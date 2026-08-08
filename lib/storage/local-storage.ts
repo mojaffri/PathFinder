@@ -28,5 +28,9 @@ export function writeJSON<T>(key: string, value: T): void {
 
 export function removeKey(key: string): void {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(key);
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Storage may be unavailable in privacy modes; deletion remains best effort.
+  }
 }
