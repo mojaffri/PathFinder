@@ -1,4 +1,4 @@
-import type { ConfidenceLevel, EvidenceStrength, MasteryDimensionScores, MasteryLevel } from "@/types";
+import type { ConfidenceLevel, EvidenceStrength, MasteryDimensionScores, MasteryLevel, SkillAttempt } from "@/types";
 
 /**
  * Deterministic, explainable mastery derivation — same philosophy as the
@@ -65,6 +65,28 @@ export function computeConfidence(evaluatedAttemptCount: number): ConfidenceLeve
   if (evaluatedAttemptCount >= 3) return "high";
   if (evaluatedAttemptCount >= 2) return "medium";
   return "low";
+}
+
+/** Recency-weighted, deterministic assessment signal. The latest three graded attempts matter most; stale results decay after 90 days. */
+export function computeAssessmentSignal(attempts: SkillAttempt[], now = new Date()): {
+  knowledge: number;
+  ability: number;
+  confidence: ConfidenceLevel;
+} {
+  const graded = attempts.filter((attempt) => attempt.evaluation !== null).slice(-3);
+  if (graded.length === 0) return { knowledge: 0, ability: 0, confidence: "low" };
+  const weights = graded.map((attempt, index) => {
+    const ageDays = Math.max(0, (now.getTime() - new Date(attempt.completedAt).getTime()) / 86_400_000);
+    const recency = ageDays > 180 ? 0.7 : ageDays > 90 ? 0.85 : 1;
+    return (index + 1) * recency;
+  });
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  const weighted = (field: "knowledgeScore" | "abilityScore") => Math.round(graded.reduce((sum, attempt, index) => sum + (attempt.evaluation?.[field] ?? 0) * weights[index], 0) / totalWeight);
+  const scores = graded.map((attempt) => attempt.evaluation?.overallScore ?? 0);
+  const spread = Math.max(...scores) - Math.min(...scores);
+  const base = computeConfidence(graded.length);
+  const confidence = spread > 25 && base === "high" ? "medium" : spread > 25 && base === "medium" ? "low" : base;
+  return { knowledge: weighted("knowledgeScore"), ability: weighted("abilityScore"), confidence };
 }
 
 /** A single 0-100 number for supporting visualizations only (e.g. a compact progress ring) — never the primary state, per the mastery model. */
