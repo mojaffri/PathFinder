@@ -10,6 +10,6 @@
     "incremental": false,
     "verbatimModuleSyntax": false
   },
-  "include": ["tests/**/*.ts", "lib/ai/**/*.ts", "lib/resume/heuristic-extractor.ts", "lib/resume/schema.ts", "lib/resume/text-normalize.ts", "lib/skillforge/deterministic-grader.ts", "lib/skillforge/mastery.ts", "types/skillforge.ts", "types/career.ts", "types/profile.ts", "types/records.ts", "types/roadmap.ts"],
+  "include": ["tests/**/*.ts", "lib/ai/**/*.ts", "lib/resume/heuristic-extractor.ts", "lib/resume/normalize-extraction.ts", "lib/resume/schema.ts", "lib/resume/text-normalize.ts", "lib/skillforge/deterministic-grader.ts", "lib/skillforge/mastery.ts", "types/skillforge.ts", "types/career.ts", "types/profile.ts", "types/records.ts", "types/roadmap.ts"],
   "exclude": ["node_modules"]
 }
