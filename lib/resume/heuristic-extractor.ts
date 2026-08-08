@@ -40,14 +40,21 @@ const SECTION_HEADERS: Record<string, "experience" | "projects" | "awards" | "ce
   EXPERIENCE: "experience",
   "WORK EXPERIENCE": "experience",
   "RELEVANT EXPERIENCE": "experience",
+  "PROFESSIONAL EXPERIENCE": "experience",
+  "RESEARCH EXPERIENCE": "experience",
   EMPLOYMENT: "experience",
   LEADERSHIP: "experience",
   "LEADERSHIP EXPERIENCE": "experience",
   ACTIVITIES: "experience",
+  "EXTRACURRICULAR ACTIVITIES": "experience",
   "ACTIVITIES LEADERSHIP": "experience",
   "LEADERSHIP ACTIVITIES": "experience",
   PROJECT: "projects",
   PROJECTS: "projects",
+  "ACADEMIC PROJECTS": "projects",
+  "PERSONAL PROJECTS": "projects",
+  "SELECTED PROJECTS": "projects",
+  "TECHNICAL PROJECTS": "projects",
   "AWARDS HONORS": "awards",
   AWARDS: "awards",
   HONORS: "awards",
@@ -316,15 +323,17 @@ function parseProjectEntries(lines: string[], idPrefix: string): ProjectRecord[]
     .slice(0, 8)
     .map((entry, i) => {
       const { endDate, titleWithoutDates } = extractDateRange(entry.headerLine);
-      const headerFields = splitHeaderFields(titleWithoutDates);
-      const { orgLine, bullets } = groupBodyLines(entry.bodyLines);
+      const inlineUrl = titleWithoutDates.match(/\b(?:https?:\/\/|www\.)\S+/i)?.[0] ?? null;
+      const titleText = inlineUrl ? titleWithoutDates.replace(inlineUrl, "").trim() : titleWithoutDates;
+      const headerFields = splitHeaderFields(titleText);
+      const bullets = [inlineUrl, ...entry.bodyLines].filter((line): line is string => Boolean(line)).map(stripBullet);
 
       return {
         id: newId(idPrefix, i),
         title: headerFields.title || `Project ${i + 1}`,
         technologies: [],
         date: endDate,
-        summary: bullets.length === 0 ? (headerFields.organization ?? orgLine) : null,
+        summary: headerFields.organization,
         bullets: bullets.slice(0, 8),
       };
     });
@@ -338,8 +347,10 @@ function looksLikeProjectTitle(line: string, nextLine: string | undefined): bool
   if (/^[-â€¢*â€¢]/.test(line)) return false;
   const clean = stripBullet(line);
   if (!clean || isProjectUrl(clean) || hasDateSignal(clean) || clean.length > 120) return false;
-  if (nextLine && (isProjectUrl(nextLine) || /^[-â€¢*â€¢]/.test(nextLine))) return true;
-  return /(?:project|app|application|dashboard|platform|model|tool|game|website|system|analysis|portfolio)/i.test(clean);
+  if (/^(?:achieved|analyzed|automated|built|collaborated|conducted|created|delivered|deployed|designed|developed|engineered|implemented|improved|integrated|launched|led|managed|optimized|organized|produced|researched|supported|tested|utilized|wrote)\b/i.test(clean)) return false;
+  if (/[.!?]$/.test(clean) || clean.split(/\s+/).length >= 14) return false;
+  if (/\b(?:https?:\/\/|www\.)\S+/i.test(clean)) return true;
+  return Boolean(nextLine && (isProjectUrl(nextLine) || /^[-â€¢*â€¢]/.test(nextLine)));
 }
 
 /** Project sections often omit dates. Treat a title followed by a repository
