@@ -52,6 +52,25 @@ const SECTION_ID: Record<NextBestActionType, string | null> = {
   advance: null,
 };
 
+type SkillStage = "diagnose" | "learn" | "practice" | "build" | "prove";
+const STAGE_FOR_ACTION: Record<NextBestActionType, SkillStage | null> = {
+  diagnostic: "diagnose",
+  learn: "learn",
+  practice: "practice",
+  build: "build",
+  assessment: "prove",
+  interview: "prove",
+  advance: null,
+};
+
+const SKILL_STAGES: { value: SkillStage; label: string; helper: string }[] = [
+  { value: "diagnose", label: "1. Diagnose", helper: "Find your starting point" },
+  { value: "learn", label: "2. Learn", helper: "Build the core concepts" },
+  { value: "practice", label: "3. Practice", helper: "Apply each concept" },
+  { value: "build", label: "4. Build", helper: "Create evidence" },
+  { value: "prove", label: "5. Prove", helper: "Verify mastery" },
+];
+
 function scrollToSection(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -179,6 +198,7 @@ function SkillDetailBody({
     return diagnosis && !diagnosis.withinSameSkill ? diagnosis : null;
   }, [nextBestAction.type, progress.attempts, skillModule, allModules]);
   const [readinessDismissed, setReadinessDismissed] = useState(false);
+  const [activeStage, setActiveStage] = useState<SkillStage>("diagnose");
 
   const coreResources = skillModule.learningResources.filter((r) => r.depth === "core");
   const deeperResources = skillModule.learningResources.filter((r) => r.depth === "deeper");
@@ -205,19 +225,19 @@ function SkillDetailBody({
         {whyText}
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        <Button variant="secondary" size="sm" onClick={() => scrollToSection("learn-section")}>
-          Start Learning
-        </Button>
-        <Button variant="secondary" size="sm" onClick={() => scrollToSection("practice-section")}>
-          Practice First
-        </Button>
-        <Button variant="secondary" size="sm" onClick={() => scrollToSection("diagnostic-section")}>
-          Test Me First
-        </Button>
-        <Button variant="secondary" size="sm" onClick={() => scrollToSection("build-section")}>
-          Start Project
-        </Button>
+      <div className="mt-6 grid gap-2 sm:grid-cols-5" aria-label="Skill progression">
+        {SKILL_STAGES.map((stage) => (
+          <button
+            key={stage.value}
+            type="button"
+            aria-current={activeStage === stage.value ? "step" : undefined}
+            onClick={() => setActiveStage(stage.value)}
+            className={`rounded-lg border p-3 text-left transition-colors ${activeStage === stage.value ? "border-primary bg-accent/50" : "border-border bg-background hover:bg-surface"}`}
+          >
+            <span className="block text-sm font-semibold text-foreground">{stage.label}</span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">{stage.helper}</span>
+          </button>
+        ))}
       </div>
 
       <Card className="mt-6 border-primary/30 bg-accent/30">
@@ -242,7 +262,11 @@ function SkillDetailBody({
             </Link>
           ) : (
             SECTION_ID[nextBestAction.type] && (
-              <Button size="sm" onClick={() => scrollToSection(SECTION_ID[nextBestAction.type]!)}>
+              <Button size="sm" onClick={() => {
+                const stage = STAGE_FOR_ACTION[nextBestAction.type];
+                if (stage) setActiveStage(stage);
+                scrollToSection(SECTION_ID[nextBestAction.type]!);
+              }}>
                 Go
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -333,7 +357,7 @@ function SkillDetailBody({
         </Card>
       )}
 
-      <Card className="mt-6" id="diagnostic-section">
+      <Card className={`mt-6 ${activeStage !== "diagnose" ? "hidden" : ""}`} id="diagnostic-section">
         <CardHeader>
           <CardTitle className="text-base">Test Me First</CardTitle>
           <p className="text-sm text-muted-foreground">{skillModule.diagnostic.instructions}</p>
@@ -350,7 +374,7 @@ function SkillDetailBody({
         </CardContent>
       </Card>
 
-      <Card className="mt-6" id="learn-section">
+      <Card className={`mt-6 ${activeStage !== "learn" ? "hidden" : ""}`} id="learn-section">
         <CardHeader>
           <CardTitle className="text-base">Learn</CardTitle>
         </CardHeader>
@@ -397,7 +421,7 @@ function SkillDetailBody({
         </CardContent>
       </Card>
 
-      <Card className="mt-6" id="practice-section">
+      <Card className={`mt-6 ${activeStage !== "practice" ? "hidden" : ""}`} id="practice-section">
         <CardHeader>
           <CardTitle className="text-base">Practice</CardTitle>
         </CardHeader>
@@ -424,7 +448,7 @@ function SkillDetailBody({
         </CardContent>
       </Card>
 
-      <Card className="mt-6" id="build-section">
+      <Card className={`mt-6 ${activeStage !== "build" ? "hidden" : ""}`} id="build-section">
         <CardHeader>
           <CardTitle className="text-base">Build</CardTitle>
         </CardHeader>
@@ -462,7 +486,7 @@ function SkillDetailBody({
         </CardContent>
       </Card>
 
-      <Card className="mt-6" id="assessment-section">
+      <Card className={`mt-6 ${activeStage !== "prove" ? "hidden" : ""}`} id="assessment-section">
         <CardHeader>
           <CardTitle className="text-base">Prove it — mastery assessment</CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -482,7 +506,7 @@ function SkillDetailBody({
         </CardContent>
       </Card>
 
-      {progress.attempts.length > 0 && (
+      {activeStage === "prove" && progress.attempts.length > 0 && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="text-base">Assessment progress</CardTitle>
@@ -509,7 +533,7 @@ function SkillDetailBody({
         </Card>
       )}
 
-      <Card className="mt-6">
+      <Card className={`mt-6 ${activeStage !== "prove" ? "hidden" : ""}`}>
         <CardHeader>
           <CardTitle className="text-base">Evidence</CardTitle>
           <p className="text-sm text-muted-foreground">Real, credible artifacts backing this skill — a repo, a document, a link.</p>
@@ -519,7 +543,7 @@ function SkillDetailBody({
         </CardContent>
       </Card>
 
-      <Card className="mt-6" id="interview-section">
+      <Card className={`mt-6 ${activeStage !== "prove" ? "hidden" : ""}`} id="interview-section">
         <CardHeader>
           <CardTitle className="text-base">Interview</CardTitle>
           <p className="text-sm text-muted-foreground">{skillModule.interviewRelevance}</p>
@@ -538,7 +562,7 @@ function SkillDetailBody({
         </CardContent>
       </Card>
 
-      <Card className="mt-6">
+      <Card className={`mt-6 ${activeStage !== "prove" ? "hidden" : ""}`}>
         <CardHeader>
           <CardTitle className="text-base">Mastery ladder for this skill</CardTitle>
         </CardHeader>

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
 import { recordAttempt } from "@/services/skillforge-service";
 import { diagnoseWeakConcept } from "@/lib/skillforge/diagnosis";
 import { cn } from "@/lib/utils";
@@ -208,26 +207,28 @@ export function SkillCheckPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      {questions.map((q) => (
-        <div key={q.id}>
-          <Label htmlFor={`q-${q.id}`}>{q.prompt}</Label>
+      {questions.map((q, index) => (
+        <fieldset key={q.id} className="rounded-lg border border-border p-4">
+          <legend className="px-1 text-sm font-medium text-foreground">
+            <span className="mr-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Question {index + 1}</span>
+            {q.prompt}
+          </legend>
           {q.options?.length ? (
-            <Select id={`q-${q.id}`} className="mt-1.5" value={answers[q.id] ?? ""} onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))} disabled={state === "submitting"} required>
-              <option value="">Choose an answer</option>
-              {q.options.map((option) => <option key={option} value={option}>{option}</option>)}
-            </Select>
+            <div className="mt-3 grid gap-2">
+              {q.options.map((option) => (
+                <label key={option} className={cn("flex cursor-pointer items-start gap-3 rounded-md border p-3 text-sm transition-colors", answers[q.id] === option ? "border-primary bg-accent/50" : "border-border hover:bg-surface")}>
+                  <input type="radio" name={`q-${q.id}`} value={option} checked={answers[q.id] === option} onChange={() => setAnswers((prev) => ({ ...prev, [q.id]: option }))} disabled={state === "submitting"} className="mt-0.5 h-4 w-4 accent-primary" />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
           ) : (
-            <Textarea
-              id={`q-${q.id}`}
-              className="mt-1.5"
-              value={answers[q.id] ?? ""}
-              onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-              disabled={state === "submitting"}
-              maxLength={4000}
-              required
-            />
+            <div className="mt-3">
+              <Label className="sr-only" htmlFor={`q-${q.id}`}>Your answer</Label>
+              <Textarea id={`q-${q.id}`} value={answers[q.id] ?? ""} onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))} disabled={state === "submitting"} maxLength={4000} placeholder="Write a concise answer and explain your reasoning." required />
+            </div>
           )}
-        </div>
+        </fieldset>
       ))}
       <div>
         <Button
