@@ -59,8 +59,8 @@ export const SKILL_MODULES: SkillModule[] = [
       id: "diag-1",
       instructions: "Two quick questions — answer honestly based on what you already know, not what you've studied.",
       prompts: [
-        { id: "diag-q1", conceptId: "data-cleaning-strategy", prompt: "You're given a sensor dataset where 8% of readings are missing and some values are clearly impossible (negative pressure). Walk through how you'd decide what to do with each case." },
-        { id: "diag-q2", conceptId: "vectorized-operations", prompt: "You need the rolling 10-reading average for 50,000 rows. Would you use a for-loop or a pandas method, and why does it matter here?" },
+        { id: "diag-q1", conceptId: "data-cleaning-strategy", prompt: "A sensor dataset has missing readings and impossible negative-pressure values. What is the best first step?", kind: "multiple-choice", options: ["Delete every affected row", "Inspect missingness and flag invalid values before choosing a treatment", "Replace every issue with zero", "Ignore both issues"], correctAnswer: "Inspect missingness and flag invalid values before choosing a treatment" },
+        { id: "diag-q2", conceptId: "vectorized-operations", prompt: "What is the best way to calculate a rolling 10-reading average for 50,000 pandas rows?", kind: "multiple-choice", options: ["A Python for-loop", "Series.rolling(10).mean()", "Manually calculate each window", "Convert every row to text first"], correctAnswer: "Series.rolling(10).mean()" },
       ],
     },
     assessment: {
@@ -69,8 +69,9 @@ export const SKILL_MODULES: SkillModule[] = [
       description: "Complete the core resources and exercises, then submit the project challenge for review.",
       passingCriteria: "Core resources and exercises completed, and the project challenge has a working, documented notebook.",
       questions: [
-        { id: "q1", conceptId: "data-cleaning-strategy", prompt: "Describe a specific cleaning decision you made in your project (or would make) and why you chose it over the alternative." },
-        { id: "q2", conceptId: "result-communication", prompt: "Explain your project's main finding in 2-3 sentences as if to a non-technical engineering manager." },
+        { id: "q1", conceptId: "data-cleaning-strategy", prompt: "True or false: dropping every row with a missing value is always the safest cleaning strategy.", kind: "true-false", options: ["True", "False"], correctAnswer: "False" },
+        { id: "q2", conceptId: "vectorized-operations", prompt: "Which expression flags pressure values below zero in a pandas DataFrame named df?", kind: "multiple-choice", options: ["df['pressure'] < 0", "df.pressure.delete(-1)", "for df in pressure", "df['pressure'] = 'negative'"], correctAnswer: "df['pressure'] < 0" },
+        { id: "q3", conceptId: "result-communication", prompt: "Which result statement is most useful to an engineering manager?", kind: "multiple-choice", options: ["The notebook ran successfully", "The mean was 42", "Line 2's temperature spikes precede 70% of stoppages, so inspect its cooling loop first", "Pandas created a chart"], correctAnswer: "Line 2's temperature spikes precede 70% of stoppages, so inspect its cooling loop first" },
       ],
     },
     interviewRelevance: "Be ready to walk through how you cleaned the data, why you chose your approach, and what you'd change with more time.",
