@@ -7,8 +7,13 @@ import { computePhaseTimelines, totalEstimatedHours } from "@/lib/roadmap/pacing
 import { RoadmapRequestSchema } from "@/lib/roadmap/schema";
 import { buildTargetResumeBenchmark } from "@/lib/roadmap/target-resume";
 import { resolveCareers, type Roadmap } from "@/types";
+import { checkRateLimit, requestRateLimitKey } from "@/lib/ai/rate-limit";
+import { exceedsContentLength } from "@/lib/http/request-limits";
 
 export async function POST(request: Request) {
+  if (exceedsContentLength(request, 500_000)) return Response.json({ error: "Roadmap request is too large." }, { status: 413 });
+  const rateLimit = checkRateLimit(requestRateLimitKey(request, "roadmap"), 6);
+  if (!rateLimit.allowed) return Response.json({ error: "Too many roadmap requests. Try again shortly." }, { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } });
   let body: unknown;
   try {
     body = await request.json();
