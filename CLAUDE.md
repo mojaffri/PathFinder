@@ -16,6 +16,8 @@ PathFinder is a STEM Career & Academic Roadmap Engine built with Next.js (App Ro
 
 Both paths converge on the same structured types in `types/records.ts` (`EducationRecord`, `ExperienceRecord`, `ProjectRecord`, `AwardRecord`, `CertificationRecord`) — long-form content (bullets, summaries) is always a textarea/list, never a chip; only genuinely short categorical values (skills, interests) are chips.
 
+Every resume extraction resultâ€”AI or heuristicâ€”must pass through `normalizeResumeExtraction()` before persistence. This enforces record invariants across arbitrary PDF layouts: action-oriented description lines and orphan URL records are folded into the nearest preceding project, inline project URLs are removed from titles and retained with that project's description, and repeated bullets are deduplicated.
+
 **Roadmap generation** (`app/api/roadmap/route.ts`, `lib/roadmap/`): The full structured profile is first run through a **deterministic gap-analysis engine** (`lib/gap-analysis/engine.ts`) that compares the student against what the target career actually rewards and produces prioritized (critical/high/medium/low), hour-costed gaps. That gap analysis is the authoritative foundation for both generation paths:
 - If an Anthropic API key is configured, `lib/roadmap/ai-generator.ts` turns the gaps + full profile into a rich roadmap via Claude, validated against a zod schema (`lib/roadmap/schema.ts`).
 - If the key is missing or the call fails, `lib/roadmap/fallback.ts` builds a complete roadmap directly from the gap analysis — this path must always work and must never be allowed to regress, since it's the guaranteed fallback.
