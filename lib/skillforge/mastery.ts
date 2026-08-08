@@ -1,4 +1,13 @@
-import type { ConfidenceLevel, EvidenceStrength, MasteryDimensionScores, MasteryLevel } from "@/types";
+import type {
+  ConfidenceLevel,
+  EvidenceStrength,
+  MasteryDimensionScores,
+  MasteryLevel,
+  SkillAttempt,
+  SkillEvaluationResult,
+  SkillModule,
+  SkillProgress,
+} from "@/types";
 
 /**
  * Deterministic, explainable mastery derivation — same philosophy as the
@@ -71,4 +80,102 @@ export function computeConfidence(evaluatedAttemptCount: number): ConfidenceLeve
 export function overallMasteryScore(dimensions: MasteryDimensionScores): number {
   const { knowledge, ability, evidence, interview } = dimensions;
   return Math.round((knowledge + ability + evidence + interview) / 4);
+}
+
+function emptyDimensions(): MasteryDimensionScores {
+  return { knowledge: 0, ability: 0, evidence: 0, interview: 0 };
+}
+
+/** The zero-state a skill starts in before the student has done anything — never persisted until a real mutation happens. */
+export function freshProgress(skillId: string): SkillProgress {
+  const dimensions = emptyDimensions();
+  const now = new Date().toISOString();
+  return {
+    skillId,
+    startedAt: null,
+    lastActivityAt: null,
+    completedResourceIds: [],
+    completedExerciseIds: [],
+    projectChallengeStatus: {},
+    evidence: [],
+    interviewSelfRating: null,
+    attempts: [],
+    mastery: {
+      skillId,
+      level: computeMasteryLevel(dimensions),
+      dimensions,
+      confidence: { knowledge: "low", ability: "low" },
+      evidenceStrength: evidenceStrengthFromScore(dimensions.evidence),
+      isResumeReady: false,
+      updatedAt: now,
+    },
+  };
+}
+
+/**
+ * Recomputes the four mastery dimensions from whatever the student has
+ * actually done. "No fake progress" (spec rule 17): merely completing
+ * resources or exercises can only carry knowledge/ability into
+ * exposure/familiar territory (a low, capped ceiling) — it is never enough
+ * on its own to reach "working" or higher. Real credit for knowledge/ability
+ * comes from demonstrated performance: an AI-evaluated diagnostic or
+ * assessment attempt, or a reviewed/submitted project. This also means a
+ * student who skips straight to "Test Me First" and performs well can jump
+ * straight to a high mastery level with zero resources checked off (spec
+ * rule 11 — trust demonstrated ability over assumed prerequisites).
+ *
+ * Pure and storage-agnostic by design — both the database-backed repository
+ * (`repositories/skillforge-repository.ts`) and any future caller share this
+ * one implementation rather than duplicating the scoring rules.
+ */
+export function recomputeMastery(progress: SkillProgress, module: SkillModule): SkillProgress {
+  const resourceTotal = module.learningResources.length;
+  const exerciseTotal = module.practiceExercises.length;
+
+  const resourceCompletionPct = resourceTotal > 0 ? progress.completedResourceIds.length / resourceTotal : 0;
+  const exerciseCompletionPct = exerciseTotal > 0 ? progress.completedExerciseIds.length / exerciseTotal : 0;
+  const knowledgeFromCompletion = Math.round(resourceCompletionPct * 25);
+  const abilityFromCompletion = Math.round(exerciseCompletionPct * 20);
+
+  const projectStatuses = Object.values(progress.projectChallengeStatus);
+  const reviewedProjects = projectStatuses.filter((s) => s === "reviewed").length;
+  const submittedProjects = projectStatuses.filter((s) => s === "submitted").length;
+  const abilityFromProjects = Math.min(70, reviewedProjects * 50 + submittedProjects * 25);
+
+  const evaluatedAttempts = progress.attempts.filter(
+    (a): a is SkillAttempt & { evaluation: SkillEvaluationResult } => a.evaluation !== null,
+  );
+  const knowledgeFromEvaluation = evaluatedAttempts.length > 0 ? Math.max(...evaluatedAttempts.map((a) => a.evaluation.knowledgeScore)) : 0;
+  const abilityFromEvaluation = evaluatedAttempts.length > 0 ? Math.max(...evaluatedAttempts.map((a) => a.evaluation.abilityScore)) : 0;
+
+  const knowledge = Math.max(knowledgeFromCompletion, knowledgeFromEvaluation);
+  const ability = Math.max(abilityFromCompletion, abilityFromProjects, abilityFromEvaluation);
+
+  const evidenceScore =
+    progress.evidence.length === 0
+      ? 0
+      : Math.min(
+          100,
+          Math.round(
+            progress.evidence.reduce((sum, e) => sum + EVIDENCE_STRENGTH_SCORE[e.strength], 0) / progress.evidence.length,
+          ),
+        );
+  const interview = progress.interviewSelfRating ? progress.interviewSelfRating * 20 : 0;
+
+  const dimensions: MasteryDimensionScores = { knowledge, ability, evidence: evidenceScore, interview };
+  const level = computeMasteryLevel(dimensions);
+  const confidence = computeConfidence(evaluatedAttempts.length);
+
+  return {
+    ...progress,
+    mastery: {
+      skillId: progress.skillId,
+      level,
+      dimensions,
+      confidence: { knowledge: confidence, ability: confidence },
+      evidenceStrength: evidenceStrengthFromScore(evidenceScore),
+      isResumeReady: level === "resume-ready",
+      updatedAt: new Date().toISOString(),
+    },
+  };
 }

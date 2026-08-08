@@ -325,6 +325,7 @@ function parseProjectEntries(lines: string[], idPrefix: string): ProjectRecord[]
         date: endDate,
         summary: bullets.length === 0 ? (headerFields.organization ?? orgLine) : null,
         bullets: bullets.slice(0, 8),
+        githubUrl: null,
       };
     });
 }
@@ -476,8 +477,21 @@ function parseEducationEntries(lines: string[]): EducationRecord[] {
   return entries.slice(0, 5);
 }
 
+/**
+ * Best-effort scale guess from the raw number alone (no scale is ever stated
+ * next to a bare GPA line). 4.0-scale GPAs, including weighted APs/IBs, top
+ * out around 4.3; a 5.0-scale weighted GPA commonly lands in the 4.3-5.5
+ * range; anything higher reads as a percentage. Never guesses "other" — the
+ * reviewer can always correct a wrong guess in the review UI.
+ */
+function inferGpaScale(gpa: number): EducationRecord["gpaScale"] {
+  if (gpa <= 4.3) return "4.0";
+  if (gpa <= 5.5) return "5.0";
+  return "100";
+}
+
 function finalizeEducation(partial: Partial<EducationRecord>, index: number): EducationRecord {
-  const gpaScale = partial.gpa !== undefined && partial.gpa !== null && partial.gpa > 4.3 ? "100" : "4.0";
+  const gpaScale = partial.gpa !== undefined && partial.gpa !== null ? inferGpaScale(partial.gpa) : "4.0";
   return {
     id: newId("edu", index),
     institution: partial.institution ?? null,
@@ -551,9 +565,16 @@ export function extractResumeDataHeuristically(rawText: string): ResumeExtractio
   const awards = parseAwardEntries(sections.awards, "award");
 
   const skillsFromSection = parseSkillsSection(sections.skills);
-  const skillsFromKeywords = FALLBACK_SKILL_KEYWORDS.filter((skill) =>
-    new RegExp(`\\b${skill.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(rawText),
-  );
+  // `\b` word-boundary anchors fail for keywords ending in a non-word
+  // character (e.g. "C++", "C#"): the boundary requires a word/non-word
+  // transition, and in real text both the trailing symbol and whatever
+  // follows it (space, comma, punctuation) are non-word characters, so the
+  // closing `\b` never matches. Lookaround on the actual delimiter set fixes
+  // this without loosening matching for ordinary alphanumeric keywords.
+  const skillsFromKeywords = FALLBACK_SKILL_KEYWORDS.filter((skill) => {
+    const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(?<![A-Za-z0-9+#])${escaped}(?![A-Za-z0-9+#])`, "i").test(rawText);
+  });
   const skills = dedupeStrings([...skillsFromSection, ...skillsFromKeywords]);
 
   const followUpQuestions: string[] = [];

@@ -12,9 +12,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { SkillCard } from "@/components/skillforge/skill-card";
 import { useProfile } from "@/hooks/use-profile";
 import { getRoadmaps } from "@/services/roadmap-service";
-import { getSkillProgress } from "@/services/skillforge-service";
+import { getSkillProgressMap } from "@/services/skillforge-service";
 import { getAllSkillModules, getSkillModulesForCareers } from "@/lib/skillforge/catalog";
 import { checkReadiness } from "@/lib/skillforge/readiness";
+import { freshProgress } from "@/lib/skillforge/mastery";
 import { computeNextBestAction } from "@/lib/skillforge/next-action";
 import { getDemonstratedGapIds } from "@/lib/skillforge/roadmap-connection";
 import {
@@ -34,14 +35,20 @@ export function SkillForgeDashboard() {
 
   useEffect(() => {
     if (!profile) return;
-    // Reading localStorage-backed roadmap/progress during render would mismatch
-    // SSR output, so this reads once the profile is available on the client —
-    // same pattern as components/dashboard/dashboard-view.tsx.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRoadmap(getRoadmaps(profile.id)[0] ?? null);
+    let cancelled = false;
+
+    getRoadmaps().then((roadmaps) => {
+      if (!cancelled) setRoadmap(roadmaps[0] ?? null);
+    });
 
     const modules = getSkillModulesForCareers(profile.targetCareers);
-    setItems(modules.map((module) => ({ module, progress: getSkillProgress(profile.id, module.id) })));
+    getSkillProgressMap(modules.map((m) => m.id)).then((progressMap) => {
+      if (!cancelled) setItems(modules.map((module) => ({ module, progress: progressMap[module.id] })));
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [profile]);
 
   if (isLoading) {
@@ -107,11 +114,12 @@ function DashboardBody({
     [roadmap, items],
   );
   const totalGaps = roadmap?.roadmap.gapAnalysis.gaps.length ?? 0;
+  const progressById = useMemo(() => Object.fromEntries(items.map((i) => [i.module.id, i.progress])), [items]);
   const highestPriorityNextAction = useMemo(() => {
     if (!highestPriority) return null;
-    const readiness = checkReadiness(highestPriority.module, allModules, (id) => getSkillProgress(profile.id, id));
+    const readiness = checkReadiness(highestPriority.module, allModules, (id) => progressById[id] ?? freshProgress(id));
     return computeNextBestAction(highestPriority.module, highestPriority.progress, readiness, allModules);
-  }, [highestPriority, allModules, profile.id]);
+  }, [highestPriority, allModules, progressById]);
   const currentPhase = roadmap?.roadmap.phases[0] ?? null;
 
   if (items.length === 0) {

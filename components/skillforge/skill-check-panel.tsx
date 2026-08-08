@@ -43,14 +43,12 @@ type PanelState = "idle" | "submitting" | "result" | "ungraded";
  * of the result, per the guided-freedom philosophy.
  */
 export function SkillCheckPanel({
-  userId,
   skillModule,
   stage,
   questions,
   allModules,
   onProgressChange,
 }: {
-  userId: string;
   skillModule: SkillModule;
   stage: "diagnostic" | "assessment";
   questions: AssessmentQuestion[];
@@ -92,7 +90,7 @@ export function SkillCheckPanel({
       evaluation = null;
     }
 
-    const updated = recordAttempt(userId, skillModule, stage, responses, evaluation);
+    const updated = await recordAttempt(skillModule.id, stage, responses, evaluation);
     onProgressChange(updated);
     setResult(evaluation);
     setState(evaluation ? "result" : "ungraded");

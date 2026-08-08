@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { JOB_GROWTH_LABELS, type CareerMatch } from "@/types";
 import { cn } from "@/lib/utils";
+import { CareerFitPanel } from "@/components/discovery/career-fit-panel";
 
 const CONFIDENCE_VARIANT: Record<CareerMatch["confidence"], BadgeVariant> = {
   high: "success",
@@ -115,6 +116,7 @@ export function CareerMatchCard({ match, rank }: { match: CareerMatch; rank: num
                 ))}
               </div>
             </div>
+            <CareerFitPanel career={career} />
           </div>
         )}
 

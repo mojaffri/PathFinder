@@ -79,7 +79,7 @@ export function RoadmapGenerator({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleSave() {
+  async function handleSave() {
     if (state.status !== "ready" || !profile) return;
     const now = new Date().toISOString();
     const record: SavedRoadmap = {
@@ -93,8 +93,8 @@ export function RoadmapGenerator({
       roadmap: state.roadmap,
       source,
     };
-    saveRoadmap(record);
-    setSaved(record);
+    const persisted = await saveRoadmap(record);
+    setSaved(persisted);
   }
 
   if (state.status === "loading") {

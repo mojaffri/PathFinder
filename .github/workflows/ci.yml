@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      # No DATABASE_URL/Supabase secrets are configured for CI — the
+      # integration suite runs entirely against an in-memory pglite Postgres
+      # (tests/integration/db.ts), so it needs none. This also means these
+      # tests never verify anything against a real Supabase project; that
+      # gap is intentional and documented in docs/database.md.
+      - name: Integration tests
+        run: npm run test:integration
+
+      - name: Production build
+        run: npm run build

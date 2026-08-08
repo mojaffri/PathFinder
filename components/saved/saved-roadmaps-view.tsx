@@ -10,7 +10,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { RoadmapView } from "@/components/roadmap/roadmap-view";
 import { useProfile } from "@/hooks/use-profile";
 import { deleteRoadmap, getRoadmaps } from "@/services/roadmap-service";
-import { getSkillProgress } from "@/services/skillforge-service";
+import { getSkillProgressMap } from "@/services/skillforge-service";
 import { getSkillModulesForCareers } from "@/lib/skillforge/catalog";
 import { getDemonstratedGapIds } from "@/lib/skillforge/roadmap-connection";
 import { formatDate } from "@/lib/utils";
@@ -20,15 +20,45 @@ export function SavedRoadmapsView() {
   const { profile, isLoading: isProfileLoading } = useProfile();
   const [roadmaps, setRoadmaps] = useState<SavedRoadmap[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [demonstratedGapIds, setDemonstratedGapIds] = useState<Set<string> | undefined>(undefined);
 
   useEffect(() => {
-    // Reading localStorage-backed roadmaps during render would mismatch SSR
-    // output, so we read once the profile has finished loading on the client.
-    if (!isProfileLoading) {
+    if (isProfileLoading) return;
+    let cancelled = false;
+    getRoadmaps().then((r) => {
+      if (!cancelled) setRoadmaps(r);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isProfileLoading]);
+
+  const selected = roadmaps?.find((r) => r.id === selectedId) ?? null;
+
+  useEffect(() => {
+    // Live-computed, not stored on the roadmap itself — a gap is "demonstrated"
+    // based on the student's current SkillForge mastery, which can keep
+    // changing after the roadmap was generated.
+    if (!selected || !profile) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setRoadmaps(getRoadmaps(profile?.id));
+      setDemonstratedGapIds(undefined);
+      return;
     }
-  }, [isProfileLoading, profile?.id]);
+    let cancelled = false;
+    const modules = getSkillModulesForCareers(profile.targetCareers);
+    getSkillProgressMap(modules.map((m) => m.id)).then((progressMap) => {
+      if (cancelled) return;
+      setDemonstratedGapIds(
+        getDemonstratedGapIds(
+          selected.roadmap.gapAnalysis,
+          modules.map((module) => ({ module, progress: progressMap[module.id] })),
+        ),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selected, profile]);
 
   if (isProfileLoading || roadmaps === null) {
     return (
@@ -38,22 +68,7 @@ export function SavedRoadmapsView() {
     );
   }
 
-  const selected = roadmaps.find((r) => r.id === selectedId) ?? null;
-
   if (selected) {
-    // Live-computed, not stored on the roadmap itself — a gap is "demonstrated"
-    // based on the student's current SkillForge mastery, which can keep
-    // changing after the roadmap was generated.
-    const demonstratedGapIds = profile
-      ? getDemonstratedGapIds(
-          selected.roadmap.gapAnalysis,
-          getSkillModulesForCareers(profile.targetCareers).map((module) => ({
-            module,
-            progress: getSkillProgress(profile.id, module.id),
-          })),
-        )
-      : undefined;
-
     return (
       <div className="mx-auto max-w-3xl px-6 py-16">
         <button
@@ -101,8 +116,7 @@ export function SavedRoadmapsView() {
                   variant="ghost"
                   onClick={() => {
                     if (window.confirm("Delete this saved guide?")) {
-                      deleteRoadmap(r.id);
-                      setRoadmaps(getRoadmaps(profile?.id));
+                      deleteRoadmap(r.id).then(() => getRoadmaps().then(setRoadmaps));
                     }
                   }}
                 >

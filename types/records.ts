@@ -62,6 +62,8 @@ export interface ProjectRecord {
   date: string | null;
   summary: string | null;
   bullets: string[];
+  /** Links this project to an analyzed GitHub repository (`GithubRepoRecord.id` in `types/github.ts`) — set by the project analyzer when a student links a repo, never guessed from the title. */
+  githubUrl: string | null;
 }
 
 export function createEmptyProjectRecord(): ProjectRecord {
@@ -72,6 +74,7 @@ export function createEmptyProjectRecord(): ProjectRecord {
     date: null,
     summary: null,
     bullets: [],
+    githubUrl: null,
   };
 }
 

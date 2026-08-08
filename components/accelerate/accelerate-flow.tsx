@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useProfile } from "@/hooks/use-profile";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { createEmptyProfile } from "@/types";
 import type { ResumeProfileData } from "@/types";
 import { mapResumeDataToProfileValues } from "@/lib/resume/map-to-profile";
@@ -16,10 +20,11 @@ type Step =
   | { kind: "resume" }
   | { kind: "review"; resumeData: ResumeProfileData; initialValues: ProfileFormValues }
   | { kind: "manual" }
+  | { kind: "saving" }
   | { kind: "ready"; values: ProfileFormValues };
 
 export function AccelerateFlow({ initialCareer }: { initialCareer?: string }) {
-  const { profile, createProfile, updateProfile } = useProfile();
+  const { profile, isAuthenticated, isLoading, createProfile, updateProfile, completeOnboarding } = useProfile();
   const [step, setStep] = useState<Step>({ kind: "choice" });
 
   function baseValues(): ProfileFormValues {
@@ -28,10 +33,44 @@ export function AccelerateFlow({ initialCareer }: { initialCareer?: string }) {
     return { ...base, targetCareers: [...base.targetCareers, initialCareer] };
   }
 
-  function finalize(values: ProfileFormValues) {
-    if (!profile) createProfile(values.name || "Student");
-    updateProfile(values);
+  async function finalize(values: ProfileFormValues) {
+    setStep({ kind: "saving" });
+    if (!profile) await createProfile(values.name || "Student");
+    await updateProfile(values);
+    // Accelerate captures a full profile just like onboarding does, so
+    // completing it here too means a student who skips /onboarding and
+    // comes straight here isn't nagged to "resume onboarding" afterward.
+    await completeOnboarding();
     setStep({ kind: "ready", values });
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-24">
+        <Spinner className="h-6 w-6 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="mx-auto max-w-md px-6 py-16">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign in to build your roadmap</CardTitle>
+            <CardDescription>Your resume review and roadmap get saved to your account.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex gap-3">
+            <Link href="/login?redirectTo=/accelerate">
+              <Button>Sign in</Button>
+            </Link>
+            <Link href="/signup?redirectTo=/accelerate">
+              <Button variant="secondary">Create an account</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (step.kind === "choice") {
@@ -95,6 +134,14 @@ export function AccelerateFlow({ initialCareer }: { initialCareer?: string }) {
           onCancel={() => setStep({ kind: "choice" })}
           onSubmit={finalize}
         />
+      </div>
+    );
+  }
+
+  if (step.kind === "saving") {
+    return (
+      <div className="flex justify-center py-24">
+        <Spinner className="h-6 w-6 text-muted-foreground" />
       </div>
     );
   }

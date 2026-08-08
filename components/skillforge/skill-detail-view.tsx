@@ -19,7 +19,7 @@ import { useProfile } from "@/hooks/use-profile";
 import { getRoadmaps } from "@/services/roadmap-service";
 import {
   addEvidence,
-  getSkillProgress,
+  getSkillProgressMap,
   markExerciseCompleted,
   markResourceCompleted,
   removeEvidence,
@@ -31,6 +31,7 @@ import { findRoadmapConnection } from "@/lib/skillforge/roadmap-connection";
 import { checkReadiness } from "@/lib/skillforge/readiness";
 import { computeNextBestAction } from "@/lib/skillforge/next-action";
 import { diagnoseWeakConcept } from "@/lib/skillforge/diagnosis";
+import { freshProgress } from "@/lib/skillforge/mastery";
 import { calculateExpectedDuration } from "@/lib/roadmap/pacing";
 import { MASTERY_LEVELS } from "@/types";
 import type {
@@ -73,20 +74,38 @@ const EVIDENCE_TYPE_OPTIONS: { value: SkillEvidence["type"]; label: string }[] =
 
 export function SkillDetailView({ skillId }: { skillId: string }) {
   const { profile, isAuthenticated, isLoading } = useProfile();
-  const [progress, setProgress] = useState<SkillProgress | null>(null);
+  // Keyed by skill id: this module plus its direct prerequisites, which is
+  // exactly what the (synchronous, deterministic) readiness check needs —
+  // fetched once as a map so `checkReadiness` never has to await anything.
+  const [progressMap, setProgressMap] = useState<Record<string, SkillProgress> | null>(null);
   const [whyText, setWhyText] = useState<string | null>(null);
 
   const skillModule = useMemo(() => getSkillModule(skillId), [skillId]);
 
   useEffect(() => {
     if (!profile || !skillModule) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setProgress(getSkillProgress(profile.id, skillModule.id));
+    let cancelled = false;
+    const idsNeeded = [skillModule.id, ...skillModule.prerequisites];
+    getSkillProgressMap(idsNeeded).then((map) => {
+      if (!cancelled) setProgressMap(map);
+    });
 
-    const roadmap = getRoadmaps(profile.id)[0] ?? null;
-    const connection = findRoadmapConnection(skillModule, roadmap?.roadmap.gapAnalysis ?? null);
-    setWhyText(connection.whyText);
+    getRoadmaps().then((roadmaps) => {
+      if (cancelled) return;
+      const connection = findRoadmapConnection(skillModule, roadmaps[0]?.roadmap.gapAnalysis ?? null);
+      setWhyText(connection.whyText);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [profile, skillModule]);
+
+  const progress = progressMap?.[skillModule?.id ?? ""] ?? null;
+  const setProgress = (updated: SkillProgress) => {
+    if (!skillModule) return;
+    setProgressMap((prev) => ({ ...prev, [skillModule.id]: updated }));
+  };
 
   if (isLoading) {
     return (
@@ -107,18 +126,29 @@ export function SkillDetailView({ skillId }: { skillId: string }) {
     );
   }
 
-  if (!profile || !isAuthenticated) {
+  if (!isAuthenticated) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-16 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Create a profile to track progress</h1>
-        <Link href="/profile" className="mt-6 inline-block">
-          <Button>Get started</Button>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Sign in to track progress</h1>
+        <Link href={`/login?redirectTo=/skillforge/skills/${skillId}`} className="mt-6 inline-block">
+          <Button>Sign in</Button>
         </Link>
       </div>
     );
   }
 
-  if (!progress) {
+  if (!profile) {
+    return (
+      <div className="mx-auto max-w-2xl px-6 py-16 text-center">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Set up your profile to track progress</h1>
+        <Link href="/onboarding" className="mt-6 inline-block">
+          <Button>Start onboarding</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (!progress || !progressMap) {
     return (
       <div className="flex justify-center py-24">
         <Spinner className="h-6 w-6 text-muted-foreground" />
@@ -131,7 +161,7 @@ export function SkillDetailView({ skillId }: { skillId: string }) {
       skillModule={skillModule}
       progress={progress}
       onProgressChange={setProgress}
-      userId={profile.id}
+      progressMap={progressMap}
       weeklyHoursAvailable={profile.weeklyHoursAvailable}
       whyText={whyText ?? skillModule.whyItMatters}
     />
@@ -142,14 +172,14 @@ function SkillDetailBody({
   skillModule,
   progress,
   onProgressChange,
-  userId,
+  progressMap,
   weeklyHoursAvailable,
   whyText,
 }: {
   skillModule: SkillModule;
   progress: SkillProgress;
   onProgressChange: (p: SkillProgress) => void;
-  userId: string;
+  progressMap: Record<string, SkillProgress>;
   weeklyHoursAvailable: number | null;
   whyText: string;
 }) {
@@ -160,8 +190,8 @@ function SkillDetailBody({
 
   const allModules = useMemo(() => getAllSkillModules(), []);
   const readiness = useMemo(
-    () => checkReadiness(skillModule, allModules, (id) => getSkillProgress(userId, id)),
-    [skillModule, allModules, userId],
+    () => checkReadiness(skillModule, allModules, (id) => progressMap[id] ?? freshProgress(id)),
+    [skillModule, allModules, progressMap],
   );
   const nextBestAction = useMemo(
     () => computeNextBestAction(skillModule, progress, readiness, allModules),
@@ -340,7 +370,6 @@ function SkillDetailBody({
         </CardHeader>
         <CardContent>
           <SkillCheckPanel
-            userId={userId}
             skillModule={skillModule}
             stage="diagnostic"
             questions={skillModule.diagnostic.prompts}
@@ -373,7 +402,7 @@ function SkillDetailBody({
                   key={resource.id}
                   resource={resource}
                   checked={progress.completedResourceIds.includes(resource.id)}
-                  onChange={(checked) => onProgressChange(markResourceCompleted(userId, skillModule, resource.id, checked))}
+                  onChange={(checked) => markResourceCompleted(skillModule.id, resource.id, checked).then(onProgressChange)}
                 />
               ))}
             </div>
@@ -388,7 +417,7 @@ function SkillDetailBody({
                     key={resource.id}
                     resource={resource}
                     checked={progress.completedResourceIds.includes(resource.id)}
-                    onChange={(checked) => onProgressChange(markResourceCompleted(userId, skillModule, resource.id, checked))}
+                    onChange={(checked) => markResourceCompleted(skillModule.id, resource.id, checked).then(onProgressChange)}
                   />
                 ))}
               </div>
@@ -408,7 +437,7 @@ function SkillDetailBody({
               <label key={exercise.id} className="flex cursor-pointer items-start gap-3 rounded-md bg-surface p-3">
                 <Checkbox
                   checked={checked}
-                  onChange={(e) => onProgressChange(markExerciseCompleted(userId, skillModule, exercise.id, e.target.checked))}
+                  onChange={(e) => markExerciseCompleted(skillModule.id, exercise.id, e.target.checked).then(onProgressChange)}
                 />
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -438,8 +467,8 @@ function SkillDetailBody({
                   <Select
                     value={status}
                     onChange={(e) =>
-                      onProgressChange(
-                        setProjectChallengeStatus(userId, skillModule, challenge.id, e.target.value as ProjectChallengeStatus),
+                      setProjectChallengeStatus(skillModule.id, challenge.id, e.target.value as ProjectChallengeStatus).then(
+                        onProgressChange,
                       )
                     }
                     className="h-8 w-auto text-xs"
@@ -472,7 +501,6 @@ function SkillDetailBody({
         </CardHeader>
         <CardContent>
           <SkillCheckPanel
-            userId={userId}
             skillModule={skillModule}
             stage="assessment"
             questions={skillModule.assessment.questions}
@@ -488,7 +516,7 @@ function SkillDetailBody({
           <p className="text-sm text-muted-foreground">Real, credible artifacts backing this skill — a repo, a document, a link.</p>
         </CardHeader>
         <CardContent>
-          <EvidenceList userId={userId} skillModule={skillModule} progress={progress} onProgressChange={onProgressChange} />
+          <EvidenceList skillModule={skillModule} progress={progress} onProgressChange={onProgressChange} />
         </CardContent>
       </Card>
 
@@ -505,7 +533,7 @@ function SkillDetailBody({
               lowLabel="Not ready"
               highLabel="Very ready"
               value={progress.interviewSelfRating ?? 3}
-              onChange={(v: RatingScaleValue) => onProgressChange(setInterviewSelfRating(userId, skillModule, v))}
+              onChange={(v: RatingScaleValue) => setInterviewSelfRating(skillModule.id, v).then(onProgressChange)}
             />
           </div>
         </CardContent>
@@ -582,12 +610,10 @@ function ResourceRow({
 }
 
 function EvidenceList({
-  userId,
   skillModule,
   progress,
   onProgressChange,
 }: {
-  userId: string;
   skillModule: SkillModule;
   progress: SkillProgress;
   onProgressChange: (p: SkillProgress) => void;
@@ -599,16 +625,14 @@ function EvidenceList({
 
   function commit() {
     if (!title.trim()) return;
-    onProgressChange(
-      addEvidence(userId, skillModule, {
-        title: title.trim(),
-        type,
-        url: url.trim() || undefined,
-        // A student-added artifact starts as "moderate" — genuinely stronger
-        // than nothing, but not "strong" until it's actually been reviewed.
-        strength: "moderate",
-      }),
-    );
+    addEvidence(skillModule.id, {
+      title: title.trim(),
+      type,
+      url: url.trim() || undefined,
+      // A student-added artifact starts as "moderate" — genuinely stronger
+      // than nothing, but not "strong" until it's actually been reviewed.
+      strength: "moderate",
+    }).then(onProgressChange);
     setTitle("");
     setUrl("");
     setType("project");
@@ -639,7 +663,7 @@ function EvidenceList({
               <button
                 type="button"
                 aria-label={`Remove ${item.title}`}
-                onClick={() => onProgressChange(removeEvidence(userId, skillModule, item.id))}
+                onClick={() => removeEvidence(skillModule.id, item.id).then(onProgressChange)}
                 className="shrink-0 text-muted-foreground hover:text-danger"
               >
                 <Trash2 className="h-4 w-4" />

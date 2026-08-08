@@ -21,7 +21,7 @@ A full-stack TypeScript app that turns "I don't know what I want to do" or "I kn
 
 ## What it does
 
-PathFinder is a STEM career and academic roadmap engine with three connected products:
+PathFinder is a career and academic roadmap engine — spanning STEM, law, business, and the humanities/social sciences — with three connected products:
 
 | | |
 |---|---|
@@ -38,7 +38,7 @@ This isn't a CRUD app with an LLM bolted on. A few of the deliberate engineering
 - **Anti-fabrication discipline, enforced structurally.** The app never invents resume metrics, project outcomes, or business impact — unverified claims stay as bracketed placeholders (`[quantify impact]`) the student has to fill in themselves. The same rule governs SkillForge's external resource links: a resource with no verified URL is shown without one rather than a guessed link.
 - **"No fake progress" mastery model.** SkillForge tracks four dimensions (knowledge, ability, evidence, interview) with a six-level mastery ladder. Checking off every resource and exercise can only get you to a low ceiling — real credit comes from demonstrated performance on an AI-graded assessment or a reviewed project, and confidence in a score is computed from *how many* graded attempts back it, not the AI's own self-reported certainty.
 - **Root-cause failure diagnosis, not "try again."** A weak assessment result walks backward through a skill's prerequisite chain (nearest-first, breadth-first) to find the smallest actual gap — e.g. correctly tracing a shaky "reading a p-value" answer in a finance module back to a shared `statistics-fundamentals` prerequisite, instead of telling the student to redo the whole module.
-- **Storage designed for a backend that doesn't exist yet.** There's no database — everything lives in `localStorage` behind a thin service layer (`services/*`) that mirrors exactly the shape a future Supabase table would take, so swapping the persistence layer later touches one file per domain, not the UI.
+- **Two layers of authorization, not one.** Every request is scoped server-side to the signed-in user before it ever reaches a database query — and every user-owned table also has a Postgres Row Level Security policy declared with `FORCE`, specifically because the app talks to Postgres directly rather than through Supabase's REST layer (which would otherwise apply RLS for free). A real test (`tests/integration/rls-isolation.test.ts`) proves one account genuinely can't read or delete another's data, against an actual embedded Postgres engine, not a mock.
 
 ## Tech stack
 
@@ -48,14 +48,17 @@ This isn't a CRUD app with an LLM bolted on. A few of the deliberate engineering
 - **Validation:** Zod, on every AI request/response boundary and API route
 - **AI:** Anthropic SDK (Claude), server-only, structured tool-use extraction
 - **Resume parsing:** `unpdf` (PDF → text) with a heuristic/regex extractor as the no-AI fallback
-- **Persistence:** `localStorage`, behind a service layer designed for a drop-in Supabase migration
-- **Tooling:** ESLint 9, `next build` + `tsc --noEmit` as a hard merge gate (no `@ts-ignore`/`eslint-disable` workarounds)
+- **Auth & persistence:** Supabase (Postgres + Auth), schema and migrations owned by Drizzle ORM, Row Level Security enforced on every user-owned table
+- **Testing:** Vitest — unit tests for pure domain logic, integration tests for repositories/RLS against an in-memory Postgres (`@electric-sql/pglite`)
+- **Tooling:** ESLint 9, `next build` + `tsc --noEmit` + tests as a hard merge gate (no `@ts-ignore`/`eslint-disable` workarounds), GitHub Actions CI on every PR
 
 ## Project structure
 
 ```
-app/                    Routes: /discover, /accelerate, /skillforge, /saved, /profile, /api/*
-components/              UI, grouped by feature (discovery, accelerate, roadmap, skillforge, profile, ui)
+app/                    Routes: /discover, /accelerate, /onboarding, /skillforge, /saved, /profile,
+                        /dashboard, /login, /signup, /api/*
+components/              UI, grouped by feature (discovery, accelerate, auth, onboarding, roadmap,
+                        skillforge, profile, ui)
 lib/
   matching/              Deterministic career-matching engine
   gap-analysis/          Deterministic gap-analysis engine
@@ -63,33 +66,41 @@ lib/
   skillforge/             Mastery math, readiness checks, root-cause diagnosis, next-best-action
   resume/                 PDF text extraction, AI + heuristic structured extraction
   ai/                     Server-only Anthropic client
-  storage/                localStorage abstraction (the only place that touches window.localStorage)
-services/                Per-domain CRUD over the storage layer (profile, roadmap, SkillForge)
+  supabase/               Server/browser/admin Supabase clients, session middleware
+  db/                     Drizzle schema, client, and the RLS-enforcement seam
+repositories/            Owns the database — one module per entity group
+services/                Client-side fetch wrappers over app/api/* (profile, roadmap, SkillForge)
+drizzle/                 SQL migrations (schema + Row Level Security policies)
+tests/                   unit/ (pure functions) and integration/ (real Postgres via pglite)
 data/                    Curated career dataset and SkillForge skill-module catalog
 types/                   Shared domain types
-docs/                    Product spec + living "current state" doc
+docs/                    Architecture, database, security, and living "project state" docs
 ```
 
 ## Running locally
 
 ```bash
 npm install
+cp .env.example .env.local
+```
+
+The app builds and runs with zero configuration — every database/AI-backed feature degrades to a clear "not configured" state rather than crashing. For the real experience:
+
+- **Database + auth (Supabase):** create a free project, fill in `.env.local`'s Supabase variables, then `npm run db:migrate && npm run db:seed:reference`. Full steps: [`docs/database.md`](docs/database.md).
+- **AI features** (resume extraction, AI-generated roadmaps, SkillForge assessment grading): set `ANTHROPIC_API_KEY`. Without it, the app runs entirely on its deterministic fallback paths.
+- **No signup needed to look around:** click "Try the demo" on the landing page once `npm run db:seed:demo` has been run.
+
+```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). No database or account needed — a profile is created and stored in your browser's `localStorage`.
-
-AI features (resume extraction, AI-generated roadmaps, SkillForge assessment grading) are optional. Without a key, the app runs entirely on its deterministic fallback paths:
+Open [http://localhost:3000](http://localhost:3000).
 
 ```bash
-cp .env.example .env.local
-# then set ANTHROPIC_API_KEY=... if you want the AI-backed paths
-```
-
-```bash
-npm run build      # production build
-npx tsc --noEmit   # type check
-npm run lint       # lint
+npm run build       # production build
+npm run typecheck   # type check
+npm run lint        # lint
+npm test            # unit + integration tests
 ```
 
 ## License

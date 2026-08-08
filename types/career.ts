@@ -127,6 +127,44 @@ export interface CareerMatch {
   strengths: string[];
 }
 
+export type CareerFitComponentKey =
+  | "skillMatch"
+  | "experienceMatch"
+  | "educationMatch"
+  | "projectEvidence"
+  | "interestAlignment"
+  | "preferenceAlignment"
+  | "roleRequirements";
+
+/** One weighted dimension of a `CareerFitBreakdown` — see `lib/matching/career-fit.ts`. */
+export interface CareerFitComponentScore {
+  key: CareerFitComponentKey;
+  label: string;
+  /** 0-100. */
+  score: number;
+  /** Relative weight this component carries toward `overallScore`; all seven weights across a breakdown sum to 100. */
+  weight: number;
+  evidence: string[];
+}
+
+/**
+ * A full, explainable career-fit report for one student profile against one
+ * curated career: the recruiter-visible "why this score" breakdown —
+ * component scores, the concrete evidence behind each, and plain strengths/
+ * gaps. `overallScore` is a deterministic weighted average of `components`,
+ * never an LLM-generated number (see `lib/matching/career-fit.ts`).
+ */
+export interface CareerFitBreakdown {
+  careerId: string;
+  careerTitle: string;
+  overallScore: number;
+  components: CareerFitComponentScore[];
+  strengths: string[];
+  gaps: string[];
+  /** Deterministic template text summarizing the score — not AI-generated (see CLAUDE.md's deterministic-vs-AI rule). */
+  explanation: string;
+}
+
 /** Loose lookup so free-text target-career values still resolve to structured data where possible. */
 export function findCareerByTitle(careers: Career[], title: string): Career | null {
   const normalized = title.trim().toLowerCase();

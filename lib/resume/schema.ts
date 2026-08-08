@@ -40,6 +40,7 @@ const ProjectRecordSchema = z.object({
   date: z.string().nullable(),
   summary: z.string().nullable(),
   bullets: z.array(z.string()).max(8),
+  githubUrl: z.string().nullable(),
 });
 
 const AwardRecordSchema = z.object({
@@ -138,8 +139,9 @@ export const RESUME_EXTRACTION_JSON_SCHEMA = {
           date: nullableString,
           summary: nullableString,
           bullets: { ...stringArray, description: "Same consolidation rules as experience bullets." },
+          githubUrl: { ...nullableString, description: "A GitHub repository URL for this project, ONLY if one literally appears in the text near this project — never guess or construct one." },
         },
-        required: ["id", "title", "technologies", "date", "summary", "bullets"],
+        required: ["id", "title", "technologies", "date", "summary", "bullets", "githubUrl"],
       },
     },
     awards: {

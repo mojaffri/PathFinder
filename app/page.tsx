@@ -1,5 +1,6 @@
 import { Compass, Rocket, Map, SearchCheck, Target } from "lucide-react";
 import { PathCard } from "@/components/landing/path-card";
+import { TryDemoButton } from "@/components/landing/try-demo-button";
 
 const HOW_IT_WORKS = [
   {
@@ -39,6 +40,12 @@ export default function HomePage() {
           strong match, and helps students who already know their target become genuinely
           competitive for it, across engineering, tech, law, medicine, business, and beyond.
         </p>
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <TryDemoButton size="lg" />
+          <p className="text-xs text-muted-foreground">
+            No signup — explore a fully populated profile, roadmap, and SkillForge progress.
+          </p>
+        </div>
       </section>
 
       <section className="grid gap-6 pb-24 sm:grid-cols-2">

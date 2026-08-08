@@ -197,6 +197,13 @@ export function ProjectSection({
               placeholder="Python, React, PostgreSQL"
             />
           </Field>
+          <Field label="GitHub URL (optional — links this project to a repository analysis)">
+            <Input
+              value={record.githubUrl ?? ""}
+              onChange={(e) => update({ githubUrl: e.target.value || null })}
+              placeholder="https://github.com/username/repo"
+            />
+          </Field>
           <Field label="Bullet points (one per line)">
             <Textarea
               rows={4}

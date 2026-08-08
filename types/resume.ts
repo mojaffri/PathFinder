@@ -22,3 +22,23 @@ export interface ResumeProfileData {
   extractionMethod: "ai" | "heuristic";
   followUpQuestions: string[];
 }
+
+/** `POST /api/resume`'s response — the extracted data plus the id of the resume row it was persisted as, so the upload flow can reference it later (re-analysis, evidence linking) without a second round trip. */
+export interface ResumeUploadResult extends ResumeProfileData {
+  resumeId: string;
+}
+
+export type ResumeFileType = "pdf" | "docx";
+
+/** One uploaded resume, as tracked in upload history — deliberately excludes `rawText`/`storagePath` (fetched only when actually needed, e.g. re-analysis or download). */
+export interface ResumeVersion {
+  id: string;
+  fileName: string | null;
+  fileType: ResumeFileType | null;
+  fileSizeBytes: number | null;
+  extractionMethod: "ai" | "heuristic";
+  extractionConfidence: "low" | "medium" | "high" | null;
+  isActive: boolean;
+  hasStoredFile: boolean;
+  uploadedAt: string;
+}

@@ -4,13 +4,14 @@ import { useRef, useState } from "react";
 import { FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import type { ResumeProfileData } from "@/types";
+import { uploadResume } from "@/services/resume-service";
+import type { ResumeUploadResult } from "@/types";
 
 export function ResumeUpload({
   onExtracted,
   onSkip,
 }: {
-  onExtracted: (data: ResumeProfileData) => void;
+  onExtracted: (data: ResumeUploadResult) => void;
   onSkip: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -24,20 +25,10 @@ export function ResumeUpload({
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("resume", file);
-
-      const response = await fetch("/api/resume", { method: "POST", body: formData });
-      const body = await response.json();
-
-      if (!response.ok) {
-        setError(body.error ?? "Something went wrong parsing that resume.");
-        return;
-      }
-
-      onExtracted(body as ResumeProfileData);
-    } catch {
-      setError("Couldn't reach the server. Check your connection and try again.");
+      const data = await uploadResume(file);
+      onExtracted(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong parsing that resume.");
     } finally {
       setIsUploading(false);
     }
@@ -52,14 +43,14 @@ export function ResumeUpload({
         <h2 className="text-lg font-semibold text-foreground">Upload your resume</h2>
         <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
           We&apos;ll pull out your education, skills, and experience, and you&apos;ll be able to review and
-          correct everything before it&apos;s used.
+          correct everything before it&apos;s used. PDF or DOCX, up to 8MB.
         </p>
       </div>
 
       <input
         ref={inputRef}
         type="file"
-        accept="application/pdf"
+        accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
         className="hidden"
         onChange={(e) => {
           setFile(e.target.files?.[0] ?? null);
@@ -74,7 +65,7 @@ export function ResumeUpload({
         </div>
       ) : (
         <Button variant="secondary" onClick={() => inputRef.current?.click()}>
-          Choose PDF file
+          Choose PDF or DOCX file
         </Button>
       )}
 

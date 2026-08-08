@@ -37,6 +37,7 @@ const ProjectRecordSchema = z.object({
   date: z.string().nullable(),
   summary: z.string().nullable(),
   bullets: z.array(z.string()),
+  githubUrl: z.string().nullable(),
 });
 
 const AwardRecordSchema = z.object({

@@ -107,6 +107,14 @@ export interface GpaInfo {
 
 export const EMPTY_GPA: GpaInfo = { raw: null, scale: "4.0", normalized4: null };
 
+export type EmploymentPreference = "internship" | "full-time" | "either";
+
+export const EMPLOYMENT_PREFERENCES: { value: EmploymentPreference; label: string }[] = [
+  { value: "internship", label: "Internship" },
+  { value: "full-time", label: "Full-time" },
+  { value: "either", label: "Either" },
+];
+
 export interface StudentProfile {
   id: string;
   name: string;
@@ -130,6 +138,14 @@ export interface StudentProfile {
   careerGoals: string;
   workPreferences: WorkPreferences;
   weeklyHoursAvailable: number | null;
+  preferredLocations: string[];
+  employmentPreference: EmploymentPreference | null;
+  /** "I want to be job-ready by" — a target the student sets for themselves, not used in any scoring. */
+  targetDate: string | null;
+  /** Set once the onboarding wizard's final step is submitted — see `services/profile-service.ts#completeOnboarding`. */
+  onboardingCompletedAt: string | null;
+  /** True only for the seeded showcase account (`scripts/seed-demo.ts`) — never set by any user-facing action. */
+  isDemo: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -156,38 +172,13 @@ export function createEmptyProfile(name: string): StudentProfile {
     careerGoals: "",
     workPreferences: DEFAULT_WORK_PREFERENCES,
     weeklyHoursAvailable: null,
+    preferredLocations: [],
+    employmentPreference: null,
+    targetDate: null,
+    onboardingCompletedAt: null,
+    isDemo: false,
     createdAt: now,
     updatedAt: now,
-  };
-}
-
-/**
- * Backfills any field missing from a persisted profile with a safe empty
- * default. Profiles are read straight out of localStorage as untyped JSON,
- * so a record saved before a field (e.g. `targetCareers`) existed on
- * `StudentProfile` would otherwise deserialize with that field `undefined` —
- * crashing every downstream `.length`/`.map`/`.includes` call on it. Called
- * once at the storage boundary so every consumer can trust the full shape.
- */
-export function normalizeProfile(raw: StudentProfile): StudentProfile {
-  const empty = createEmptyProfile(raw.name ?? "");
-  return {
-    ...empty,
-    ...raw,
-    gpa: { ...empty.gpa, ...raw.gpa },
-    education: raw.education ?? empty.education,
-    targetCareers: raw.targetCareers ?? empty.targetCareers,
-    currentSkills: raw.currentSkills ?? empty.currentSkills,
-    interests: raw.interests ?? empty.interests,
-    experience: raw.experience ?? empty.experience,
-    projects: raw.projects ?? empty.projects,
-    awards: raw.awards ?? empty.awards,
-    certifications: raw.certifications ?? empty.certifications,
-    workPreferences: {
-      ...empty.workPreferences,
-      ...raw.workPreferences,
-      environments: raw.workPreferences?.environments ?? empty.workPreferences.environments,
-    },
   };
 }
 

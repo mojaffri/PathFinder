@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Compass, LayoutDashboard, Menu, Rocket, Bookmark, Hammer, User, X } from "lucide-react";
+import { Compass, LayoutDashboard, Menu, Rocket, Bookmark, Hammer, Briefcase, FolderGit2, User, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/use-profile";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ const NAV_LINKS = [
   { href: "/discover", label: "Discover", icon: Compass },
   { href: "/accelerate", label: "Accelerate", icon: Rocket },
   { href: "/skillforge", label: "SkillForge", icon: Hammer },
+  { href: "/projects", label: "Projects", icon: FolderGit2 },
+  { href: "/jobs", label: "Job Fit", icon: Briefcase },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/saved", label: "Saved", icon: Bookmark },
 ];
@@ -57,6 +59,9 @@ export function Navbar() {
             >
               <User className="h-4 w-4" />
               {profile.name}
+              {profile.isDemo && (
+                <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">Demo</span>
+              )}
             </Link>
           ) : (
             <Link href="/profile">

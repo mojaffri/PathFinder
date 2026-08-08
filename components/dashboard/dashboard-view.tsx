@@ -19,10 +19,14 @@ export function DashboardView() {
   const [roadmaps, setRoadmaps] = useState<SavedRoadmap[]>([]);
 
   useEffect(() => {
-    // Reading localStorage-backed roadmaps during render would mismatch SSR
-    // output, so we read once the profile is available on the client.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (profile) setRoadmaps(getRoadmaps(profile.id));
+    if (!profile) return;
+    let cancelled = false;
+    getRoadmaps().then((r) => {
+      if (!cancelled) setRoadmaps(r);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [profile]);
 
   if (isLoading) {
@@ -33,17 +37,36 @@ export function DashboardView() {
     );
   }
 
-  if (!profile || !isAuthenticated) {
+  if (!isAuthenticated) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-16 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Create a profile to see your dashboard
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Your profile, saved roadmaps, and progress will show up here.
-        </p>
-        <Link href="/profile" className="mt-6 inline-block">
-          <Button>Get started</Button>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Sign in to see your dashboard</h1>
+        <Link href="/login?redirectTo=/dashboard" className="mt-6 inline-block">
+          <Button>Sign in</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="mx-auto max-w-2xl px-6 py-16 text-center">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Let&apos;s set up your profile</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Your profile, saved roadmaps, and progress will show up here.</p>
+        <Link href="/onboarding" className="mt-6 inline-block">
+          <Button>Start onboarding</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (!profile.onboardingCompletedAt) {
+    return (
+      <div className="mx-auto max-w-2xl px-6 py-16 text-center">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Finish setting up, {profile.name || "there"}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">You started onboarding but didn&apos;t finish — pick up where you left off.</p>
+        <Link href="/onboarding" className="mt-6 inline-block">
+          <Button>Resume onboarding</Button>
         </Link>
       </div>
     );
@@ -54,6 +77,11 @@ export function DashboardView() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
+      {profile.isDemo && (
+        <div className="mb-6 rounded-md border border-accent bg-accent/30 px-4 py-3 text-sm text-accent-foreground">
+          You&apos;re viewing the shared demo account — this data is seeded and reset periodically, not real.
+        </div>
+      )}
       <h1 className="text-2xl font-semibold tracking-tight text-foreground">Welcome back, {profile.name}</h1>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">

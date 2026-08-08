@@ -2,7 +2,7 @@
 
 SkillForge is PathFinder's **adaptive competency engine**. Where Discover answers "where should I go" and Accelerate answers "what's my plan," SkillForge answers "how do I actually get good at this" — it takes a student from their current demonstrated ability to genuine, evidenced practical proficiency in a skill relevant to their target career.
 
-This document describes the intended V1 product. For what is actually implemented right now vs. still missing, see [`CURRENT_STATE.md`](./CURRENT_STATE.md) — that file is the authoritative status; this file is the authoritative *design intent*.
+This document describes the intended V1 product. For what is actually implemented right now vs. still missing, see [`project-state.md`](./project-state.md) — that file is the authoritative status; this file is the authoritative *design intent*.
 
 ## Core philosophy
 

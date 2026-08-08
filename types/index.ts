@@ -3,5 +3,8 @@ export * from "./profile";
 export * from "./questionnaire";
 export * from "./career";
 export * from "./resume";
+export * from "./job";
+export * from "./evidence";
+export * from "./github";
 export * from "./roadmap";
 export * from "./skillforge";
