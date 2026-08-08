@@ -1,4 +1,4 @@
-import { ANTHROPIC_MODEL, getAnthropicClient } from "@/lib/ai/anthropic-client";
+import { requestStructuredAI } from "@/lib/ai/structured-output";
 import { AI_ROADMAP_JSON_SCHEMA, AIRoadmapContentSchema, type AIRoadmapContent, type RoadmapRequest } from "./schema";
 import { formatGpa } from "@/lib/gpa";
 import { resolvePlaybooksForCareers } from "./playbooks";
@@ -140,29 +140,18 @@ export async function generateRoadmapWithAI(
   resolvedCareers: ResolvedCareer[],
   gapAnalysis: GapAnalysis,
 ): Promise<AIRoadmapContent | null> {
-  const client = getAnthropicClient();
-  if (!client) return null;
-
   try {
-    const response = await client.messages.create({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 8000,
-      tools: [
-        {
-          name: TOOL_NAME,
-          description: "Generate a structured career acceleration roadmap.",
-          input_schema: AI_ROADMAP_JSON_SCHEMA,
-        },
-      ],
-      tool_choice: { type: "tool", name: TOOL_NAME },
-      messages: [{ role: "user", content: buildPrompt(request, resolvedCareers, gapAnalysis) }],
+    const result = await requestStructuredAI({
+      feature: "roadmap-generation",
+      schema: AIRoadmapContentSchema,
+      toolSchema: AI_ROADMAP_JSON_SCHEMA,
+      toolName: TOOL_NAME,
+      toolDescription: "Generate a structured career acceleration roadmap.",
+      prompt: buildPrompt(request, resolvedCareers, gapAnalysis),
+      maxTokens: 8000,
+      timeoutMs: 35_000,
     });
-
-    const toolUse = response.content.find((block) => block.type === "tool_use");
-    if (!toolUse || toolUse.type !== "tool_use") return null;
-
-    const parsed = AIRoadmapContentSchema.safeParse(toolUse.input);
-    return parsed.success ? parsed.data : null;
+    return result.data;
   } catch {
     return null;
   }
