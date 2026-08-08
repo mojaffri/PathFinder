@@ -1,6 +1,6 @@
 import { STORAGE_KEYS } from "@/lib/storage/keys";
 import { readJSON, writeJSON } from "@/lib/storage/local-storage";
-import { computeConfidence, computeMasteryLevel, evidenceStrengthFromScore, EVIDENCE_STRENGTH_SCORE } from "@/lib/skillforge/mastery";
+import { computeAssessmentSignal, computeMasteryLevel, evidenceStrengthFromScore, EVIDENCE_STRENGTH_SCORE } from "@/lib/skillforge/mastery";
 import type {
   MasteryDimensionScores,
   ProjectChallengeStatus,
@@ -122,8 +122,9 @@ function recomputeMastery(progress: SkillProgress, module: SkillModule): SkillPr
   const evaluatedAttempts = progress.attempts.filter(
     (a): a is SkillAttempt & { evaluation: SkillEvaluationResult } => a.evaluation !== null,
   );
-  const knowledgeFromEvaluation = evaluatedAttempts.length > 0 ? Math.max(...evaluatedAttempts.map((a) => a.evaluation.knowledgeScore)) : 0;
-  const abilityFromEvaluation = evaluatedAttempts.length > 0 ? Math.max(...evaluatedAttempts.map((a) => a.evaluation.abilityScore)) : 0;
+  const assessmentSignal = computeAssessmentSignal(evaluatedAttempts);
+  const knowledgeFromEvaluation = assessmentSignal.knowledge;
+  const abilityFromEvaluation = assessmentSignal.ability;
 
   const knowledge = Math.max(knowledgeFromCompletion, knowledgeFromEvaluation);
   const ability = Math.max(abilityFromCompletion, abilityFromProjects, abilityFromEvaluation);
@@ -141,7 +142,7 @@ function recomputeMastery(progress: SkillProgress, module: SkillModule): SkillPr
 
   const dimensions: MasteryDimensionScores = { knowledge, ability, evidence: evidenceScore, interview };
   const level = computeMasteryLevel(dimensions);
-  const confidence = computeConfidence(evaluatedAttempts.length);
+  const confidence = assessmentSignal.confidence;
 
   return {
     ...progress,
@@ -265,6 +266,8 @@ export function recordAttempt(
     id: crypto.randomUUID(),
     skillId: module.id,
     stage,
+    assessmentId: stage === "diagnostic" ? module.diagnostic.id : module.assessment.id,
+    attemptNumber: current.attempts.filter((item) => item.stage === stage).length + 1,
     startedAt: now,
     completedAt: now,
     responses,
