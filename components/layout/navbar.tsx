@@ -28,7 +28,7 @@ export function Navbar() {
           PathFinder
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Primary navigation" className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname?.startsWith(`${href}/`);
             return (
@@ -68,6 +68,8 @@ export function Navbar() {
         <button
           type="button"
           aria-label="Toggle menu"
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-navigation"
           className="flex h-9 w-9 items-center justify-center rounded-md text-foreground md:hidden"
           onClick={() => setMobileOpen((v) => !v)}
         >
@@ -76,7 +78,7 @@ export function Navbar() {
       </div>
 
       {mobileOpen && (
-        <nav className="border-t border-border px-6 py-3 md:hidden">
+        <nav id="mobile-navigation" aria-label="Mobile navigation" className="border-t border-border px-6 py-3 md:hidden">
           <div className="flex flex-col gap-1">
             {NAV_LINKS.map(({ href, label, icon: Icon }) => (
               <Link
