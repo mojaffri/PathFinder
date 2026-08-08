@@ -1,4 +1,4 @@
-import { ANTHROPIC_MODEL, getAnthropicClient } from "@/lib/ai/anthropic-client";
+import { requestStructuredAI } from "@/lib/ai/structured-output";
 import { RESUME_EXTRACTION_JSON_SCHEMA, ResumeExtractionSchema, type ResumeExtraction } from "./schema";
 
 const TOOL_NAME = "extract_resume_data";
@@ -9,25 +9,16 @@ const TOOL_NAME = "extract_resume_data";
  * callers are expected to fall back to the heuristic extractor in that case.
  */
 export async function extractResumeDataWithAI(rawText: string): Promise<ResumeExtraction | null> {
-  const client = getAnthropicClient();
-  if (!client) return null;
-
   try {
-    const response = await client.messages.create({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 4000,
-      tools: [
-        {
-          name: TOOL_NAME,
-          description: "Extract structured fields from resume text.",
-          input_schema: RESUME_EXTRACTION_JSON_SCHEMA,
-        },
-      ],
-      tool_choice: { type: "tool", name: TOOL_NAME },
-      messages: [
-        {
-          role: "user",
-          content: `Extract and consolidate structured information from this resume text into Education, Experience, Projects, Awards, Certifications, and Skills.
+    const result = await requestStructuredAI({
+      feature: "resume-extraction",
+      schema: ResumeExtractionSchema,
+      toolSchema: RESUME_EXTRACTION_JSON_SCHEMA,
+      toolName: TOOL_NAME,
+      toolDescription: "Extract structured fields from resume text.",
+      maxTokens: 4000,
+      timeoutMs: 25_000,
+      prompt: `Extract and consolidate structured information from this resume text into Education, Experience, Projects, Awards, Certifications, and Skills.
 
 Rules:
 - Only include information actually present in the text — use null for fields not found, and empty arrays for sections not present. Do not infer or invent details.
@@ -46,15 +37,8 @@ Rules:
 ---
 ${rawText.slice(0, 14000)}
 ---`,
-        },
-      ],
     });
-
-    const toolUse = response.content.find((block) => block.type === "tool_use");
-    if (!toolUse || toolUse.type !== "tool_use") return null;
-
-    const parsed = ResumeExtractionSchema.safeParse(toolUse.input);
-    return parsed.success ? parsed.data : null;
+    return result.data;
   } catch {
     return null;
   }
