@@ -197,11 +197,20 @@ export function ProjectSection({
               placeholder="Python, React, PostgreSQL"
             />
           </Field>
-          <Field label="Bullet points (one per line)">
+          <Field label="Summary (optional)">
+            <Textarea
+              rows={2}
+              value={record.summary ?? ""}
+              onChange={(e) => update({ summary: e.target.value || null })}
+              placeholder="One-sentence overview of what the project does."
+            />
+          </Field>
+          <Field label="Description / bullet points (one per line)">
             <Textarea
               rows={4}
               value={bulletsToText(record.bullets)}
               onChange={(e) => update({ bullets: textToBullets(e.target.value) })}
+              placeholder="Built the core feature...\nImplemented authentication...\nhttps://github.com/you/project"
             />
           </Field>
         </>
