@@ -14,6 +14,7 @@ The repository is the source of truth. PathFinder currently includes Discover, A
 - AI calls have timeouts, malformed-output retries, typed failures, Zod validation, metadata-only observability, fallback behavior, endpoint rate limiting, and request-size guards.
 - Offline tests cover deterministic grading, mastery signals, provider abstraction, malformed retry, timeout, and missing-provider fallback.
 - Resume normalization restores section headings that PDF extraction appends to the previous line, and the heuristic parser splits dateless projects using title/repository/bullet boundaries so each project retains only its own description.
+- AI and heuristic results now share a defensive record-normalization pass. Orphan action sentences are merged into the preceding project, inline URLs move out of titles into that project's description, repeated bullets are removed, more common resume section names are recognized, and project summaries are visible/editable in review.
 - Skill detail pages now present a five-stage Diagnose â†’ Learn â†’ Practice â†’ Build â†’ Prove flow instead of displaying every activity at once. Python engineering diagnostics and mastery checks use accessible, deterministic multiple-choice cards; project evidence remains a separate mastery signal.
 
 ## Known limitations
