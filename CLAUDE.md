@@ -29,6 +29,15 @@ Every recommendation/milestone carries a real `estimatedHours` figure. Actual pa
 - Keep career matching deterministic/explainable — do not replace it with an LLM call.
 - Treat resume-extracted data as unverified until the student confirms it in the review UI.
 
+## Durable AI and assessment conventions
+
+- All provider SDK access belongs in `lib/ai/*`; feature code must use `requestStructuredAI()` and must not instantiate Anthropic directly.
+- Every AI feature requires a tool/JSON schema, Zod validation, timeout, malformed-output retry, typed failure, metadata-only telemetry, and a non-crashing fallback.
+- Never log prompts, resumes, student answers, or generated content. AI telemetry is operational metadata only.
+- SkillForge grades deterministic formats without AI. Open responses use the versioned rubric documented in `docs/assessments.md`; only validated structured results may affect mastery.
+- Skill mastery is deterministic and derives from repeated/recency-weighted attempts, projects, evidence, and interview state. Do not let AI assign mastery levels directly.
+- Regression tests use Node's built-in runner through `npm test`; CI must not call a live AI provider.
+
 ## Known environment quirk
 
 OneDrive occasionally re-syncs a stray duplicate `pathfinder/pathfinder/` scaffold folder (with its own `node_modules`) inside this repo. It pollutes `eslint`/`tsc`/`next build` output if present. Check for it and delete it before running any validation command:

@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".test-build",
+    "rootDir": ".",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2022",
+    "incremental": false,
+    "verbatimModuleSyntax": false
+  },
+  "include": ["tests/**/*.ts", "lib/ai/**/*.ts", "lib/skillforge/deterministic-grader.ts", "lib/skillforge/mastery.ts", "types/skillforge.ts", "types/career.ts", "types/profile.ts", "types/records.ts", "types/roadmap.ts"],
+  "exclude": ["node_modules"]
+}
