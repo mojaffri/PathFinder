@@ -44,6 +44,7 @@ const SECTION_HEADERS: Record<string, "experience" | "projects" | "awards" | "ce
   LEADERSHIP: "experience",
   "LEADERSHIP EXPERIENCE": "experience",
   ACTIVITIES: "experience",
+  "ACTIVITIES LEADERSHIP": "experience",
   "LEADERSHIP ACTIVITIES": "experience",
   PROJECT: "projects",
   PROJECTS: "projects",
@@ -311,7 +312,7 @@ function parseExperienceEntries(lines: string[], idPrefix: string): ExperienceRe
 }
 
 function parseProjectEntries(lines: string[], idPrefix: string): ProjectRecord[] {
-  return splitIntoEntries(lines)
+  return splitProjectEntries(lines)
     .slice(0, 8)
     .map((entry, i) => {
       const { endDate, titleWithoutDates } = extractDateRange(entry.headerLine);
@@ -327,6 +328,37 @@ function parseProjectEntries(lines: string[], idPrefix: string): ProjectRecord[]
         bullets: bullets.slice(0, 8),
       };
     });
+}
+
+function isProjectUrl(line: string): boolean {
+  return /^(?:https?:\/\/|www\.)/i.test(stripBullet(line));
+}
+
+function looksLikeProjectTitle(line: string, nextLine: string | undefined): boolean {
+  if (/^[-â€¢*â€¢]/.test(line)) return false;
+  const clean = stripBullet(line);
+  if (!clean || isProjectUrl(clean) || hasDateSignal(clean) || clean.length > 120) return false;
+  if (nextLine && (isProjectUrl(nextLine) || /^[-â€¢*â€¢]/.test(nextLine))) return true;
+  return /(?:project|app|application|dashboard|platform|model|tool|game|website|system|analysis|portfolio)/i.test(clean);
+}
+
+/** Project sections often omit dates. Treat a title followed by a repository
+ * URL or bullet as a boundary and keep its body attached until the next title. */
+function splitProjectEntries(lines: string[]): { headerLine: string; bodyLines: string[] }[] {
+  if (lines.some(hasDateSignal)) return splitIntoEntries(lines);
+
+  const entries: { headerLine: string; bodyLines: string[] }[] = [];
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index].trim();
+    if (!line) continue;
+    const nextLine = lines[index + 1]?.trim();
+    const startsProject = looksLikeProjectTitle(line, nextLine) &&
+      (entries.length === 0 || entries[entries.length - 1].bodyLines.length > 0);
+
+    if (startsProject || entries.length === 0) entries.push({ headerLine: stripBullet(line), bodyLines: [] });
+    else entries[entries.length - 1].bodyLines.push(line);
+  }
+  return entries;
 }
 
 /**
