@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { Select } from "@/components/ui/select";
 import { recordAttempt } from "@/services/skillforge-service";
 import { diagnoseWeakConcept } from "@/lib/skillforge/diagnosis";
 import { cn } from "@/lib/utils";
@@ -67,6 +68,8 @@ export function SkillCheckPanel({
       answer: (answers[q.id] ?? "").trim(),
     }));
 
+    if (responses.some((response) => response.answer.length === 0)) return;
+
     setState("submitting");
 
     let evaluation: SkillEvaluationResult | null = null;
@@ -77,10 +80,6 @@ export function SkillCheckPanel({
         body: JSON.stringify({
           skillId: skillModule.id,
           stage,
-          moduleName: skillModule.name,
-          moduleDescription: skillModule.description,
-          concepts: skillModule.concepts,
-          questions,
           responses,
         }),
       });
@@ -109,7 +108,8 @@ export function SkillCheckPanel({
 
     return (
       <div className="flex flex-col gap-4">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <ScoreTile label="Overall" value={result.overallScore} />
           <ScoreTile label="Knowledge" value={result.knowledgeScore} />
           <ScoreTile label="Ability" value={result.abilityScore} />
         </div>
@@ -211,17 +211,30 @@ export function SkillCheckPanel({
       {questions.map((q) => (
         <div key={q.id}>
           <Label htmlFor={`q-${q.id}`}>{q.prompt}</Label>
-          <Textarea
-            id={`q-${q.id}`}
-            className="mt-1.5"
-            value={answers[q.id] ?? ""}
-            onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-            disabled={state === "submitting"}
-          />
+          {q.options?.length ? (
+            <Select id={`q-${q.id}`} className="mt-1.5" value={answers[q.id] ?? ""} onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))} disabled={state === "submitting"} required>
+              <option value="">Choose an answer</option>
+              {q.options.map((option) => <option key={option} value={option}>{option}</option>)}
+            </Select>
+          ) : (
+            <Textarea
+              id={`q-${q.id}`}
+              className="mt-1.5"
+              value={answers[q.id] ?? ""}
+              onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
+              disabled={state === "submitting"}
+              maxLength={4000}
+              required
+            />
+          )}
         </div>
       ))}
       <div>
-        <Button type="button" onClick={submit} disabled={state === "submitting"}>
+        <Button
+          type="button"
+          onClick={submit}
+          disabled={state === "submitting" || questions.some((q) => !(answers[q.id] ?? "").trim())}
+        >
           {state === "submitting" ? (
             <>
               <Spinner className="h-4 w-4" />

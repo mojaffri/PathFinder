@@ -482,6 +482,33 @@ function SkillDetailBody({
         </CardContent>
       </Card>
 
+      {progress.attempts.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-base">Assessment progress</CardTitle>
+            <p className="text-sm text-muted-foreground">Every attempt is preserved. Recent repeated performance drives mastery confidence.</p>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {[...progress.attempts].reverse().map((attempt, reverseIndex) => (
+              <div key={attempt.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-surface p-3 text-sm">
+                <div>
+                  <p className="font-medium text-foreground">
+                    {attempt.stage === "diagnostic" ? "Diagnostic" : "Mastery assessment"} attempt {attempt.attemptNumber ?? progress.attempts.length - reverseIndex}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{new Date(attempt.completedAt).toLocaleDateString()}</p>
+                </div>
+                {attempt.evaluation ? (
+                  <div className="text-right">
+                    <p className="font-semibold text-foreground">{attempt.evaluation.overallScore ?? Math.round((attempt.evaluation.knowledgeScore + attempt.evaluation.abilityScore) / 2)}%</p>
+                    <p className="text-xs text-muted-foreground">{attempt.evaluation.passed ? "Passed" : "Review recommended"}</p>
+                  </div>
+                ) : <Badge variant="neutral">Saved, awaiting grade</Badge>}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="text-base">Evidence</CardTitle>
