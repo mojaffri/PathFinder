@@ -138,6 +138,11 @@ export interface AssessmentQuestion {
   id: string;
   conceptId: string;
   prompt: string;
+  /** Omitted on legacy catalog entries and treated as an AI-graded open response. */
+  kind?: "multiple-choice" | "true-false" | "code-output" | "structured-response" | "open-response";
+  options?: string[];
+  correctAnswer?: string;
+  acceptedAnswers?: string[];
 }
 
 /**
@@ -186,6 +191,26 @@ export interface SkillEvaluationResult {
   weaknesses: string[];
   weakestConceptId: string | null;
   recommendedNextStep: string;
+  overallScore: number;
+  passed: boolean;
+  dimensionScores: AssessmentDimensionScores;
+  weakConceptIds: string[];
+  gradingMetadata: AssessmentGradingMetadata;
+}
+
+export interface AssessmentDimensionScores {
+  accuracy: number;
+  reasoning: number;
+  application: number;
+  communication: number;
+}
+
+export interface AssessmentGradingMetadata {
+  method: "deterministic" | "ai-assisted" | "hybrid";
+  rubricVersion: string;
+  provider: string | null;
+  model: string | null;
+  retries: number;
 }
 
 export interface SkillEvidence {
@@ -262,6 +287,8 @@ export interface SkillAttempt {
   id: string;
   skillId: string;
   stage: "diagnostic" | "assessment";
+  assessmentId: string;
+  attemptNumber: number;
   startedAt: string;
   completedAt: string;
   responses: SkillAttemptResponse[];
