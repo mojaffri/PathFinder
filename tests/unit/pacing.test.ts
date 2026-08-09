@@ -63,7 +63,6 @@ describe("computePhaseTimelines", () => {
 
   it("never produces a zero-or-negative-length window even for a tiny phase", () => {
     const timelines = computePhaseTimelines([1], 40);
-    const [, start, end] = timelines[0].match(/Months (\d+)-(\d+)/) ?? [];
-    expect(Number(end)).toBeGreaterThan(Number(start));
+    expect(timelines[0]).toBe("Month 1");
   });
 });

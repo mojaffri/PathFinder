@@ -4,6 +4,7 @@ import { extractResumeDataHeuristically } from "@/lib/resume/heuristic-extractor
 import { extractTextFromPdf } from "@/lib/resume/pdf-text";
 import { extractTextFromDocx } from "@/lib/resume/docx-text";
 import { reassembleLines } from "@/lib/resume/text-normalize";
+import { normalizeResumeExtraction } from "@/lib/resume/normalize-extraction";
 import { validateExtraction } from "@/lib/resume/validate-extraction";
 import { MAX_RESUME_FILE_SIZE, validateResumeFile } from "@/lib/resume/file-validation";
 import { withDbErrorHandling } from "@/lib/api/with-db-error-handling";
@@ -71,7 +72,9 @@ export async function POST(request: Request) {
     const normalizedText = reassembleLines(rawText);
 
     const aiResult = await extractResumeDataWithAI(normalizedText);
-    const extraction = validateExtraction(aiResult ?? extractResumeDataHeuristically(normalizedText));
+    const extraction = validateExtraction(
+      normalizeResumeExtraction(aiResult ?? extractResumeDataHeuristically(normalizedText)),
+    );
     const extractionMethod: "ai" | "heuristic" = aiResult ? "ai" : "heuristic";
 
     const { id: resumeId, profileId } = await saveResume(user.id, {

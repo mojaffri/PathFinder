@@ -29,8 +29,23 @@ const TERMINAL_PUNCTUATION_RE = /[.!?:;]$/;
 const TRAILING_CONNECTOR_RE = /\b(a|an|the|of|in|on|at|for|and|or|to|with|as|from|by)$/i;
 const HYPHEN_WRAP_RE = /[a-z]-$/;
 
+// PDF extractors sometimes place the next all-caps section heading at the
+// end of the previous bullet instead of on its own line. Restore those hard
+// boundaries before line reassembly so a project description cannot absorb
+// the following Experience/Leadership/Awards section.
+const INLINE_SECTION_HEADER_RE = new RegExp(
+  `\\s+(${[
+    "EDUCATION", "EXPERIENCE", "WORK EXPERIENCE", "RELEVANT EXPERIENCE", "PROFESSIONAL EXPERIENCE", "RESEARCH EXPERIENCE",
+    "INTERNSHIPS?", "PROJECTS?", "AWARDS(?: & HONORS)?", "HONORS(?: & AWARDS)?",
+    "CERTIFICATIONS?", "TECHNICAL SKILLS", "SKILLS(?: & INTERESTS)?",
+    "ACADEMIC PROJECTS", "PERSONAL PROJECTS", "SELECTED PROJECTS", "TECHNICAL PROJECTS",
+    "ACTIVITIES(?: & LEADERSHIP)?", "EXTRACURRICULAR ACTIVITIES", "LEADERSHIP(?: & ACTIVITIES| EXPERIENCE)?",
+  ].join("|")})(?=\\s|$)`,
+  "g",
+);
+
 function isHardBoundary(line: string): boolean {
-  return line === "" || BULLET_RE.test(line) || HEADER_LIKE_RE.test(line);
+  return line === "" || BULLET_RE.test(line) || HEADER_LIKE_RE.test(line) || /^(?:https?:\/\/|www\.)/i.test(line);
 }
 
 function shouldHyphenMerge(prev: string, next: string): boolean {
@@ -50,7 +65,8 @@ function shouldMerge(prev: string, next: string): boolean {
 }
 
 export function reassembleLines(rawText: string): string {
-  const rawLines = rawText.split(/\r?\n/).map((l) => l.trim());
+  const withRestoredSections = rawText.replace(INLINE_SECTION_HEADER_RE, "\n$1\n");
+  const rawLines = withRestoredSections.split(/\r?\n/).map((l) => l.trim());
   const merged: string[] = [];
 
   for (const line of rawLines) {

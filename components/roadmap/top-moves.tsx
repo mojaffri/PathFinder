@@ -9,7 +9,10 @@ export function TopMoves({ moves, weeklyHoursAvailable }: { moves: TopMove[]; we
   return (
     <Card className="border-primary/30 bg-accent/30">
       <CardHeader>
-        <CardTitle>This month&apos;s top 3 moves</CardTitle>
+        <CardTitle>Your 3 highest-priority moves</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Start in this order. The time estimate reflects your weekly availability, even when a move spans more than one month.
+        </p>
       </CardHeader>
       <CardContent>
         <ol className="flex flex-col gap-4">

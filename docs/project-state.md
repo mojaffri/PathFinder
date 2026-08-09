@@ -40,6 +40,7 @@ The deterministic domain engines remain explainable and storage-agnostic. SkillF
 - **Dashboard and analytics:** `/api/analytics/overview` batches persisted roadmap, assessment, application, job-fit, evidence, and activity data. `/dashboard` is now an actionable command center; `/analytics` displays only recorded history and explicitly refuses synthetic backfill. Demo data is labeled wherever shown.
 - **Security/observability:** authenticated, database-backed rate limits protect resume/job/roadmap/assessment AI paths; auth redirects are same-origin paths only; `instrumentation.ts` and `lib/observability/logger.ts` emit structured, document-free server errors; Vercel Analytics measures page traffic; security headers deny framing/sniffing and restrict browser capabilities.
 - **Product quality:** skip link, `aria-current`, mobile-nav state, reduced-motion support, responsive requirement editing and pipeline overflow, global error/not-found states, desktop/mobile Playwright smoke tests, and axe WCAG A/AA checks. The demo seed now computes saved jobs, fit snapshots, an application, and the adaptive roadmap through real engines/repositories.
+- **Resume and roadmap quality reconciliation:** AI and heuristic resume output now share defensive record normalization before validation/persistence. The narrative roadmap is education-stage-aware across all 46 careers, uses program-verification safeguards for variable admissions requirements, favors externally reviewable evidence over generic activity, and has exhaustive career/stage regression coverage. System fonts remove an external build-time font dependency while preserving the accessibility and analytics layout additions.
 
 **Everything from Phase 1, 2, and session 3 still works**, unchanged: Discover, Accelerate, narrative roadmap generation, SkillForge's full guided-freedom loop, real accounts/auth, onboarding, demo mode, resume upgrade, career-fit scoring, job analysis, evidence-backed skills, GitHub integration. See `docs/architecture.md` §1 and the session summaries further down.
 
@@ -169,7 +170,7 @@ A second, separate roadmap system alongside the narrative `Roadmap` above — se
 
 ## Tests
 
-**198 tests, 29 Vitest files, all passing** (including 36 database integration tests), plus Playwright desktop/mobile smoke and axe accessibility coverage. New regression suites cover saved-job insights, real-only readiness history, safe redirects, full application persistence/stage events/ownership, atomic per-user throttling, structured-AI retry/timeout behavior, deterministic assessment grading, and recency-aware mastery. The detailed historical inventory below remains useful but predates these additions.
+**208 tests, 31 Vitest files, all passing** (including 36 database integration tests), plus Playwright desktop/mobile smoke and axe accessibility coverage. New regression suites cover saved-job insights, real-only readiness history, safe redirects, full application persistence/stage events/ownership, atomic per-user throttling, structured-AI retry/timeout behavior, deterministic assessment grading, recency-aware mastery, resume-layout normalization, and exhaustive career/stage roadmap quality. The detailed historical inventory below remains useful but predates these additions.
 
 Unit (pure functions, no DB) — `tests/unit/`:
 - `mastery.test.ts` (11), `pacing.test.ts` (8) — unchanged from Phase 1.
@@ -309,7 +310,7 @@ Run 2026-08-09 (session 5), this exact repository state before deployment:
 ```text
 npm run lint             → clean
 npm run typecheck        → clean
-npm test                 → 198 passed (29 files, including 36 integration)
+npm test                 → 208 passed (31 files, including 36 integration)
 npm run test:e2e         → 5 passed desktop/mobile public + axe checks; 5 real-demo checks skipped locally because Supabase/demo credentials are intentionally absent
 npm run build            → clean (Next.js 16.3.0, 42 routes/pages)
 npm audit --omit=dev     → 0 vulnerabilities

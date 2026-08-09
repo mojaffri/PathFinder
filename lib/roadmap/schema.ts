@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { EDUCATION_STAGES, type EducationStage } from "../../types/profile";
 
 const RatingScaleSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]);
 
@@ -58,7 +59,7 @@ const CertificationRecordSchema = z.object({
 export const RoadmapRequestSchema = z.object({
   name: z.string(),
   age: z.number().nullable(),
-  educationStage: z.string().nullable(),
+  educationStage: z.enum(EDUCATION_STAGES.map((stage) => stage.value) as [EducationStage, ...EducationStage[]]).nullable(),
   school: z.string(),
   major: z.string(),
   gpa: GpaInfoSchema,

@@ -1,5 +1,5 @@
-import { CAREERS } from "@/data/careers";
-import type { Career, ReadinessGate, ResolvedCareer } from "@/types";
+import { CAREERS } from "../../data/careers";
+import type { Career, ReadinessGate, ResolvedCareer } from "../../types";
 
 /**
  * Career-specific expert playbooks, keyed directly to individual careers
@@ -13,8 +13,9 @@ import type { Career, ReadinessGate, ResolvedCareer } from "@/types";
  *
  * This used to be keyed by `CareerCategory`, which broke down once a single
  * category held careers with genuinely different credential paths — e.g. the
- * "healthcare" category spans Physician (MCAT), Physical Therapist (GRE),
- * Pharmacist (PCAT), and Dentist (DAT), and a category-wide "gatingExam"
+ * "healthcare" category spans Physician (MCAT), program-variable Physical
+ * Therapist requirements, Pharmacist (no PCAT since its 2024 retirement),
+ * and Dentist (DAT), and a category-wide "gatingExam"
  * field silently told every one of them to study for the MCAT. Keying by
  * career id instead means a Pre-Dental student is never told to study for
  * the MCAT and a Robotics Engineer's grad-school gap never cites the FE
@@ -27,6 +28,8 @@ export interface CareerPlaybook {
   gatingExam: string | null;
   /** Readiness gate for gatingExam specifically. */
   gatingExamReadiness: ReadinessGate;
+  /** Whether the exam is a real universal gate or must be verified program-by-program before any prep spend. */
+  gatingExamPolicy?: "required" | "program-dependent";
   /** The 2-4 tools worth prioritizing first for immediate resume leverage in this specific career (a curated subset, not the full commonTools list). */
   keyTools: string[];
   /** Concrete, career-specific resume builders that belong in Phase A regardless of any credential timeline. */
@@ -101,8 +104,8 @@ const CAREER_PLAYBOOKS: Record<CareerId, CareerPlaybook> = {
   },
   "aerospace-engineer": {
     field: "Aerospace Engineer",
-    gatingExam: "FE Exam",
-    gatingExamReadiness: "requires-upperclass-standing",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
     keyTools: ["MATLAB/Simulink", "ANSYS", "CATIA/NX"],
     immediateResumeBuilders: [
       "A flight-dynamics, propulsion, or structures project — simulation-based is fine if well-documented",
@@ -111,7 +114,6 @@ const CAREER_PLAYBOOKS: Record<CareerId, CareerPlaybook> = {
     ],
     networkingTemplate: { roles: "practicing aerospace engineers", focusAreas: "the specific sub-field (propulsion, structures, avionics, systems) you're targeting" },
     genericPhrasesToAvoid: ["network with engineers", "learn aerospace software", "gain technical experience"],
-    officialPrepResource: "NCEES.org for official FE Exam registration and practice exams",
   },
   "biomedical-engineer": {
     field: "Biomedical Engineer",
@@ -128,8 +130,9 @@ const CAREER_PLAYBOOKS: Record<CareerId, CareerPlaybook> = {
   },
   "robotics-engineer": {
     field: "Robotics Engineer",
-    gatingExam: "GRE",
+    gatingExam: "GRE, only if a shortlisted graduate program requires or meaningfully values it",
     gatingExamReadiness: "requires-upperclass-standing",
+    gatingExamPolicy: "program-dependent",
     keyTools: ["ROS/ROS2", "Python/C++", "Gazebo or another simulator"],
     immediateResumeBuilders: [
       "A complete robot or robotic subsystem (a real sense-think-act loop), documented with video and a write-up",
@@ -138,7 +141,7 @@ const CAREER_PLAYBOOKS: Record<CareerId, CareerPlaybook> = {
     ],
     networkingTemplate: { roles: "robotics engineers and researchers", focusAreas: "the specific sub-field (perception, controls, manipulation) you're targeting" },
     genericPhrasesToAvoid: ["network with engineers", "learn robotics", "gain hands-on experience"],
-    officialPrepResource: "ETS.org for GRE registration, since most robotics Master's programs (this career's typical grad path) require it rather than a licensure exam",
+    officialPrepResource: "The admissions pages for each shortlisted robotics graduate program first; ETS.org only after confirming the GRE is required or useful",
   },
   "environmental-engineer": {
     field: "Environmental Engineer",
@@ -402,8 +405,9 @@ const CAREER_PLAYBOOKS: Record<CareerId, CareerPlaybook> = {
   },
   "physician-assistant": {
     field: "Physician Assistant",
-    gatingExam: "GRE (or program-specific exam)",
+    gatingExam: "GRE or another program-specific exam, only where required",
     gatingExamReadiness: "requires-upperclass-standing",
+    gatingExamPolicy: "program-dependent",
     keyTools: [],
     immediateResumeBuilders: [
       "Direct, hands-on patient-care hours (EMT, CNA, medical scribe) — the single biggest lever for PA program admission",
@@ -429,8 +433,8 @@ const CAREER_PLAYBOOKS: Record<CareerId, CareerPlaybook> = {
   },
   pharmacist: {
     field: "Pharmacist",
-    gatingExam: "PCAT (where required)",
-    gatingExamReadiness: "requires-upperclass-standing",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
     keyTools: [],
     immediateResumeBuilders: [
       "Pharmacy technician experience before or during the PharmD program — both useful experience and a genuine test of fit",
@@ -439,12 +443,13 @@ const CAREER_PLAYBOOKS: Record<CareerId, CareerPlaybook> = {
     ],
     networkingTemplate: { roles: "pharmacists", focusAreas: "retail, hospital/clinical, or industry pharmacy" },
     genericPhrasesToAvoid: ["gain pharmacy experience", "network with pharmacists", "learn about the field"],
-    officialPrepResource: "PharmCAS for PharmD program application requirements and timelines",
+    officialPrepResource: "PharmCAS for current PharmD prerequisites, experience expectations, and application timelines; the PCAT was retired in January 2024",
   },
   "physical-therapist": {
     field: "Physical Therapist",
     gatingExam: "GRE (where required)",
     gatingExamReadiness: "requires-upperclass-standing",
+    gatingExamPolicy: "program-dependent",
     keyTools: [],
     immediateResumeBuilders: [
       "Observation hours across at least three distinct clinical settings (outpatient ortho, inpatient, and a specialty), the core DPT-application requirement",
@@ -475,6 +480,7 @@ const CAREER_PLAYBOOKS: Record<CareerId, CareerPlaybook> = {
     field: "Research Scientist (Physical Sciences)",
     gatingExam: "GRE (Physics GRE where required)",
     gatingExamReadiness: "requires-upperclass-standing",
+    gatingExamPolicy: "program-dependent",
     keyTools: ["Python/MATLAB", "specialized simulation or experimental software", "LaTeX"],
     immediateResumeBuilders: [
       "Real research-group involvement as early as possible, aiming for co-authorship or a strong senior thesis",

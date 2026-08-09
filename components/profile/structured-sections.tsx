@@ -197,18 +197,20 @@ export function ProjectSection({
               placeholder="Python, React, PostgreSQL"
             />
           </Field>
-          <Field label="GitHub URL (optional — links this project to a repository analysis)">
-            <Input
-              value={record.githubUrl ?? ""}
-              onChange={(e) => update({ githubUrl: e.target.value || null })}
-              placeholder="https://github.com/username/repo"
+          <Field label="Summary (optional)">
+            <Textarea
+              rows={2}
+              value={record.summary ?? ""}
+              onChange={(e) => update({ summary: e.target.value || null })}
+              placeholder="One-sentence overview of what the project does."
             />
           </Field>
-          <Field label="Bullet points (one per line)">
+          <Field label="Description / bullet points (one per line)">
             <Textarea
               rows={4}
               value={bulletsToText(record.bullets)}
               onChange={(e) => update({ bullets: textToBullets(e.target.value) })}
+              placeholder="Built the core feature...\nImplemented authentication...\nhttps://github.com/you/project"
             />
           </Field>
         </>

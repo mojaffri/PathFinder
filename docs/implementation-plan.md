@@ -87,6 +87,8 @@ For current status, see [`project-state.md`](./project-state.md). For diagrams a
 
 **Definition of done:** met — the skill graph is validated at load time, not just informally correct; a student sees a real cross-skill weekly schedule with impossible-deadline detection, not just a per-skill next-best-action; completed work and change history survive every recompute.
 
+**Narrative-roadmap quality follow-up:** the original generator/fallback now shares a canonical education-stage strategy across the 46-career catalog, program-variable exam safeguards, career-specific evidence playbooks, and exhaustive career × stage regression checks. This complements the adaptive scheduler rather than replacing it.
+
 ---
 
 ## Phase 4 — Product Completeness ✅ Complete

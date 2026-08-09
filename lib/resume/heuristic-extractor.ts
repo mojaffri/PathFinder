@@ -40,13 +40,21 @@ const SECTION_HEADERS: Record<string, "experience" | "projects" | "awards" | "ce
   EXPERIENCE: "experience",
   "WORK EXPERIENCE": "experience",
   "RELEVANT EXPERIENCE": "experience",
+  "PROFESSIONAL EXPERIENCE": "experience",
+  "RESEARCH EXPERIENCE": "experience",
   EMPLOYMENT: "experience",
   LEADERSHIP: "experience",
   "LEADERSHIP EXPERIENCE": "experience",
   ACTIVITIES: "experience",
+  "EXTRACURRICULAR ACTIVITIES": "experience",
+  "ACTIVITIES LEADERSHIP": "experience",
   "LEADERSHIP ACTIVITIES": "experience",
   PROJECT: "projects",
   PROJECTS: "projects",
+  "ACADEMIC PROJECTS": "projects",
+  "PERSONAL PROJECTS": "projects",
+  "SELECTED PROJECTS": "projects",
+  "TECHNICAL PROJECTS": "projects",
   "AWARDS HONORS": "awards",
   AWARDS: "awards",
   HONORS: "awards",
@@ -311,23 +319,58 @@ function parseExperienceEntries(lines: string[], idPrefix: string): ExperienceRe
 }
 
 function parseProjectEntries(lines: string[], idPrefix: string): ProjectRecord[] {
-  return splitIntoEntries(lines)
+  return splitProjectEntries(lines)
     .slice(0, 8)
     .map((entry, i) => {
       const { endDate, titleWithoutDates } = extractDateRange(entry.headerLine);
-      const headerFields = splitHeaderFields(titleWithoutDates);
-      const { orgLine, bullets } = groupBodyLines(entry.bodyLines);
+      const inlineUrl = titleWithoutDates.match(/\b(?:https?:\/\/|www\.)\S+/i)?.[0] ?? null;
+      const titleText = inlineUrl ? titleWithoutDates.replace(inlineUrl, "").trim() : titleWithoutDates;
+      const headerFields = splitHeaderFields(titleText);
+      const bullets = [inlineUrl, ...entry.bodyLines].filter((line): line is string => Boolean(line)).map(stripBullet);
 
       return {
         id: newId(idPrefix, i),
         title: headerFields.title || `Project ${i + 1}`,
         technologies: [],
         date: endDate,
-        summary: bullets.length === 0 ? (headerFields.organization ?? orgLine) : null,
+        summary: headerFields.organization,
         bullets: bullets.slice(0, 8),
-        githubUrl: null,
+        githubUrl: inlineUrl,
       };
     });
+}
+
+function isProjectUrl(line: string): boolean {
+  return /^(?:https?:\/\/|www\.)/i.test(stripBullet(line));
+}
+
+function looksLikeProjectTitle(line: string, nextLine: string | undefined): boolean {
+  if (/^[-â€¢*â€¢]/.test(line)) return false;
+  const clean = stripBullet(line);
+  if (!clean || isProjectUrl(clean) || hasDateSignal(clean) || clean.length > 120) return false;
+  if (/^(?:achieved|analyzed|automated|built|collaborated|conducted|created|delivered|deployed|designed|developed|engineered|implemented|improved|integrated|launched|led|managed|optimized|organized|produced|researched|supported|tested|utilized|wrote)\b/i.test(clean)) return false;
+  if (/[.!?]$/.test(clean) || clean.split(/\s+/).length >= 14) return false;
+  if (/\b(?:https?:\/\/|www\.)\S+/i.test(clean)) return true;
+  return Boolean(nextLine && (isProjectUrl(nextLine) || /^[-â€¢*â€¢]/.test(nextLine)));
+}
+
+/** Project sections often omit dates. Treat a title followed by a repository
+ * URL or bullet as a boundary and keep its body attached until the next title. */
+function splitProjectEntries(lines: string[]): { headerLine: string; bodyLines: string[] }[] {
+  if (lines.some(hasDateSignal)) return splitIntoEntries(lines);
+
+  const entries: { headerLine: string; bodyLines: string[] }[] = [];
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index].trim();
+    if (!line) continue;
+    const nextLine = lines[index + 1]?.trim();
+    const startsProject = looksLikeProjectTitle(line, nextLine) &&
+      (entries.length === 0 || entries[entries.length - 1].bodyLines.length > 0);
+
+    if (startsProject || entries.length === 0) entries.push({ headerLine: stripBullet(line), bodyLines: [] });
+    else entries[entries.length - 1].bodyLines.push(line);
+  }
+  return entries;
 }
 
 /**
@@ -477,21 +520,8 @@ function parseEducationEntries(lines: string[]): EducationRecord[] {
   return entries.slice(0, 5);
 }
 
-/**
- * Best-effort scale guess from the raw number alone (no scale is ever stated
- * next to a bare GPA line). 4.0-scale GPAs, including weighted APs/IBs, top
- * out around 4.3; a 5.0-scale weighted GPA commonly lands in the 4.3-5.5
- * range; anything higher reads as a percentage. Never guesses "other" — the
- * reviewer can always correct a wrong guess in the review UI.
- */
-function inferGpaScale(gpa: number): EducationRecord["gpaScale"] {
-  if (gpa <= 4.3) return "4.0";
-  if (gpa <= 5.5) return "5.0";
-  return "100";
-}
-
 function finalizeEducation(partial: Partial<EducationRecord>, index: number): EducationRecord {
-  const gpaScale = partial.gpa !== undefined && partial.gpa !== null ? inferGpaScale(partial.gpa) : "4.0";
+  const gpaScale = partial.gpa !== undefined && partial.gpa !== null && partial.gpa > 4.3 ? "100" : "4.0";
   return {
     id: newId("edu", index),
     institution: partial.institution ?? null,
@@ -565,16 +595,9 @@ export function extractResumeDataHeuristically(rawText: string): ResumeExtractio
   const awards = parseAwardEntries(sections.awards, "award");
 
   const skillsFromSection = parseSkillsSection(sections.skills);
-  // `\b` word-boundary anchors fail for keywords ending in a non-word
-  // character (e.g. "C++", "C#"): the boundary requires a word/non-word
-  // transition, and in real text both the trailing symbol and whatever
-  // follows it (space, comma, punctuation) are non-word characters, so the
-  // closing `\b` never matches. Lookaround on the actual delimiter set fixes
-  // this without loosening matching for ordinary alphanumeric keywords.
-  const skillsFromKeywords = FALLBACK_SKILL_KEYWORDS.filter((skill) => {
-    const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return new RegExp(`(?<![A-Za-z0-9+#])${escaped}(?![A-Za-z0-9+#])`, "i").test(rawText);
-  });
+  const skillsFromKeywords = FALLBACK_SKILL_KEYWORDS.filter((skill) =>
+    new RegExp(`\\b${skill.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(rawText),
+  );
   const skills = dedupeStrings([...skillsFromSection, ...skillsFromKeywords]);
 
   const followUpQuestions: string[] = [];

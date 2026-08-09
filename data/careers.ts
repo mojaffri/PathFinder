@@ -1,4 +1,4 @@
-import type { Career } from "@/types";
+import type { Career } from "../types";
 
 export const CAREERS: Career[] = [
   // ============================== ENGINEERING ==============================
@@ -1503,7 +1503,7 @@ export const CAREERS: Career[] = [
     competitiveness: "Moderate for PharmD admissions; increasingly competitive job market in some regions post-graduation",
     competitivenessFactors: [
       { factor: "Prerequisite science GPA", description: "Strong performance in required chemistry/biology coursework", weight: 4 },
-      { factor: "PCAT (where required)", description: "Standardized admissions exam, required by some programs", weight: 3 },
+      { factor: "Program prerequisite fit", description: "Required coursework, GPA expectations, experience, and deadlines vary by PharmD program; the PCAT was retired in 2024", weight: 3 },
       { factor: "Pharmacy experience/internship hours", description: "Working as a pharmacy technician before or during school", weight: 4 },
       { factor: "Residency (for clinical/hospital tracks)", description: "Increasingly important for competitive hospital/clinical pharmacy roles", weight: 3 },
     ],
