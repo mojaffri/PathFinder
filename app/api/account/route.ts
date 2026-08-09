@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUser } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { logServerEvent } from "@/lib/observability/logger";
 
 /**
  * Permanently deletes the signed-in user's Supabase Auth account. This
@@ -24,7 +25,7 @@ export async function DELETE() {
 
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) {
-    console.error(error);
+    logServerEvent("error", "account_deletion_failed", { userId: user.id }, error);
     return NextResponse.json({ error: "Could not delete account. Please try again." }, { status: 500 });
   }
 

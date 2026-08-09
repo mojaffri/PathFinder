@@ -7,20 +7,29 @@ import { computePhaseTimelines, totalEstimatedHours } from "@/lib/roadmap/pacing
 import { RoadmapRequestSchema } from "@/lib/roadmap/schema";
 import { buildTargetResumeBenchmark } from "@/lib/roadmap/target-resume";
 import { resolveCareers, type Roadmap } from "@/types";
+import { getServerUser } from "@/lib/supabase/server";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
+import { withDbErrorHandling } from "@/lib/api/with-db-error-handling";
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
+  return withDbErrorHandling(async () => {
+  const user = await getServerUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  const limited = await enforceRateLimit(user.id, "roadmap-generation", 10, 600);
+  if (limited) return limited;
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: "Expected a JSON request body." }, { status: 400 });
+    return NextResponse.json({ error: "Expected a JSON request body." }, { status: 400 });
   }
 
   const parsed = RoadmapRequestSchema.safeParse(body);
   if (!parsed.success) {
     const firstIssue = parsed.error.issues[0];
     const fieldPath = firstIssue?.path.join(".") || "request";
-    return Response.json(
+    return NextResponse.json(
       {
         error: firstIssue ? `${fieldPath}: ${firstIssue.message}` : "Invalid roadmap request.",
         details: parsed.error.flatten(),
@@ -60,5 +69,6 @@ export async function POST(request: Request) {
     source: aiContent ? "ai" : "fallback",
   };
 
-  return Response.json(roadmap);
+  return NextResponse.json(roadmap);
+  });
 }

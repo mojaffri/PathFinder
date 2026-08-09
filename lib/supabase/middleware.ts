@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /** Routes that require a signed-in session. Server-enforced here, not just hidden client-side. */
-const PROTECTED_PREFIXES = ["/dashboard", "/accelerate", "/skillforge", "/profile", "/saved", "/onboarding", "/jobs", "/projects"];
+const PROTECTED_PREFIXES = ["/dashboard", "/accelerate", "/skillforge", "/profile", "/saved", "/onboarding", "/jobs", "/projects", "/roadmap", "/applications", "/analytics"];
 
 /**
  * Refreshes the Supabase session cookie on every request and enforces route

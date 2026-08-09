@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import "server-only";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 /**
  * Server-side Supabase client for use in route handlers and Server
@@ -36,6 +37,7 @@ export async function createSupabaseServerClient() {
  * "not authenticated," never fall back to trusting a client-supplied user id.
  */
 export async function getServerUser() {
+  if (!isSupabaseConfigured()) return null;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

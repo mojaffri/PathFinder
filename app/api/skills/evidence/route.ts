@@ -4,6 +4,7 @@ import { getServerUser } from "@/lib/supabase/server";
 import { addManualEvidence } from "@/repositories/evidence-repository";
 import { EVIDENCE_SOURCE_TYPES } from "@/types";
 import type { EvidenceSourceType, EvidenceStrengthLevel, VerificationStatus } from "@/types";
+import { logActivityEvent } from "@/repositories/activity-repository";
 
 const SOURCE_TYPES = new Set<string>(EVIDENCE_SOURCE_TYPES.map((t) => t.value));
 const STRENGTHS = new Set(["weak", "moderate", "strong"]);
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
       explanation,
       occurredOn,
     });
+    await logActivityEvent(user.id, "skill_evidence_added", { evidenceId: record.id, skillName: record.skillName, sourceType: record.sourceType });
     return NextResponse.json({ evidence: record }, { status: 201 });
   });
 }

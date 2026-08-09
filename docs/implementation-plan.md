@@ -62,31 +62,38 @@ For current status, see [`project-state.md`](./project-state.md). For diagrams a
 
 ---
 
-## Phase 3 — Adaptive System
+## Phase 3 — Adaptive System ✅ Complete
 
-**Objective:** turn the curated, hand-authored SkillForge catalog into a real skill graph with a scheduler, and add timed/structured assessments beyond the current diagnostic/assessment Q&A.
+**Objective:** a real skill dependency graph with a deterministic scheduler, and an adaptive roadmap engine that recomputes as a student's evidence, assessments, saved jobs, and goals change — without losing completed-work history.
 
-**Dependencies:** Phase 1 (real persistence for skill graph state); benefits from Phase 2's evidence/GitHub work feeding into skill demonstration.
+**Status:** Done. Full writeup: `docs/project-state.md`'s "Adaptive Roadmap Engine" section. Design docs: `docs/skill-graph.md`, `docs/roadmap-engine.md`.
 
-**Expected files/modules affected:**
-- New: `lib/skillforge/skill-graph.ts` — formalizes the currently-implicit prerequisite graph (`SkillModule.prerequisites`) into a queryable structure (topological ordering, cycle detection at data-load time rather than assuming `data/skillforge-modules.ts` is acyclic).
-- New: `lib/skillforge/scheduler.ts` — a **deterministic** weekly scheduler that sequences recommended SkillForge activities against `weeklyHoursAvailable`, reusing `lib/roadmap/pacing.ts`'s existing duration math rather than inventing new pacing logic.
-- Extended: `types/skillforge.ts`, `data/skillforge-modules.ts` grows beyond 10 modules — consider whether hand-authored `data/*.ts` content files still scale, or whether this is the point to move curated content into the database (seeded, but editable without a code deploy).
-- New: `assessments`/`assessment_attempts` as genuinely distinct from `skill_attempts` if a proctored/timed assessment format is added (today's `SkillAttempt` shape covers untimed diagnostic/assessment Q&A only).
+**What was actually built** (diverged from the original sketch below in one deliberate way — see "Decisions Made" in `docs/project-state.md`): rather than formalizing *SkillForge's own* `SkillModule.prerequisites` graph, a new, broader, standalone skill graph (`types/skill-graph.ts`, `data/skill-graph.ts#SKILL_GRAPH_NODES`, ~25 curated nodes) was built — SkillForge's 10-module catalog barely has any populated `prerequisites` to formalize (2 of 10 modules), so a graph scoped to SkillForge alone wouldn't have supported the task brief's own worked examples (JS→TS→React→Next.js; SQL→Postgres→ORM→backend persistence; Python→REST→FastAPI→production backend). The new graph optionally links back to a real SkillForge module via `skillForgeModuleId` where one exists.
+- `lib/roadmap/skill-graph.ts` — cycle detection and dangling-prerequisite validation at index-build time (`buildSkillGraphIndex`, throws `SkillGraphValidationError`), deterministic topological ordering, unmet-prerequisite/blocked-skill lookups.
+- `lib/roadmap/priority.ts` — deterministic, documented weighted-sum priority formula (gap match, saved-job frequency, unblock count, evidence weakness, mastery discount).
+- `lib/roadmap/adaptive-generator.ts` + `adaptive-phases.ts` — real dependency-aware task generation (pulls in unmet prerequisites recursively) and depth-based phase grouping.
+- `lib/roadmap/scheduler.ts` — a **deterministic** weekly scheduler: topological + priority ordering, greedy weekly bin-packing, impossible-deadline detection with the task brief's own worked-example message format and concrete recommendations. Reuses `lib/roadmap/pacing.ts`'s assumed-default-hours convention rather than inventing new pacing logic, though the actual multi-task bin-packing is necessarily new (pacing.ts only computes single-item durations).
+- `lib/roadmap/adaptation.ts` — merges forward by `skillId` so completed/in-progress/skipped status survives every regenerate; a completed skill that drops out of scope is preserved in `completedHistory`, never deleted; produces a deterministic per-trigger change summary.
+- `lib/roadmap/saved-job-signals.ts` — personalized saved-job skill-frequency aggregation, always labeled as such.
+- Five new DB tables (`adaptive_roadmaps` + 4 children, two genuinely append-only) + `repositories/adaptive-roadmap-repository.ts`, three API routes, `/roadmap` UI.
 
-**Major risks:**
-- A cycle in `SkillModule.prerequisites` would currently cause `diagnoseWeakConcept()`'s BFS to loop forever without the `visited` set (it has one, so it's currently safe) — but a formal skill graph module should validate acyclicity at build/load time so a future bad content edit fails loudly instead of relying on the BFS's defensive `visited` check to save it silently.
-- Scheduler complexity: resist turning this into a generic project-planning engine — scope it to "what SkillForge activity should this student do this week," which `lib/skillforge/next-action.ts` already answers per-skill; the scheduler's job is sequencing *across* skills, not replacing the existing next-action logic.
+**Deliberately not built (scope decisions, all documented in `docs/roadmap-engine.md`):** timed/proctored assessments beyond the existing untimed diagnostic/assessment Q&A (out of this session's scope — `assessments`/`assessment_attempts` tables are unchanged); moving `data/*.ts` curated content into the database (not needed yet — the new skill graph, like `data/skillforge-modules.ts`, is still small enough to hand-author); automatic wiring of every `RoadmapChangeTrigger` into every relevant mutation route (3 of 9 triggers are automatic/contextual-UI-wired; the rest work via direct API calls but have no UI entry point yet).
 
-**Tests required:** skill-graph cycle detection test with a deliberately malformed fixture; scheduler tests for the same edge cases as `pacing.ts` (zero/null weekly hours, single skill, empty skill list).
+**Major risks (as anticipated, and how they played out):**
+- Cycle risk in a hand-authored graph — held: `buildSkillGraphIndex` validates acyclicity and dangling references at build time, with dedicated fixture tests (`tests/unit/skill-graph.test.ts`), not just an informally-correct hand-checked list.
+- Scheduler scope creep into a generic project-planning engine — held: `lib/roadmap/scheduler.ts` does exactly one job (weekly bin-packing of a given task list against given capacity/deadline), and doesn't touch or replace `lib/skillforge/next-action.ts`'s per-skill guidance.
 
-**Definition of done:** the skill graph is validated at load time, not just informally correct; a student sees a cross-skill weekly schedule, not just a per-skill next-best-action.
+**Tests:** 73 new tests across 6 new files — `skill-graph.test.ts` (26), `priority.test.ts` (15), `saved-job-signals.test.ts` (6), `scheduler.test.ts` (11, including the exact impossible-deadline worked example), `adaptation.test.ts` (8, including completed-history preservation across a regenerate), `adaptive-roadmap-repository.test.ts` (6, integration) — plus one new RLS-isolation case. See `docs/project-state.md`'s "Tests" section for the full breakdown.
+
+**Definition of done:** met — the skill graph is validated at load time, not just informally correct; a student sees a real cross-skill weekly schedule with impossible-deadline detection, not just a per-skill next-best-action; completed work and change history survive every recompute.
 
 ---
 
-## Phase 4 — Product Completeness
+## Phase 4 — Product Completeness ✅ Complete
 
 **Objective:** the features that make this feel like a product a student would actually keep using over months, not just once.
+
+**Status:** Done in session 5: compact application tracking, saved-job evidence insights, actionable real-data dashboard, recorded-history analytics, structured events, accessibility/responsive/error-state improvements, security hardening, structured observability + Vercel Analytics, and Playwright/axe smoke coverage. See `docs/project-state.md` for the exact verification state and live-infrastructure risks.
 
 **Dependencies:** Phase 1 (persistence for applications/analytics); Phase 2 (job descriptions to attach applications to).
 

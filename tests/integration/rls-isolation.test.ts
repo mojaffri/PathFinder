@@ -7,9 +7,10 @@ import { deleteResume, getResumeById, saveResume, setActiveResume } from "@/repo
 import { deleteJobDescription, getJobDescription, createJobDescription } from "@/repositories/job-repository";
 import { deleteRepo, getRepo, saveRepoAnalysis } from "@/repositories/github-repository";
 import { addManualEvidence, listManualEvidence } from "@/repositories/evidence-repository";
+import { getAdaptiveRoadmap, saveAdaptiveRoadmap, updateTaskStatus } from "@/repositories/adaptive-roadmap-repository";
 import { skillModules, skillProgress } from "@/lib/db/schema";
 import { DEFAULT_WORK_PREFERENCES } from "@/types";
-import type { Roadmap, SavedRoadmap, RepoAnalysis } from "@/types";
+import type { Roadmap, SavedRoadmap, RepoAnalysis, AdaptiveRoadmap } from "@/types";
 import type { JobExtraction } from "@/lib/jobs/schema";
 
 /**
@@ -97,6 +98,54 @@ function minimalRepoAnalysis(): RepoAnalysis {
     skillEvidence: [{ skill: "Python", strength: "strong", reason: "Primary language" }],
     summary: "This project provides strong evidence of Python.",
     analyzedAt: new Date().toISOString(),
+  };
+}
+
+function minimalAdaptiveRoadmap(): AdaptiveRoadmap {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    userId: "unused-overwritten-by-repository",
+    targetCareers: ["Software Engineer"],
+    targetDate: null,
+    weeklyHoursAvailable: 10,
+    readiness: 0,
+    phases: [
+      {
+        key: "foundations",
+        title: "Foundations",
+        tasks: [
+          {
+            id: crypto.randomUUID(),
+            skillId: "javascript",
+            skillName: "JavaScript",
+            title: "Learn JavaScript",
+            reason: "Foundational.",
+            estimatedHours: 30,
+            prerequisiteTaskIds: [],
+            priorityScore: 60,
+            priorityTier: "high",
+            scheduledStartDate: null,
+            scheduledTargetDate: null,
+            status: "not-started",
+            completionCriteria: ["Complete the core material"],
+            learningResource: null,
+            assessmentSkillForgeModuleId: null,
+            evidenceGoal: null,
+            sourceGapTitle: null,
+            sourceJobRequirementLabels: [],
+            completedAt: null,
+            createdAt: now,
+          },
+        ],
+      },
+    ],
+    feasibility: { feasible: true, totalRemainingHours: 30, requiredWeeks: 3, availableWeeks: null, weeklyHoursAvailable: 10, isAssumedAvailability: false, message: "", recommendations: [] },
+    savedJobSkillFrequency: [],
+    changeEvents: [],
+    completedHistory: [],
+    generatedAt: now,
+    updatedAt: now,
   };
 }
 
@@ -269,5 +318,24 @@ describe("RLS user isolation", () => {
 
     const asOther = await listManualEvidence(USER_B);
     expect(asOther.some((e) => e.skillName === "Public Speaking")).toBe(false);
+  });
+
+  it("prevents one user from reading another user's adaptive roadmap, and from updating its tasks", async () => {
+    const saved = await saveAdaptiveRoadmap(USER_A, minimalAdaptiveRoadmap(), null);
+    const taskId = saved.phases[0].tasks[0].id;
+
+    // getAdaptiveRoadmap scopes through the caller's own profile_id lookup,
+    // so User B's call must return null rather than User A's roadmap.
+    expect(await getAdaptiveRoadmap(USER_B)).toBeNull();
+    const ownerRead = await getAdaptiveRoadmap(USER_A);
+    expect(ownerRead?.id).toBe(saved.id);
+
+    // updateTaskStatus filters only by task id — RLS alone must block this
+    // from touching User A's task when called as User B.
+    const attackerUpdate = await updateTaskStatus(USER_B, taskId, "completed");
+    expect(attackerUpdate).toBeNull();
+
+    const stillNotStarted = await getAdaptiveRoadmap(USER_A);
+    expect(stillNotStarted?.phases[0].tasks[0].status).toBe("not-started");
   });
 });

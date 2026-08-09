@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, inArray, sql } from "drizzle-orm";
 import { ensureProfileId } from "@/repositories/profile-repository";
 import { withUserContext } from "@/lib/db/with-user-context";
 import { jobDescriptions, jobMatches, jobRequirements } from "@/lib/db/schema";
@@ -104,6 +104,35 @@ export async function listJobDescriptions(userId: string): Promise<JobDescriptio
       .orderBy(desc(jobDescriptions.createdAt));
 
     return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
+  });
+}
+
+/**
+ * Bulk-fetches every saved job description WITH its full requirements —
+ * unlike `listJobDescriptions` (a lightweight summary for the `/jobs` list
+ * view), this is what the adaptive roadmap engine's saved-job aggregation
+ * (`lib/roadmap/saved-job-signals.ts`) needs. Batches the requirements query
+ * with `inArray` rather than N+1, same convention as `roadmap-repository.ts`.
+ */
+export async function listFullJobDescriptions(userId: string): Promise<JobDescription[]> {
+  return withUserContext(userId, async (tx) => {
+    const profileId = await ensureProfileId(tx, userId);
+    const rows = await tx.select().from(jobDescriptions).where(eq(jobDescriptions.profileId, profileId)).orderBy(desc(jobDescriptions.createdAt)).limit(200);
+    if (rows.length === 0) return [];
+
+    const requirementRows = await tx
+      .select()
+      .from(jobRequirements)
+      .where(inArray(jobRequirements.jobDescriptionId, rows.map((r) => r.id)));
+
+    const byJobId = new Map<string, JobRequirementRow[]>();
+    for (const req of requirementRows) {
+      const list = byJobId.get(req.jobDescriptionId) ?? [];
+      list.push(req);
+      byJobId.set(req.jobDescriptionId, list);
+    }
+
+    return rows.map((row) => toJobDescription(row, byJobId.get(row.id) ?? []));
   });
 }
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { saveGithubConnection } from "@/repositories/github-repository";
+import { safeRedirectPath } from "@/lib/security/safe-redirect";
 
 /**
  * Exchanges an OAuth/magic-link code for a session, then redirects on to
@@ -17,7 +18,7 @@ import { saveGithubConnection } from "@/repositories/github-repository";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
+  const redirectTo = safeRedirectPath(searchParams.get("redirectTo"), "/dashboard");
 
   if (code) {
     const supabase = await createSupabaseServerClient();

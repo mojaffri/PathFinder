@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Compass, LayoutDashboard, Menu, Rocket, Bookmark, Hammer, Briefcase, FolderGit2, User, X } from "lucide-react";
+import { Compass, LayoutDashboard, Menu, Rocket, Bookmark, Hammer, Briefcase, FolderGit2, User, X, Map, ListChecks, ChartNoAxesCombined } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/use-profile";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,12 @@ const NAV_LINKS = [
   { href: "/discover", label: "Discover", icon: Compass },
   { href: "/accelerate", label: "Accelerate", icon: Rocket },
   { href: "/skillforge", label: "SkillForge", icon: Hammer },
+  { href: "/roadmap", label: "Plan", icon: Map },
   { href: "/projects", label: "Projects", icon: FolderGit2 },
   { href: "/jobs", label: "Job Fit", icon: Briefcase },
+  { href: "/applications", label: "Applications", icon: ListChecks },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/analytics", label: "Progress", icon: ChartNoAxesCombined },
   { href: "/saved", label: "Saved", icon: Bookmark },
 ];
 
@@ -25,12 +28,12 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="text-base font-semibold tracking-tight text-foreground">
           PathFinder
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Primary navigation" className="hidden items-center gap-0.5 md:flex">
           {NAV_LINKS.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname?.startsWith(`${href}/`);
             return (
@@ -38,14 +41,16 @@ export function Navbar() {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium transition-colors xl:px-3",
                   active
                     ? "bg-accent text-accent-foreground"
                     : "text-muted-foreground hover:bg-surface hover:text-foreground",
                 )}
+                aria-current={active ? "page" : undefined}
+                title={label}
               >
                 <Icon className="h-4 w-4" />
-                {label}
+                <span className="hidden xl:inline">{label}</span>
               </Link>
             );
           })}
@@ -73,6 +78,8 @@ export function Navbar() {
         <button
           type="button"
           aria-label="Toggle menu"
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-navigation"
           className="flex h-9 w-9 items-center justify-center rounded-md text-foreground md:hidden"
           onClick={() => setMobileOpen((v) => !v)}
         >
@@ -81,7 +88,7 @@ export function Navbar() {
       </div>
 
       {mobileOpen && (
-        <nav className="border-t border-border px-6 py-3 md:hidden">
+        <nav id="mobile-navigation" aria-label="Mobile navigation" className="border-t border-border px-6 py-3 md:hidden">
           <div className="flex flex-col gap-1">
             {NAV_LINKS.map(({ href, label, icon: Icon }) => (
               <Link
@@ -89,6 +96,7 @@ export function Navbar() {
                 href={href}
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-surface"
+                aria-current={pathname === href || pathname?.startsWith(`${href}/`) ? "page" : undefined}
               >
                 <Icon className="h-4 w-4" />
                 {label}

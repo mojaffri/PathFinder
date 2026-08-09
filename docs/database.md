@@ -48,19 +48,20 @@ npm run db:migrate    # applies every unapplied migration in filename order
 
 ## Schema overview
 
-30 tables. Full definitions live in `lib/db/schema/*.ts` (one file per domain group); the generated SQL is in `drizzle/migrations/0000_init_schema.sql` plus incremental migrations (`0002`-`0006`) added for the Phase 2 job-analysis/resume-upgrade and evidence/GitHub-integration work — see "Migration history" below.
+36 tables. Full definitions live in `lib/db/schema/*.ts`; migrations now run through `0010`, adding the Phase-4 application expansion, indexes, and persistent API throttling.
 
 | Group | Tables |
 |---|---|
 | Identity | `profiles` (references Supabase's own `auth.users`, not duplicated) |
 | Profile detail | `education`, `experience`, `projects`, `awards`, `certifications`, `career_goals`, `skills`, `resumes` |
 | Career matching | `careers` (seeded reference), `career_matches` |
-| Roadmaps | `roadmaps`, `gap_items`, `roadmap_phases`, `roadmap_tasks` |
+| Roadmaps (narrative, Phase 2) | `roadmaps`, `gap_items`, `roadmap_phases`, `roadmap_tasks` |
+| Adaptive roadmap engine (Phase 3) | `adaptive_roadmaps`, `adaptive_roadmap_phases`, `adaptive_roadmap_tasks`, `adaptive_roadmap_change_events`, `adaptive_roadmap_completed_history` |
 | SkillForge | `skill_modules` (seeded reference), `skill_progress`, `assessments`, `assessment_attempts`, `skill_evidence` |
 | Job analysis (Phase 2, implemented) | `job_descriptions`, `job_requirements`, `job_matches` |
-| Evidence-backed skills & GitHub (this phase) | `skill_evidence_records` (manual evidence only — see `docs/evidence-model.md`), `github_connections`, `github_repos` |
-| Schema-only, Phase 4 | `applications` |
-| Observability | `activity_events` |
+| Evidence-backed skills & GitHub (Phase 2) | `skill_evidence_records` (manual evidence only — see `docs/evidence-model.md`), `github_connections`, `github_repos` |
+| Application tracking (Phase 4) | `applications` |
+| Observability and abuse protection | `activity_events`, `api_usage_windows` |
 
 ### Migration history
 
@@ -73,6 +74,10 @@ npm run db:migrate    # applies every unapplied migration in filename order
 5. `0004_job_requirements_rls.sql` — RLS policy for the new `job_requirements` table (owned transitively through `job_description_id`, same pattern as `gap_items`).
 6. `0005_evidence_and_github_schema.sql` — new tables: `github_connections`, `github_repos`, `skill_evidence_records`. Also added `projects.github_url` (was schema-only unused since Phase 1; now wired through `types/records.ts#ProjectRecord` and `repositories/profile-repository.ts` for real).
 7. `0006_evidence_and_github_rls.sql` — RLS policies for the three new tables, same profile-owned pattern as `0001`.
+8. `0007_adaptive_roadmap_schema.sql` — new tables for the Phase 3 adaptive roadmap engine: `adaptive_roadmaps` (one per profile, `UNIQUE` on `profile_id`), `adaptive_roadmap_phases`, `adaptive_roadmap_tasks`, `adaptive_roadmap_change_events`, `adaptive_roadmap_completed_history`. Hand-written (not `drizzle-kit generate` output) to match this repo's established column-naming/check-constraint conventions exactly, same approach as every prior hand-authored migration in this history.
+9. `0008_adaptive_roadmap_rls.sql` — RLS policies for the five new tables: `adaptive_roadmaps` is owned directly by `profile_id`; the other four are owned transitively through it, same join-based pattern as `gap_items`/`roadmap_phases`/`roadmap_tasks` in `0001`.
+10. `0009_product_completeness.sql` — expands `applications` with posting/source/fit/interview-date/gap-snapshot fields and the nine-stage constraint; adds application/activity/job query indexes.
+11. `0010_api_rate_limits.sql` — creates RLS-protected `api_usage_windows`, keyed per profile and time window for atomic throttling across serverless instances.
 
 **Important for anyone regenerating migrations:** `tests/integration/db.ts` lists migration files by name (not by directory scan), so a new migration file must be added there too or the integration/RLS test suite will fail against a schema that's missing it.
 
@@ -87,7 +92,7 @@ npm run db:migrate    # applies every unapplied migration in filename order
 - **`skills` (the table) is the profile's flat, free-text skill tags** (`StudentProfile.currentSkills`), sourced from manual entry or resume extraction. It is deliberately unrelated to SkillForge's `skill_progress`/`skill_modules` (curated-module mastery tracking) — conflating "skills I say I have" with "skills SkillForge is actively developing" would break the career-agnostic separation `CLAUDE.md` requires between the two systems.
 - **`resumes` now supports real version history and real file storage.** Every upload (PDF or DOCX) becomes its own row rather than overwriting the last one; `is_active` (with a partial unique index enforcing exactly one active resume per profile) marks which version currently backs the profile / is used as job-fit evidence. `storage_path` is wired up to Supabase Storage (`lib/supabase/storage.ts`, private `resumes` bucket, auto-created on first upload) — the original file is genuinely persisted now, not just the extracted text; storage failures degrade gracefully (the extraction result still returns) rather than blocking the upload.
 - **`job_descriptions`/`job_requirements`/`job_matches` are implemented this phase** (Phase 2's flagship job-analysis workflow — see `docs/implementation-plan.md`). `job_requirements` normalizes each individual required/preferred skill/tool/experience/education item into its own editable row (so a student can correct one misextracted requirement without re-parsing the whole posting); `job_matches` stores a point-in-time snapshot of a deterministic fit-analysis run (`lib/jobs/fit-scoring.ts`) rather than only recomputing on read, specifically so a student can compare fit before/after building evidence for a gap.
-- **`applications` is still schema-only** — Phase 4, unchanged from the prior checkpoint.
+- **`applications` is intentionally compact but fully implemented.** `gaps_snapshot` and `fit_score` capture application-time state instead of silently changing as the profile improves; interview dates are full ISO date strings and status is one of the nine product stages.
 
 ### ER diagram
 

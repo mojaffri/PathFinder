@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { DatabaseNotConfiguredError } from "@/lib/db/client";
+import { logServerEvent } from "@/lib/observability/logger";
 
 /**
  * Every DB-backed route handler wraps its body in this — a missing
@@ -14,7 +15,8 @@ export async function withDbErrorHandling(fn: () => Promise<NextResponse>): Prom
     if (error instanceof DatabaseNotConfiguredError) {
       return NextResponse.json({ error: error.message }, { status: 503 });
     }
-    console.error(error);
-    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+    const requestId = crypto.randomUUID();
+    logServerEvent("error", "database_route_failure", { requestId }, error);
+    return NextResponse.json({ error: "Something went wrong. Please try again.", requestId }, { status: 500 });
   }
 }

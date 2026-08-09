@@ -6,6 +6,7 @@ import { getProfileByUserId } from "@/repositories/profile-repository";
 import { listResumes } from "@/repositories/resume-repository";
 import { computeJobFitAnalysis } from "@/lib/jobs/fit-scoring";
 import { buildSkillConfidenceContext } from "@/lib/evidence/build-context";
+import { logActivityEvent } from "@/repositories/activity-repository";
 
 /** Match history for this job, most recent first — lets a student compare fit before/after building evidence for a gap. */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -54,6 +55,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     const evidenceContext = await buildSkillConfidenceContext(user.id);
     const result = computeJobFitAnalysis(job, profile, activeResumeId, evidenceContext ?? undefined);
     const analysis = await saveJobMatch(user.id, id, result);
+    await logActivityEvent(user.id, "job_analyzed", { jobDescriptionId: id, company: job.company, title: job.title, fitScore: analysis.overallFitScore });
     return NextResponse.json({ analysis });
   });
 }

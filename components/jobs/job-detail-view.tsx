@@ -14,6 +14,7 @@ import { JobRequirementRow } from "@/components/jobs/job-requirement-row";
 import { JobFitResults } from "@/components/jobs/job-fit-results";
 import { getJobDescription, runJobFitAnalysis, updateJobDescription } from "@/services/job-service";
 import type { JobDescription, JobFitAnalysis, JobRequirement } from "@/types";
+import { createApplication } from "@/services/application-service";
 
 function newRequirement(): JobRequirement {
   return {
@@ -32,6 +33,8 @@ export function JobDetailView({ jobId }: { jobId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<JobFitAnalysis | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [tracking, setTracking] = useState(false);
+  const [tracked, setTracked] = useState(false);
 
   useEffect(() => {
     getJobDescription(jobId).then(setJob);
@@ -61,6 +64,20 @@ export function JobDetailView({ jobId }: { jobId: string }) {
       setError(err instanceof Error ? err.message : "Couldn't run the fit analysis.");
     } finally {
       setAnalyzing(false);
+    }
+  }
+
+  async function handleTrack() {
+    if (!job) return;
+    setTracking(true);
+    setError(null);
+    try {
+      await createApplication({ jobDescriptionId: job.id, company: job.company ?? "Unknown company", title: job.title ?? "Untitled role", jobDescription: job.rawText, sourceUrl: null, fitScore: analysis?.overallFitScore ?? null, applicationDate: null, currentStage: "saved", interviewDates: [], notes: null, gapsAtApplication: [] });
+      setTracked(true);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not add this role to your pipeline.");
+    } finally {
+      setTracking(false);
     }
   }
 
@@ -113,7 +130,7 @@ export function JobDetailView({ jobId }: { jobId: string }) {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {job.requirements.length > 0 && (
-            <div className="grid grid-cols-[1fr_9rem_8rem_5rem_2.5rem] gap-2 text-xs font-medium text-muted-foreground">
+            <div className="hidden grid-cols-[1fr_9rem_8rem_5rem_2.5rem] gap-2 text-xs font-medium text-muted-foreground sm:grid">
               <span>Requirement</span>
               <span>Category</span>
               <span>Kind</span>
@@ -169,6 +186,7 @@ export function JobDetailView({ jobId }: { jobId: string }) {
           {analyzing && <Spinner />}
           {analyzing ? "Analyzing..." : "Run fit analysis"}
         </Button>
+        {tracked ? <Link href="/applications"><Button variant="outline">View in applications</Button></Link> : <Button variant="outline" onClick={handleTrack} disabled={tracking}>{tracking ? "Adding…" : "Track application"}</Button>}
       </div>
 
       {analysis && (

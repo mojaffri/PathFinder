@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { UpdateRoadmapLink } from "@/components/roadmap/adaptive/update-roadmap-link";
 import { recordAttempt } from "@/services/skillforge-service";
 import { diagnoseWeakConcept } from "@/lib/skillforge/diagnosis";
 import { cn } from "@/lib/utils";
@@ -181,6 +182,9 @@ export function SkillCheckPanel({
           <Button type="button" variant="secondary" onClick={retry}>
             Retry
           </Button>
+          <UpdateRoadmapLink
+            trigger={result.knowledgeScore >= 70 && result.abilityScore >= 70 ? "assessment-passed" : "assessment-failed"}
+          />
         </div>
       </div>
     );

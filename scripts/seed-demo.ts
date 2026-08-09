@@ -13,6 +13,14 @@ import { saveRoadmap } from "@/repositories/roadmap-repository";
 import { saveCareerMatches } from "@/repositories/career-match-repository";
 import { markExerciseCompleted, markResourceCompleted } from "@/repositories/skillforge-repository";
 import { resolveCareers, DEFAULT_WORK_PREFERENCES, type EducationStage, type Roadmap, type SavedRoadmap } from "@/types";
+import { createJobDescription, listFullJobDescriptions, saveJobMatch } from "@/repositories/job-repository";
+import { computeJobFitAnalysis } from "@/lib/jobs/fit-scoring";
+import { buildSkillConfidenceContext } from "@/lib/evidence/build-context";
+import { createApplication, listApplications } from "@/repositories/application-repository";
+import { buildAdaptiveRoadmapInput } from "@/lib/roadmap/adaptive-input";
+import { recomputeAdaptiveRoadmap } from "@/lib/roadmap/adaptation";
+import { saveAdaptiveRoadmap } from "@/repositories/adaptive-roadmap-repository";
+import type { JobExtraction } from "@/lib/jobs/schema";
 
 /**
  * Seeds (or refreshes) the shared "Try Demo" showcase account, entirely
@@ -199,6 +207,36 @@ async function main() {
     priorityRanking: ["learning-growth", "salary", "remote-flexibility", "work-life-balance", "prestige-impact", "leadership-entrepreneurship"],
   });
   await saveCareerMatches(userId, matches);
+
+  console.log("Seeding saved jobs, fit snapshots, and an application...");
+  const demoJobs: Array<{ rawText: string; extraction: JobExtraction }> = [
+    { rawText: "Software Engineering Intern. Required: Python, SQL, Git, REST APIs. Preferred: AWS, Docker, React.", extraction: { title: "Software Engineering Intern", company: "Northstar Labs", minExperienceYears: null, preferredExperienceYears: 1, educationRequirement: "Pursuing a bachelor's degree", responsibilities: ["Build and test customer-facing services", "Collaborate through code review"], keywords: ["internship", "backend"], requirements: [{ category: "required", kind: "skill", label: "Python", minYears: null }, { category: "required", kind: "skill", label: "SQL", minYears: null }, { category: "required", kind: "tool", label: "Git", minYears: null }, { category: "required", kind: "skill", label: "REST APIs", minYears: null }, { category: "preferred", kind: "tool", label: "AWS", minYears: null }, { category: "preferred", kind: "tool", label: "Docker", minYears: null }, { category: "preferred", kind: "skill", label: "React", minYears: null }], extractionConfidence: "high" } },
+    { rawText: "Data Platform Intern. Required: SQL, Python, data pipelines. Preferred: AWS, Docker, PostgreSQL.", extraction: { title: "Data Platform Intern", company: "Atlas Metrics", minExperienceYears: null, preferredExperienceYears: null, educationRequirement: "Computer science or related degree", responsibilities: ["Improve batch data pipelines", "Add data-quality checks"], keywords: ["data", "platform"], requirements: [{ category: "required", kind: "skill", label: "SQL", minYears: null }, { category: "required", kind: "skill", label: "Python", minYears: null }, { category: "required", kind: "skill", label: "Data pipelines", minYears: null }, { category: "preferred", kind: "tool", label: "AWS", minYears: null }, { category: "preferred", kind: "tool", label: "Docker", minYears: null }, { category: "preferred", kind: "tool", label: "PostgreSQL", minYears: null }], extractionConfidence: "high" } },
+    { rawText: "Full Stack Engineering Intern. Required: JavaScript, React, Git. Preferred: TypeScript, AWS, SQL.", extraction: { title: "Full Stack Engineering Intern", company: "Cedar Health", minExperienceYears: null, preferredExperienceYears: null, educationRequirement: null, responsibilities: ["Ship accessible product features", "Write automated tests"], keywords: ["full stack", "accessibility"], requirements: [{ category: "required", kind: "skill", label: "JavaScript", minYears: null }, { category: "required", kind: "skill", label: "React", minYears: null }, { category: "required", kind: "tool", label: "Git", minYears: null }, { category: "preferred", kind: "skill", label: "TypeScript", minYears: null }, { category: "preferred", kind: "tool", label: "AWS", minYears: null }, { category: "preferred", kind: "skill", label: "SQL", minYears: null }], extractionConfidence: "high" } },
+  ];
+  let savedJobs = await listFullJobDescriptions(userId);
+  if (savedJobs.length === 0) {
+    for (const demoJob of demoJobs) await createJobDescription(userId, demoJob.rawText, demoJob.extraction, "heuristic");
+    savedJobs = await listFullJobDescriptions(userId);
+  }
+  const demoProfile = await getProfileByUserId(userId);
+  const evidenceContext = await buildSkillConfidenceContext(userId);
+  if (demoProfile) {
+    for (const job of savedJobs) {
+      const analysis = computeJobFitAnalysis(job, demoProfile, null, evidenceContext ?? undefined);
+      await saveJobMatch(userId, job.id, analysis);
+    }
+  }
+  if ((await listApplications(userId)).length === 0 && savedJobs[0]) {
+    await createApplication(userId, { jobDescriptionId: savedJobs[0].id, company: savedJobs[0].company ?? "Northstar Labs", title: savedJobs[0].title ?? "Software Engineering Intern", jobDescription: savedJobs[0].rawText, sourceUrl: "https://example.com/demo-job", fitScore: null, applicationDate: null, currentStage: "preparing", interviewDates: [], notes: "Demo data: tailor the project section and request a referral.", gapsAtApplication: [] });
+  }
+
+  console.log("Computing the demo adaptive roadmap from real profile and saved-job signals...");
+  const adaptiveInput = await buildAdaptiveRoadmapInput(userId);
+  if (adaptiveInput) {
+    const { roadmap: adaptiveRoadmap, changeEvent } = recomputeAdaptiveRoadmap(adaptiveInput.previous, adaptiveInput, "manual");
+    await saveAdaptiveRoadmap(userId, adaptiveRoadmap, changeEvent);
+  }
 
   console.log("Seeding partial SkillForge progress...");
   const modules = getSkillModulesForCareers(request.targetCareers);

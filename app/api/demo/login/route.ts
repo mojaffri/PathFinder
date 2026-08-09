@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { logServerEvent } from "@/lib/observability/logger";
 
 /**
  * Signs the browser in as the shared demo account, server-side — the demo
@@ -17,7 +18,7 @@ export async function POST() {
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    console.error(error);
+    logServerEvent("error", "demo_login_failed", {}, error);
     return NextResponse.json({ error: "Could not start the demo session." }, { status: 500 });
   }
 

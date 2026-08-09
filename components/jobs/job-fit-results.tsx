@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { UpdateRoadmapLink } from "@/components/roadmap/adaptive/update-roadmap-link";
 import type { EvidenceRefType, JobFitAnalysis, RequirementMatchStatus } from "@/types";
 
 /** Only a `project`/`education` ref currently resolves to a page in this app — everything else (experience, GitHub repos not linked to a project, SkillForge assessments) still shows its label and explanation, just not as a link yet. */
@@ -32,6 +33,10 @@ const PRIORITY_VARIANT: Record<"high" | "medium" | "low", BadgeVariant> = {
 export function JobFitResults({ analysis }: { analysis: JobFitAnalysis }) {
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex justify-end">
+        <UpdateRoadmapLink trigger="job-analyzed" label="Reflect this job in my plan" />
+      </div>
+
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
           <div>

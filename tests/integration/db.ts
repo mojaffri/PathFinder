@@ -54,6 +54,10 @@ export async function createTestDb(): Promise<TestDb> {
   await client.exec(loadSql("drizzle/migrations/0004_job_requirements_rls.sql"));
   await client.exec(loadSql("drizzle/migrations/0005_evidence_and_github_schema.sql"));
   await client.exec(loadSql("drizzle/migrations/0006_evidence_and_github_rls.sql"));
+  await client.exec(loadSql("drizzle/migrations/0007_adaptive_roadmap_schema.sql"));
+  await client.exec(loadSql("drizzle/migrations/0008_adaptive_roadmap_rls.sql"));
+  await client.exec(loadSql("drizzle/migrations/0009_product_completeness.sql"));
+  await client.exec(loadSql("drizzle/migrations/0010_api_rate_limits.sql"));
 
   __setTestDb(db);
   return { client, db };

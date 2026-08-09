@@ -20,7 +20,7 @@ export function JobRequirementRow({
   onRemove: () => void;
 }) {
   return (
-    <div className="grid grid-cols-[1fr_9rem_8rem_5rem_2.5rem] items-center gap-2">
+    <div className="grid gap-2 rounded-md border border-border p-3 sm:grid-cols-[1fr_9rem_8rem_5rem_2.5rem] sm:items-center sm:border-0 sm:p-0">
       <Input
         value={requirement.label}
         onChange={(e) => onChange({ ...requirement, label: e.target.value, source: "manual" })}
@@ -57,7 +57,7 @@ export function JobRequirementRow({
         aria-label="Minimum years"
         disabled={requirement.kind !== "experience"}
       />
-      <Button variant="ghost" size="sm" onClick={onRemove} aria-label="Remove requirement">
+      <Button variant="ghost" size="sm" className="justify-self-end" onClick={onRemove} aria-label={`Remove ${requirement.label || "requirement"}`}>
         <Trash2 className="h-4 w-4 text-danger" />
       </Button>
     </div>

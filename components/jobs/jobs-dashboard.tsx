@@ -13,6 +13,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { analyzeJobDescription, deleteJobDescription, getJobDescriptions } from "@/services/job-service";
 import { formatDate } from "@/lib/utils";
 import type { JobDescriptionSummary } from "@/types";
+import { SavedJobInsights } from "@/components/jobs/saved-job-insights";
 
 const MIN_LENGTH = 50;
 
@@ -25,7 +26,7 @@ export function JobsDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   function refresh() {
-    getJobDescriptions().then(setJobs);
+    getJobDescriptions().then(setJobs).catch((cause) => setError(cause instanceof Error ? cause.message : "Could not refresh saved jobs."));
   }
 
   useEffect(() => {
@@ -33,6 +34,8 @@ export function JobsDashboard() {
     let cancelled = false;
     getJobDescriptions().then((j) => {
       if (!cancelled) setJobs(j);
+    }).catch((cause) => {
+      if (!cancelled) { setJobs([]); setError(cause instanceof Error ? cause.message : "Could not load saved jobs."); }
     });
     return () => {
       cancelled = true;
@@ -86,7 +89,7 @@ export function JobsDashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16">
+    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-16">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">Job fit</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
@@ -107,13 +110,15 @@ export function JobsDashboard() {
             placeholder="Paste the full job posting here..."
             className="min-h-48"
           />
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && <p role="alert" className="text-sm text-danger">{error}</p>}
           <Button onClick={handleAnalyze} disabled={analyzing} className="self-start">
             {analyzing && <Spinner />}
             {analyzing ? "Analyzing..." : "Analyze"}
           </Button>
         </CardContent>
       </Card>
+
+      <div className="mt-8"><SavedJobInsights /></div>
 
       <div className="mt-10">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">

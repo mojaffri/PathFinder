@@ -72,9 +72,15 @@ lib/
                         pipeline — a summary sentence over already-computed facts, deterministic template
                         fallback), `token-crypto.ts` (AES-256-GCM for a connected account's OAuth token).
                         See `docs/github-integration.md`.
-  roadmap/              AI + fallback roadmap generation, pacing math, per-career playbooks, target-resume
-                        benchmark. `pacing.ts` is the ONLY place "expected duration" is computed — never
-                        hardcode or re-derive a duration elsewhere.
+  roadmap/              AI + fallback roadmap generation (the narrative `Roadmap`), pacing math, per-career
+                        playbooks, target-resume benchmark. `pacing.ts` is the ONLY place "expected duration"
+                        is computed for that narrative roadmap — never hardcode or re-derive a duration
+                        elsewhere. `skill-graph.ts`/`priority.ts`/`adaptive-generator.ts`/`adaptive-phases.ts`/
+                        `scheduler.ts`/`adaptation.ts`/`adaptive-input.ts`/`saved-job-signals.ts`/
+                        `profile-to-request.ts` (Phase 3) are the SEPARATE, deterministic adaptive roadmap
+                        engine (`types/adaptive-roadmap.ts`, `docs/roadmap-engine.md`) — a single,
+                        continuously-recomputed scheduled plan, not the narrative `Roadmap` above. Never merge
+                        the two systems; they answer different questions and CLAUDE.md protects both.
   skillforge/           Mastery math (`mastery.ts` — also owns `recomputeMastery()`/`freshProgress()`, pure
                         and storage-agnostic, imported directly by `repositories/skillforge-repository.ts`),
                         readiness checks, root-cause diagnosis, next-best-action, roadmap connection.
@@ -92,13 +98,20 @@ lib/
                         RLS-enforcement seam — read before adding any repository function).
   api/                  `with-db-error-handling.ts` — every DB-backed route handler wraps its body in this.
 repositories/           Owns Drizzle + `withUserContext()`. One module per entity group (profile, roadmap,
-                        skillforge, career-match, activity, resume, job, github, evidence) — see "One
-                        persistence boundary" above. `profile-repository.ts#ensureProfileId(tx, userId)` is
-                        the shared helper any repository call needs when its feature can legitimately happen
-                        before a full profile exists (resume upload, pasting a job description) — call it
-                        from inside your own `withUserContext` transaction, don't duplicate the lazy-create
-                        logic. `evidence-repository.ts` persists ONLY manual `skill_evidence_records` rows —
-                        auto-derived evidence is never written here, see `lib/evidence/confidence.ts`.
+                        adaptive-roadmap, skillforge, career-match, activity, resume, job, github, evidence)
+                        — see "One persistence boundary" above. `profile-repository.ts#ensureProfileId(tx,
+                        userId)` is the shared helper any repository call needs when its feature can
+                        legitimately happen before a full profile exists (resume upload, pasting a job
+                        description) — call it from inside your own `withUserContext` transaction, don't
+                        duplicate the lazy-create logic. `evidence-repository.ts` persists ONLY manual
+                        `skill_evidence_records` rows — auto-derived evidence is never written here, see
+                        `lib/evidence/confidence.ts`. `adaptive-roadmap-repository.ts` follows the same
+                        delete-and-reinsert pattern as `roadmap-repository.ts` for phases/tasks, but its
+                        `change_events`/`completed_history` child tables are genuinely APPEND-ONLY — never
+                        add a code path that deletes or rewrites an existing row in either.
+                        Phase 4 adds `application-repository.ts` (compact pipeline + stage events),
+                        `analytics-repository.ts` (bounded/batched read model), and `rate-limit-repository.ts`
+                        (atomic per-profile serverless throttling), all under the same ownership/RLS rules.
 services/               Client-side fetch wrappers over `app/api/*` (profile, roadmap, skillforge, resume,
                         job, github, evidence) — no Drizzle/DB imports here, ever; these run in the browser.
 drizzle/                `migrations/*.sql` (schema + hand-written RLS policies, applied by `scripts/
@@ -146,6 +159,8 @@ Real database: Supabase Postgres, schema owned by Drizzle. Full ER design and ra
 - AI-or-fallback-generated narrative content (roadmap phase resources, certification guidance, etc.) stays JSONB — only normalize a field into its own table/columns when something needs to query or join on it (`gap_items`, `roadmap_phases`/`roadmap_tasks`, and `assessment_attempts` are normalized for exactly this reason).
 - Every résumé-style date field (`education.start_date`, `experience.end_date`, `projects.date`, `awards.date`, `certifications.date`) is `text`, not SQL `date` — a real bug this codebase already hit once (partial dates like `"2022-08"` fail Postgres's `date` parser). Only `profiles.target_date` and `applications.applied_at` are real `date` columns, since those are fed exclusively by an HTML `<input type="date">`. Do not "fix" the text columns back to `date`.
 - Schema changes: edit `lib/db/schema/*.ts`, then `npm run db:generate` (drizzle-kit) followed by `npm run db:migrate` (the project's own runner, `scripts/migrate.ts` — not drizzle-kit's migrator, since it also needs to run hand-written RLS SQL in the same sequence). **`drizzle-kit generate` will emit a `CREATE TABLE "auth"."users"` statement** (because `lib/db/schema/auth.ts` stubs it for FK typing) — always strip that statement before the migration ever touches a real Supabase database, which already owns that table.
+- `activity_events` is the structured source for longitudinal analytics and auditability. Log meaningful state changes (evidence, assessment, roadmap task, readiness, job analysis, application stage, resume), never clicks or document bodies. Analytics must not synthesize missing history.
+- Expensive external/AI endpoints consume `api_usage_windows` through `enforceRateLimit()` after verifying the session and before the external call. Do not replace this with an in-memory map; serverless instances do not share memory.
 
 ## Authentication conventions
 
@@ -172,6 +187,7 @@ Ask this before adding any new scoring, ranking, matching, or "how am I doing" f
 - Server-only secrets (`ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `DEMO_USER_PASSWORD`, `GITHUB_TOKEN`, `GITHUB_TOKEN_ENCRYPTION_KEY`) are read only in server-only modules (several marked with the `server-only` package), never in anything importable from a `"use client"` file. A connected student's GitHub OAuth token is additionally AES-256-GCM-encrypted at rest (`lib/github/token-crypto.ts`) and never returned from any API route — see `docs/github-integration.md`.
 - Every file upload (resume PDFs today; eventually other artifacts) needs a size cap enforced as early as possible (before the request body is fully buffered where feasible) and a content-type check — accept that a client-declared MIME type is not proof of file content, and don't treat it as one.
 - Every API route authorizes the request via `getServerUser()` (does this session's user own this resource?), not just checks that a session exists — see `docs/security.md`.
+- Any auth redirect target must pass through `lib/security/safe-redirect.ts`; query-string redirect destinations are untrusted. Structured logs must never include resume/job text, uploaded documents, OAuth tokens, or request bodies.
 - Never trust a client-supplied `userId`/`profileId` anywhere, even in a request body that also happens to carry other legitimate data (e.g. `POST /api/roadmaps`'s body includes a `userId` field on the `SavedRoadmap` object — the route handler overwrites it with the server-verified id before ever calling a repository; follow this pattern for any new route accepting a body shape that happens to contain an id-like field).
 
 ## Coding conventions
@@ -190,6 +206,7 @@ npm run typecheck           # tsc --noEmit
 npm test                    # vitest run (unit + integration)
 npm run test:unit           # pure-function tests only, no DB
 npm run test:integration    # repository/RLS tests against in-memory Postgres (pglite)
+npm run test:e2e            # Playwright desktop/mobile smoke + axe; real demo journeys run when E2E_DEMO=1
 npm run dev                 # local dev server
 npm run db:generate         # drizzle-kit generate — schema change -> new migration file
 npm run db:migrate          # apply pending migrations (scripts/migrate.ts, not drizzle-kit's migrator)
@@ -199,11 +216,11 @@ npm run db:seed:demo        # seed/refresh the shared "Try Demo" account
 
 ## Important files/modules (read first in a fresh session)
 
-`docs/project-state.md` → `docs/database.md` → `docs/security.md` → `docs/evidence-model.md` → `docs/github-integration.md` → `docs/architecture.md` → `docs/implementation-plan.md` → `types/profile.ts` + `types/roadmap.ts` + `types/skillforge.ts` + `types/evidence.ts` → `lib/gap-analysis/engine.ts` (the single most important piece of business logic in the app) → `repositories/profile-repository.ts` (the template every other repository follows) → `lib/db/with-user-context.ts` (the RLS-enforcement seam).
+`docs/project-state.md` → `docs/database.md` → `docs/security.md` → `docs/evidence-model.md` → `docs/github-integration.md` → `docs/skill-graph.md` → `docs/roadmap-engine.md` → `docs/architecture.md` → `docs/implementation-plan.md` → `types/profile.ts` + `types/roadmap.ts` + `types/adaptive-roadmap.ts` + `types/skill-graph.ts` + `types/skillforge.ts` + `types/evidence.ts` → `lib/gap-analysis/engine.ts` (the single most important piece of business logic in the app) → `lib/roadmap/adaptation.ts` (the adaptive roadmap engine's orchestration point) → `repositories/profile-repository.ts` (the template every other repository follows) → `lib/db/with-user-context.ts` (the RLS-enforcement seam).
 
 ## Things that must not be casually rewritten
 
-- `lib/gap-analysis/engine.ts`, `lib/matching/engine.ts`, `lib/skillforge/mastery.ts`, `lib/roadmap/pacing.ts` — deterministic, audited, and load-bearing. Extend with new cases; don't restructure the scoring approach without a strong reason documented in `docs/project-state.md`. `lib/matching/career-fit.ts`, `lib/jobs/fit-scoring.ts`, and `lib/evidence/confidence.ts` (added for job/career fit scoring and skill confidence) follow the same discipline going forward, now that they exist.
+- `lib/gap-analysis/engine.ts`, `lib/matching/engine.ts`, `lib/skillforge/mastery.ts`, `lib/roadmap/pacing.ts` — deterministic, audited, and load-bearing. Extend with new cases; don't restructure the scoring approach without a strong reason documented in `docs/project-state.md`. `lib/matching/career-fit.ts`, `lib/jobs/fit-scoring.ts`, `lib/evidence/confidence.ts`, and the adaptive roadmap engine (`lib/roadmap/{skill-graph,priority,adaptive-generator,scheduler,adaptation}.ts`) follow the same discipline going forward, now that they exist — deterministic, documented weights/thresholds, unit-tested, no AI in the scoring/scheduling path.
 - `lib/roadmap/fallback.ts` — must always work and must never regress, since it's the guaranteed no-AI-key path.
 - `repositories/*.ts`'s exclusive ownership of Drizzle/`withUserContext()` — don't add a second file that imports `lib/db/schema` directly.
 - `lib/db/with-user-context.ts` and the `FORCE ROW LEVEL SECURITY` policies in `drizzle/migrations/0001_rls_policies.sql` — together they're what makes RLS real rather than decorative (see Authentication conventions above). Don't remove `FORCE` from a policy or stop setting `request.jwt.claim.sub` without understanding exactly what that turns off.

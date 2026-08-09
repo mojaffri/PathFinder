@@ -4,6 +4,7 @@ import { getServerUser } from "@/lib/supabase/server";
 import { getSkillModule } from "@/lib/skillforge/catalog";
 import { recordAttempt } from "@/repositories/skillforge-repository";
 import type { SkillAttemptResponse, SkillEvaluationResult } from "@/types";
+import { logActivityEvent } from "@/repositories/activity-repository";
 
 interface RecordAttemptBody {
   stage: "diagnostic" | "assessment";
@@ -22,6 +23,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ski
 
     const body = (await request.json()) as RecordAttemptBody;
     const progress = await recordAttempt(user.id, skillModule, body.stage, body.responses, body.evaluation);
+    await logActivityEvent(user.id, "assessment_completed", { skillId, skillName: skillModule.name, stage: body.stage, evaluated: body.evaluation !== null, knowledgeScore: body.evaluation?.knowledgeScore ?? null, abilityScore: body.evaluation?.abilityScore ?? null });
     return NextResponse.json({ progress }, { status: 201 });
   });
 }

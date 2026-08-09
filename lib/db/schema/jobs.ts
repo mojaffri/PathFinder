@@ -1,4 +1,4 @@
-import { check, integer, jsonb, pgTable, text, timestamp, uuid, date } from "drizzle-orm/pg-core";
+import { check, index, integer, jsonb, pgTable, text, timestamp, uuid, date } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { profiles, resumes } from "./profiles";
 
@@ -79,11 +79,19 @@ export const applications = pgTable("applications", {
   jobDescriptionId: uuid("job_description_id").references(() => jobDescriptions.id, { onDelete: "set null" }),
   company: text("company").notNull(),
   role: text("role").notNull(),
+  jobDescriptionText: text("job_description_text"),
+  sourceUrl: text("source_url"),
+  fitScore: integer("fit_score"),
   status: text("status").notNull().default("saved"),
   appliedAt: date("applied_at"),
+  interviewDates: text("interview_dates").array().notNull().default(sql`'{}'::text[]`),
   notes: text("notes"),
+  gapsSnapshot: jsonb("gaps_snapshot").notNull().default(sql`'[]'::jsonb`),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
-  check("applications_status_check", sql`${table.status} IN ('saved', 'applied', 'interviewing', 'offer', 'rejected', 'withdrawn')`),
+  check("applications_status_check", sql`${table.status} IN ('saved', 'preparing', 'applied', 'phone_screen', 'interview', 'final_round', 'rejected', 'offer', 'withdrawn')`),
+  check("applications_fit_score_check", sql`${table.fitScore} IS NULL OR ${table.fitScore} BETWEEN 0 AND 100`),
+  index("applications_profile_status_idx").on(table.profileId, table.status),
+  index("applications_profile_updated_idx").on(table.profileId, table.updatedAt),
 ]);

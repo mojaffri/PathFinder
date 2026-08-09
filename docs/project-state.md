@@ -4,7 +4,11 @@ Read this after [`CLAUDE.md`](../CLAUDE.md) and before touching code. This file 
 
 ## Last Updated
 
-2026-08-08 (session 3) — Evidence-backed skills + GitHub integration built this session, finishing the rest of Phase 2: a new cross-cutting `SkillEvidenceRecord`/`SkillConfidenceScore` domain model with a deterministic, quality-weighted (not count-based) confidence engine; GitHub repository analysis (deterministic detectors for testing/CI/Docker/database/backend signals, never stars/forks/commits) via both a public-username/repo path (no auth) and an OAuth-connect path reusing Supabase's existing GitHub sign-in provider (`supabase.auth.linkIdentity`, no separate OAuth app); a `/projects` project-analyzer page; and the job-fit engine's `RequirementMatch.evidence` upgraded from plain strings to the same structured, clickable evidence records. The adaptive roadmap/skill-graph (Phase 3) remains explicitly out of scope. This supersedes session 2's checkpoint (résumé upgrade + career-fit engine + job analysis), which is otherwise unchanged and summarized below.
+2026-08-09 (session 5) — Phase 4 product completeness: a compact nine-stage application pipeline, personalized saved-job requirement/evidence insights, a real-data main dashboard, longitudinal `/analytics`, expanded structured activity events, persistent per-user throttling on AI-cost routes, safe redirect handling, structured Vercel logs via Next instrumentation, Vercel page analytics, security headers, responsive/accessibility fixes, global error recovery, and Playwright + axe smoke coverage. Next.js was upgraded from 16.2.11 to 16.3.0 to clear every production `npm audit` finding. Migrations `0009`/`0010` and the new repository/service/API/UI surfaces are described below.
+
+2026-08-08 (session 4) — Phase 3, the adaptive, evidence-aware roadmap engine, built this session: a curated skill dependency graph with cycle detection (`data/skill-graph.ts`, `lib/roadmap/skill-graph.ts`), a deterministic priority formula (`lib/roadmap/priority.ts`), real dependency-aware task generation (`lib/roadmap/adaptive-generator.ts`), a deterministic weekly scheduler with impossible-deadline detection (`lib/roadmap/scheduler.ts`), adaptive recomputation that preserves completed-task history (`lib/roadmap/adaptation.ts`), saved-job skill-frequency aggregation (`lib/roadmap/saved-job-signals.ts`), five new append-history-aware DB tables + repository (`repositories/adaptive-roadmap-repository.ts`), three API routes, and a full `/roadmap` UI. See "Adaptive Roadmap Engine" below and `docs/skill-graph.md`/`docs/roadmap-engine.md` for the full design. This supersedes session 3's checkpoint (evidence-backed skills + GitHub integration), which is otherwise unchanged and summarized below.
+
+2026-08-08 (session 3) — Evidence-backed skills + GitHub integration built this session, finishing the rest of Phase 2: a new cross-cutting `SkillEvidenceRecord`/`SkillConfidenceScore` domain model with a deterministic, quality-weighted (not count-based) confidence engine; GitHub repository analysis (deterministic detectors for testing/CI/Docker/database/backend signals, never stars/forks/commits) via both a public-username/repo path (no auth) and an OAuth-connect path reusing Supabase's existing GitHub sign-in provider (`supabase.auth.linkIdentity`, no separate OAuth app); a `/projects` project-analyzer page; and the job-fit engine's `RequirementMatch.evidence` upgraded from plain strings to the same structured, clickable evidence records. This supersedes session 2's checkpoint (résumé upgrade + career-fit engine + job analysis), which is otherwise unchanged and summarized below.
 
 ---
 
@@ -29,7 +33,17 @@ The four deterministic domain engines (`lib/matching/engine.ts`, `lib/gap-analys
 
 ## Implemented Features
 
-**Everything from Phase 1 and session 2 still works**, unchanged: Discover, Accelerate, roadmap generation, SkillForge's full guided-freedom loop, real accounts/auth, onboarding, demo mode, resume upgrade, career-fit scoring, job analysis. See `docs/architecture.md` §1 and session 2's summary further down.
+**New this session — cohesive product layer (Phase 4):**
+
+- **Application tracker:** `types/application.ts` → `applications` (expanded by migration `0009`) → `repositories/application-repository.ts` → `/api/applications` → `/applications`. It intentionally stops at company/title/posting/source/fit/date/stage/interview dates/notes/gap snapshot; there are no contacts, email sequences, or generic CRM workflows. Stage changes append structured events.
+- **Saved-job insights:** `lib/jobs/saved-job-insights.ts` deterministically aggregates required/preferred frequency over only the signed-in user's saved postings and joins it to the existing evidence-confidence engine. Every UI label explicitly says this is personalized saved-job data, not labor-market research.
+- **Dashboard and analytics:** `/api/analytics/overview` batches persisted roadmap, assessment, application, job-fit, evidence, and activity data. `/dashboard` is now an actionable command center; `/analytics` displays only recorded history and explicitly refuses synthetic backfill. Demo data is labeled wherever shown.
+- **Security/observability:** authenticated, database-backed rate limits protect resume/job/roadmap/assessment AI paths; auth redirects are same-origin paths only; `instrumentation.ts` and `lib/observability/logger.ts` emit structured, document-free server errors; Vercel Analytics measures page traffic; security headers deny framing/sniffing and restrict browser capabilities.
+- **Product quality:** skip link, `aria-current`, mobile-nav state, reduced-motion support, responsive requirement editing and pipeline overflow, global error/not-found states, desktop/mobile Playwright smoke tests, and axe WCAG A/AA checks. The demo seed now computes saved jobs, fit snapshots, an application, and the adaptive roadmap through real engines/repositories.
+
+**Everything from Phase 1, 2, and session 3 still works**, unchanged: Discover, Accelerate, narrative roadmap generation, SkillForge's full guided-freedom loop, real accounts/auth, onboarding, demo mode, resume upgrade, career-fit scoring, job analysis, evidence-backed skills, GitHub integration. See `docs/architecture.md` §1 and the session summaries further down.
+
+**New this session — the adaptive roadmap engine (Phase 3):** see "Adaptive Roadmap Engine" below for the full writeup.
 
 **New this session — evidence-backed skills + GitHub integration:**
 
@@ -58,13 +72,13 @@ The four deterministic domain engines (`lib/matching/engine.ts`, `lib/gap-analys
 
 ## Persistence
 
-**Supabase Postgres**, schema owned by Drizzle (`lib/db/schema/*.ts`, 30 tables — 27 as of session 2 plus `github_connections`/`github_repos`/`skill_evidence_records`, new this session; `projects` also gained a real `github_url` column, see `docs/database.md`'s "Migration history"). `localStorage` is not used anywhere in the app. Full schema, ER diagram, and design rationale: [`database.md`](./database.md).
+**Supabase Postgres**, schema owned by Drizzle (`lib/db/schema/*.ts`, 36 tables: the prior 35 plus `api_usage_windows`; `applications` was expanded from its Phase-1 placeholder into the live Phase-4 tracker). `localStorage` is not used anywhere in the app. Full schema and migration history: [`database.md`](./database.md).
 
 Key structural decisions:
 - `profiles.user_id` references Supabase's own `auth.users` — there is no separate app-level `users` table.
 - `careers` and `skill_modules` are seeded JSONB reference tables (`npm run db:seed:reference`), not normalized.
 - Every résumé-style date field (`education.start_date`, etc.) is `text`, not SQL `date` — a real bug caught by Phase 1's own tests (see "Bugs Fixed" in the Phase 1 summary below).
-- `applications` remains schema-only (tables + RLS), unused until Phase 4. `job_descriptions`/`job_requirements`/`job_matches`/`github_connections`/`github_repos`/`skill_evidence_records` are all implemented and in active use.
+- `applications` is fully implemented and RLS-protected; `api_usage_windows` is a small per-profile operational table for atomic serverless-safe throttling.
 - `skill_evidence_records` stores **only manually-added** evidence — every auto-derived piece (from the profile, SkillForge progress, or an analyzed GitHub repo) is recomputed on read, never persisted redundantly. See `docs/evidence-model.md`.
 
 ---
@@ -135,9 +149,27 @@ Domain logic unchanged. Persistence is now `roadmaps`/`gap_items`/`roadmap_phase
 
 ---
 
+## Adaptive Roadmap Engine (new this session — Phase 3)
+
+A second, separate roadmap system alongside the narrative `Roadmap` above — see `docs/roadmap-engine.md` for the full pipeline/formula/scheduling design and `docs/skill-graph.md` for the dependency graph. Summary:
+
+- **Skill graph** (`types/skill-graph.ts`, `data/skill-graph.ts`, `lib/roadmap/skill-graph.ts`): ~25 curated nodes covering JS/TS/React/Next.js, SQL/Postgres/ORM/backend-persistence, Python/REST/FastAPI, and a data/ML branch tied to 4 real `data/skillforge-modules.ts` ids. Cycle detection and dangling-prerequisite validation run at index-build time (`buildSkillGraphIndex`), not just informally. Deterministic topological ordering and BFS depth power both task-priority ("what does this unblock") and phase grouping.
+- **Priority formula** (`lib/roadmap/priority.ts#scoreSkillPriority`): documented weighted sum of matched-gap priority/impact, saved-job frequency, unblock count, and evidence weakness, with a mastery discount — same discipline as `lib/evidence/confidence.ts`.
+- **Task generation** (`lib/roadmap/adaptive-generator.ts`, `adaptive-phases.ts`): candidate skills come from target-career relevance, gap-analysis matches, and saved-job requirement matches; unmet prerequisites are pulled in recursively; each unmastered skill becomes one `AdaptiveTask` (title, reason, hours, prerequisites, priority, completion criteria, evidence goal, optional SkillForge learning resource/assessment link) — never AI-authored.
+- **Deterministic scheduler** (`lib/roadmap/scheduler.ts`): topologically-ordered, priority-tie-broken, greedy weekly bin-packing; detects impossible deadlines with the exact worked-example message format from the task brief and concrete recommendations (raise weekly hours to X, extend to date Y, or drop N lowest-priority tasks).
+- **Adaptation** (`lib/roadmap/adaptation.ts`): every recompute merges forward by `skillId` (task ids regenerate every run) so completed/in-progress/skipped status survives a full regenerate; a skill that drops out of scope while completed is preserved in `completedHistory` rather than deleted; a deterministic, per-trigger `RoadmapChangeEvent` summary is produced only when something actually changed.
+- **Saved-job aggregation** (`lib/roadmap/saved-job-signals.ts`): personalized skill frequency across a student's own saved jobs, always labeled as such in the UI, never presented as market-wide stats. Required a new `repositories/job-repository.ts#listFullJobDescriptions` bulk-fetch (existing `listJobDescriptions` only returns lightweight summaries).
+- **Persistence**: `adaptive_roadmaps` (one per profile, `UNIQUE` on `profile_id`) + `adaptive_roadmap_phases`/`_tasks` (delete-and-reinsert, same sanctioned pattern as `roadmap-repository.ts`) + `adaptive_roadmap_change_events`/`_completed_history` (genuinely **append-only** — `repositories/adaptive-roadmap-repository.ts` only ever inserts new rows into these two, never deletes/rewrites). Migrations `0007_adaptive_roadmap_schema.sql` + `0008_adaptive_roadmap_rls.sql`, same two-file schema-then-RLS pattern as `0005`/`0006`.
+- **API**: `GET /api/roadmap/adaptive`, `POST /api/roadmap/adaptive/generate` (body `{trigger}`, the single recompute entrypoint every trigger calls), `PATCH /api/roadmap/adaptive/tasks/[taskId]` (mark complete/in-progress/skipped; reschedules remaining tasks in place when status affects future capacity, without a full regenerate). `services/adaptive-roadmap-service.ts` is the client wrapper.
+- **UI**: new protected route `/roadmap` ("Plan" in the navbar) — `components/roadmap/adaptive/*`: header/readiness/feasibility banner, a personalized saved-job-frequency panel, phase/task cards with status controls and prerequisite indicators, a change-history feed, and a completed-history list. `StaleRoadmapBanner` detects profile drift (target careers/date/weekly hours) client-side and prompts a recompute — deliberately **not** wired into `app/api/profile/route.ts` itself. Contextual "Update my plan" links added to the SkillForge assessment-result view and `/jobs/[id]`'s fit results.
+- **Deliberate scope decisions** (all documented in `docs/roadmap-engine.md`): curated (not exhaustive) skill-graph coverage; one active roadmap per profile, not multiple snapshots; only 3 of 9 `RoadmapChangeTrigger`s are wired to an automatic/contextual UI trigger today (`new-evidence`/`new-github-project`/`new-resume` work via the API but have no UI entry point yet); no free-drag rescheduling; no analytics dashboard (deferred to Phase 4 per the task brief's own instruction).
+- **A real bug caught by manual browser verification this session**: the first version of `AdaptiveRoadmapDashboard` gated its top-level loading spinner on both `isProfileLoading` and its own roadmap-fetch state in one condition — since the roadmap-fetch effect intentionally does nothing when the user isn't authenticated, an unauthenticated visit to `/roadmap` got stuck on an infinite spinner instead of showing the sign-in prompt. Fixed by checking `isProfileLoading`, then `!isAuthenticated`, then the roadmap-fetch loading state as three separate, ordered gates — the same three-stage pattern `JobsDashboard` already used correctly.
+
+---
+
 ## Tests
 
-**76 tests, 12 files, all passing** (was 28/4 at the end of Phase 1):
+**191 tests, 26 Vitest files, all passing** (155 unit + 36 integration), plus Playwright desktop/mobile smoke and axe accessibility coverage. New regression suites cover saved-job insights, real-only readiness history, safe redirects, full application persistence/stage events/ownership, and atomic per-user throttling. The detailed historical inventory below remains useful but predates these Phase-4 additions.
 
 Unit (pure functions, no DB) — `tests/unit/`:
 - `mastery.test.ts` (11), `pacing.test.ts` (8) — unchanged from Phase 1.
@@ -150,15 +182,21 @@ Unit (pure functions, no DB) — `tests/unit/`:
 - `skill-confidence.test.ts` (8, new) — `computeSkillConfidence`: zero evidence never throws and is "Unverified," a bare self-claim alone stays "Unverified," the exact task-spec worked example (claimed + 88/100 assessed + strong project + moderate professional) lands at "High" not "Very High," "Very High" requires all three non-claimed dimensions independently strong, two merely-moderate independent sources land at "Low," every component score stays bounded 0-100; `listTrackedSkills` unions claimed/GitHub-detected/manually-added skill names correctly.
 - `github-client.test.ts` (5, new) — mocks `fetch` directly: successful requests parse cleanly, a 404 becomes a clean `GithubError`, a 403-with-`remaining=0` is recognized as rate-limited with a computed `retryAfterSeconds`, a 403-with-remaining>0 is NOT treated as a rate limit, a network failure is wrapped rather than propagated raw.
 - `github-detectors.test.ts` (11, new) — all seven detectors return `detected:false` (not a throw) for an empty repo; a realistic file tree + deps trips README/testing/CI/Docker/database/backend detection with real evidence; a weak circumstantial match (a `tests/` folder with no config/deps) never claims high confidence; `extractManifestDependencies` for `package.json`/`requirements.txt`, malformed JSON handled without throwing; `mapRepoSignalsToSkills` never reads star/fork/commit fields (structural — the function signature has none), dominant-vs-minor language strength, dedup-to-strongest.
-- `github-analyze-repo.test.ts` (2, new) — mocks the `client.ts` functions: a full realistic analysis produces the expected detected signals/skills/summary; a languages/tree API failure degrades to a sparser-but-valid analysis rather than throwing.
+- `github-analyze-repo.test.ts` (2) — mocks the `client.ts` functions: a full realistic analysis produces the expected detected signals/skills/summary; a languages/tree API failure degrades to a sparser-but-valid analysis rather than throwing.
+- `skill-graph.test.ts` (26, new) — `detectCycle`: acyclic/empty graphs return null, a direct two-node cycle, a longer indirect cycle, a self-referencing node; `buildSkillGraphIndex`: the real curated `SKILL_GRAPH_NODES` build cleanly (no cycles/dangling ids), throws `SkillGraphValidationError` on a dangling prerequisite/cycle/duplicate id, handles an empty node list; `getUnmetPrerequisites`/`getBlockedSkills`/`resolveTransitivePrerequisites`: correctness on a small fixture graph, unknown skill id returns empty rather than throwing; `topologicalOrder`: prerequisite-before-dependent ordering, pulls in un-requested transitive prerequisites, deterministic across repeated calls, empty input, and a full valid ordering over the real curated graph; `graphDepth`: root/hop/out-of-scope-prerequisite cases.
+- `priority.test.ts` (15, new) — `tierForScore` documented thresholds; `scoreSkillPriority`: always bounded 0-100, a critical/high-impact gap outranks a low-priority/low-impact one, saved-job frequency and unblock-count and evidence-weakness each independently raise the score, the mastery discount applies whether triggered by SkillForge level or by confidence alone; `findMatchingGap`/`findMatchingJobFrequency`: keyword-match correctness, highest-priority-match tie-break, empty-list cases.
+- `saved-job-signals.test.ts` (6, new) — `computeSavedJobSkillFrequency`: empty saved-jobs list, single-job 100% case, correct percentage across multiple jobs, descending sort, a requirement appearing twice on the same job counts once, never divides by zero.
+- `scheduler.test.ts` (11, new) — `scheduleTasks`: empty task list, a task that fits within one week, splitting a task across weeks when it exceeds weekly capacity, respecting prerequisites (a dependent never starts before its prerequisite's week finishes), higher-priority work scheduled in earlier weeks, completed/skipped tasks never rescheduled and never consume future capacity, null/zero weekly hours default to an assumed value, the exact impossible-deadline worked example from the task brief (message format + recommendation numbers), a feasible schedule emits no recommendations, deterministic across repeated calls.
+- `adaptation.test.ts` (8, new) — `recomputeAdaptiveRoadmap`: first-ever generation emits no change event, a completed task's status survives a full regenerate, a completed skill that drops out of scope lands in `completedHistory` instead of being deleted, no duplicate history entries, an added-skill diff produces a summary naming the trigger, a changed priority tier is detected, a no-op recompute emits no change event, never throws for an empty profile with no target careers.
 
 Integration (real repository/RLS behavior against pglite) — `tests/integration/`:
 - `profile-repository.test.ts` (6), `resume-repository.test.ts` (7), `job-repository.test.ts` (6) — unchanged from session 2.
-- `rls-isolation.test.ts` (7, was 5) — session 2's five cases plus two new ones this session: an analyzed GitHub repository (`getRepo`/`deleteRepo`, filtering only by id) and manually-added skill evidence (`listManualEvidence`, filtered by `profile_id`) are both proven unreadable/unmodifiable by a second user. Per CLAUDE.md's rule, this was required for `github-repository.ts`'s/`evidence-repository.ts`'s new repository functions.
+- `adaptive-roadmap-repository.test.ts` (6, new) — save/load round-trip including `prerequisiteTaskIds` resolved back via `skillId`, one-roadmap-per-profile (a second save overwrites rather than duplicating), change events append without losing prior ones, `updateTaskStatus` records `completedHistory` and a later regenerate that drops the skill doesn't lose it, an unknown task id returns null rather than throwing.
+- `rls-isolation.test.ts` (8, was 7) — session 3's seven cases plus one new this session: an adaptive roadmap and its tasks (`getAdaptiveRoadmap`/`updateTaskStatus`, both filtering only by the caller's own scoped id) are proven unreadable/unmodifiable by a second user. Per CLAUDE.md's rule, this was required for `adaptive-roadmap-repository.ts`'s new repository functions.
 
-**Test infrastructure:** `tests/integration/db.ts` now applies migrations `0000` → `0006` (`0005_evidence_and_github_schema.sql` + `0006_evidence_and_github_rls.sql` added this session — a new migration must be added to this list or the harness silently won't see it). `server-only` is now aliased to a no-op stub in `vitest.config.mts` (`tests/support/server-only-stub.ts`) so server-only modules (`lib/github/client.ts`, `lib/github/token-crypto.ts`, etc.) can be unit-tested directly without the real package throwing outside a Next.js server-component build — a reusable pattern for any future server-only file that needs direct unit coverage. The non-superuser `app_role` switch is unchanged from Phase 1.
+**Test infrastructure:** `tests/integration/db.ts` now applies migrations `0000` → `0008` (`0007_adaptive_roadmap_schema.sql` + `0008_adaptive_roadmap_rls.sql` added this session — a new migration must be added to this list or the harness silently won't see it). `server-only` is aliased to a no-op stub in `vitest.config.mts` (`tests/support/server-only-stub.ts`, unchanged this session) so server-only modules can be unit-tested directly. The non-superuser `app_role` switch is unchanged from Phase 1.
 
-**Not yet covered (tracked as debt):** `lib/gap-analysis/engine.ts` still has zero direct unit coverage — still the top test-debt item the next session that touches that file should close first, per CLAUDE.md.
+**Not yet covered (tracked as debt):** `lib/gap-analysis/engine.ts` still has zero direct unit coverage — carried over again this session (touched only indirectly via `lib/roadmap/adaptive-input.ts#buildAdaptiveRoadmapInput`, which calls `analyzeGaps` unchanged; still the top test-debt item the next session that actually modifies that file's logic should close first, per CLAUDE.md).
 
 ---
 
@@ -170,24 +208,28 @@ Live at https://path-finder-umber.vercel.app/ — **not yet redeployed with this
 
 ## Known Issues
 
-**Closed this session:** GitHub project analysis (was session 2's "Next Recommended Phase" #1) — done, see "GitHub Integration" above. `projects.github_url` being schema-only/unwired is also closed (now real).
+**Closed this session:** Phase 3 — the adaptive skill-graph/scheduler (was session 3's "Next Recommended Phase" #2) — done, see "Adaptive Roadmap Engine" above.
 
 **Carried over, still open:**
 1. `lib/resume/pdf-text.ts`/`docx-text.ts` has no timeout/resource ceiling around document parsing.
 2. `components/skillforge/skill-detail-view.tsx` (691 lines) mixes data-fetching, several `useMemo` chains into domain engines, and ~10 rendered sections in one file.
 3. No unit tests for `lib/gap-analysis/engine.ts` — top test-debt priority the next session that touches it.
-4. No rate limiting anywhere (`/api/skillforge/evaluate`, `/api/jobs`, and now every `/api/github/*` route are all real per-request costs — Anthropic spend or GitHub API quota — with no throttle on a single account's volume).
+4. Anthropic-cost paths now have persistent per-user limits. GitHub's outbound paths still rely on GitHub's own rate-limit responses; host-level IP/WAF controls remain a production-operations improvement.
 5. Demo mode is a single shared account with no per-visitor isolation or auto-reset. Documented as an accepted limitation in `docs/security.md`.
 6. Production Vercel deployment has not been reconnected to a real Supabase project — see "Deployment" above.
 7. `lib/jobs/fit-scoring.ts#estimateYearsOfExperience` is a best-effort estimate from free-text resume dates — genuinely approximate by design.
 8. `/jobs` has no URL-import option (paste-only) — a deliberate scope decision, not an oversight.
 9. `lib/jobs/heuristic-extractor.ts`'s required-vs-preferred classification depends entirely on section-heading detection.
-
-**New this session:**
 10. GitHub OAuth-connect (`supabase.auth.linkIdentity` + `app/auth/callback/route.ts`'s token capture) is real code, typechecked and built, but **not live-verified** — no Supabase project with GitHub enabled is configured in this local environment. Public username/repo analysis (the primary path) doesn't share this gap — it needs no auth infrastructure at all.
 11. No revocation call to GitHub's own token-revocation endpoint on "Disconnect" — only the local encrypted copy is deleted. Documented as acceptable for a `read:user`-only, non-`repo`-scoped token in `docs/github-integration.md`, but worth adding for defense-in-depth later.
 12. The GitHub file-tree fetch (`git/trees/{branch}?recursive=1`) is capped at whatever GitHub returns before truncating (~100k entries) — an enormous monorepo gets a partial (not wrong, just incomplete) signal picture.
 13. `lib/evidence/confidence.ts`'s "claimed" dimension treats a skill as binary present/absent — the current `StudentProfile.currentSkills` shape has no per-skill self-rated proficiency level (the task's own worked example implies one, e.g. "Claimed: Advanced"), so "claimed" evidence is presence-only rather than a graded claim. Extending `currentSkills` to carry an optional level would be a real (if small) profile-schema change, deliberately not done this session to avoid scope creep into the resume/profile UI.
+
+**New this session:**
+14. Only 3 of the 9 `RoadmapChangeTrigger` values (`target-role-changed`/`deadline-changed`/`weekly-hours-changed` via automatic staleness detection, plus `assessment-passed`/`assessment-failed`/`job-analyzed`/`manual` via explicit UI links) are actually reachable from the UI — `new-evidence`/`new-github-project`/`new-resume` work correctly if called directly against the API but have no button/link anywhere yet. See `docs/roadmap-engine.md`.
+15. No free-drag task rescheduling — a deliberate invariant-preserving decision (see `docs/roadmap-engine.md`), but worth restating here so it isn't mistaken for an oversight.
+16. `lib/roadmap/adaptive-input.ts#buildAdaptiveRoadmapInput` calls four independent data sources (profile, saved jobs, SkillForge progress, evidence confidence, previous roadmap) via `Promise.all` but doesn't cache/dedupe against calls other routes might make in the same request lifecycle — acceptable at current traffic, worth revisiting if `/roadmap` and another evidence-heavy page are ever loaded in the same server request.
+17. The adaptive roadmap's authenticated end-to-end flow (generate → mark task complete → recompute → verify history/change-event persistence → infeasible-deadline banner) was **not live-verified against a real signed-in session** this session — no Supabase project is configured in this local environment (same infrastructure gap every prior session has carried). It IS verified at the unit/integration-test level (73 new tests, including a dedicated repository round-trip test) and the unauthenticated `/roadmap` page was manually browser-tested (see "Verification Status" below) — which is what caught and fixed a real bug (see "Adaptive Roadmap Engine" above).
 
 ---
 
@@ -209,6 +251,7 @@ Both verified by a full `npm run lint` + `npm run typecheck` + `npm test` + `npm
 - `lib/matching/evidence.ts`'s `fuzzyIncludes`/`normalizeText` intentionally duplicate ~15 lines of logic that also exists privately inside `lib/gap-analysis/engine.ts` — a deliberate tradeoff (see "Career Matching" above), not an oversight; revisit only if `gap-analysis/engine.ts` is ever refactored for its own reasons.
 - `app/api/jobs/[id]/match/route.ts` fetches the profile twice (once directly for its own 422 check, once inside `buildSkillConfidenceContext`) — a small, deliberate redundancy documented inline rather than restructuring the 422 check around the context-builder's `null` return.
 - See the Phase 1 carried-over items (skill-detail-view.tsx size, playbooks/data file scalability) — unchanged this session.
+- `app/api/roadmap/adaptive/generate/route.ts` reuses `input.previous` (already fetched inside `buildAdaptiveRoadmapInput`) instead of calling `getAdaptiveRoadmap` a second time — same "avoid the obvious redundancy where it's free to avoid" instinct as the job-fit route above, but this one didn't need a documented tradeoff since there was no reason to duplicate the call.
 
 ---
 
@@ -233,35 +276,58 @@ Both verified by a full `npm run lint` + `npm run typecheck` + `npm test` + `npm
 - **Manual evidence is the only evidence type persisted; everything else is recomputed.** Same reasoning as `topMoves`: auto-derived evidence (from profile/SkillForge/GitHub) is cheap to recompute and would otherwise go stale the instant any input changes.
 - **`RequirementMatch.evidence` changed shape (`string[]` → `SkillEvidenceRecord[]`) rather than adding a parallel field.** This is Phase 2 work, still evolving pre-launch — CLAUDE.md doesn't protect this specific type, and duplicating it (`evidence` + `evidenceRefs`) would've been worse than one clean breaking change with tests updated alongside it.
 
+**This session:**
+- **A second, separate roadmap system, not an extension of the narrative `Roadmap`.** `types/adaptive-roadmap.ts`/`AdaptiveRoadmap` was added alongside `types/roadmap.ts`/`Roadmap` rather than adding scheduling fields to the existing type — they answer genuinely different questions (a one-shot AI/fallback narrative vs. a single continuously-recomputed, scheduled plan) and CLAUDE.md explicitly protects the existing roadmap engines from casual rewrites. This also means Accelerate's existing narrative roadmap keeps working completely unchanged.
+- **One active adaptive roadmap per profile, not multiple saved snapshots.** Unlike `SavedRoadmap`, `adaptive_roadmaps.profile_id` is `UNIQUE`. The task brief frames this as "the roadmap" (singular, evolving), and completed-task/change history is preserved via genuinely append-only child tables instead of via multiple full snapshots.
+- **Automatic recompute triggers are scoped to profile-field changes (via client-side staleness detection), not wired into every mutation route.** Hooking into `app/api/profile/route.ts`, the resume-upload route, the evidence-add route, and the GitHub-import route would touch four already-relied-upon, unrelated routes for triggers (`new-resume`/`new-evidence`/`new-github-project`) that are real and available via the API but not yet worth that blast radius — an explicit "Update my plan" link is the safer, still-real alternative. See `docs/roadmap-engine.md`.
+- **`prerequisiteTaskIds` are persisted as `prerequisite_skill_ids` (skill ids, not task ids) and resolved back to sibling task ids at read time.** Task ids are regenerated on every recompute (they have no stable identity across runs — `skillId` is what's stable), so persisting a task-id-based FK would break the moment a roadmap regenerates. Storing the stable `skillId` and resolving at read time avoids that entirely, at the cost of one extra map-lookup pass in the repository — the same tradeoff already made for `findRoadmapConnection`'s keyword matching elsewhere in this codebase (prefer a stable natural key over a synthetic one that churns).
+
 ---
 
 ## Current Phase
 
-Phase 2 — Flagship Intelligence, **complete**: résumé upgrade, centralized deterministic career-fit scoring, job-description analyzer + deterministic job-fit engine (session 2), plus evidence-backed skills + GitHub integration (this session). Phase 3 (adaptive skill graph/scheduler) untouched — explicitly out of scope per this session's own instructions ("do not build the full roadmap scheduler in this phase").
+Phase 4 — Product Completeness, **complete in the repository**. Production still requires migrations `0009` and `0010`, a demo reseed, deployment verification, and the authenticated live Playwright journey before this exact state is considered fully proven online.
 
 ## Next Recommended Phase
 
 Two reasonable next steps, in priority order:
 
-1. **Close the remaining test-debt gap:** `lib/gap-analysis/engine.ts` still has zero direct unit coverage — the last major deterministic engine without it, now that `matching/engine.ts`, `matching/career-fit.ts`, `jobs/fit-scoring.ts`, and `evidence/confidence.ts` all have real coverage.
-2. **Phase 3 — Adaptive System** per `docs/implementation-plan.md`: formalize the SkillForge prerequisite graph, add a deterministic weekly scheduler reusing `lib/roadmap/pacing.ts`'s duration math. This session's evidence/GitHub work is a natural input to Phase 3 (a skill demonstrated via a strong analyzed repo could inform scheduling priority) but that connection is not built yet — Phase 3 should decide deliberately whether/how to wire it in, not inherit it accidentally.
+1. Apply migrations `0009`/`0010`, reseed the demo, and run the authenticated live Playwright journeys after deployment.
+2. Close the remaining direct-test gap in `lib/gap-analysis/engine.ts` before changing that engine.
+3. Add contextual `new-evidence`/`new-github-project`/`new-resume` adaptive-roadmap refresh links; those triggers remain backend-supported but not surfaced everywhere.
 
-Before either: provision a real Supabase project for the Vercel deployment (still not done — see "Deployment"), and live-verify the GitHub OAuth-connect path against a real Supabase project with GitHub enabled (see "GitHub Integration" above — the only piece of this session's work that couldn't be exercised end-to-end locally).
+Before any of these: provision a real Supabase project for the Vercel deployment (still not done — see "Deployment"), live-verify the GitHub OAuth-connect path (carried over from session 3), and live-verify the adaptive roadmap's full authenticated flow (carried over from this session — see Known Issue #17).
 
 ## Important Files
 
-Read these first in a fresh session, in this order: `CLAUDE.md` → this file → `docs/database.md` → `docs/security.md` → `docs/evidence-model.md` → `docs/github-integration.md` → `docs/architecture.md` → `docs/implementation-plan.md` → `types/profile.ts` + `types/roadmap.ts` + `types/skillforge.ts` + `types/job.ts` + `types/evidence.ts` + `types/github.ts` → `lib/gap-analysis/engine.ts` → `lib/evidence/confidence.ts` (the newest deterministic engine, same discipline) → `repositories/profile-repository.ts` (the template every other repository follows) → `lib/db/with-user-context.ts` (the RLS-enforcement seam — read this before adding any new repository function).
+Read these first in a fresh session, in this order: `CLAUDE.md` → this file → `docs/database.md` → `docs/security.md` → `docs/evidence-model.md` → `docs/github-integration.md` → `docs/skill-graph.md` → `docs/roadmap-engine.md` → `docs/architecture.md` → `docs/implementation-plan.md` → `types/profile.ts` + `types/roadmap.ts` + `types/adaptive-roadmap.ts` + `types/skill-graph.ts` + `types/skillforge.ts` + `types/job.ts` + `types/evidence.ts` + `types/github.ts` → `lib/gap-analysis/engine.ts` → `lib/roadmap/adaptation.ts` (the newest orchestration point, same deterministic discipline) → `lib/evidence/confidence.ts` → `repositories/profile-repository.ts` (the template every other repository follows) → `lib/db/with-user-context.ts` (the RLS-enforcement seam — read this before adding any new repository function).
 
 ## Verification Status
 
-Run 2026-08-08 (session 3), this exact repository state:
+Run 2026-08-09 (session 5), this exact repository state before deployment:
+
+```text
+npm run lint             → clean
+npm run typecheck        → clean
+npm test                 → 191 passed (26 files: 155 unit, 36 integration)
+npm run test:e2e         → 5 passed desktop/mobile public + axe checks; 5 real-demo checks skipped locally because Supabase/demo credentials are intentionally absent
+npm run build            → clean (Next.js 16.3.0, 42 routes/pages)
+npm audit --omit=dev     → 0 vulnerabilities
+```
+
+The local browser run verifies loading/empty/auth/error rendering on protected journeys at desktop and mobile sizes plus automated WCAG A/AA serious/critical checks on the landing page. The authenticated demo journey is implemented but must be rerun with `E2E_DEMO=1` against the deployed seeded account after migrations/reseed. The older session-4 verification notes below are historical context, not the current checkpoint.
+
+Run 2026-08-08 (session 4), this exact repository state:
 
 ```
 $ npm run lint         → clean, no output
 $ npx tsc --noEmit     → clean, no output
-$ npm test             → 106 passed (16 test files)
+$ npm test             → 179 passed (22 test files)
 $ npm run build        → clean (Next.js 16.2.11, Turbopack, all routes generated, including
-                          /projects, /projects/[id], /api/github/*, /api/skills/*)
+                          /roadmap, /api/roadmap/adaptive, /api/roadmap/adaptive/generate,
+                          /api/roadmap/adaptive/tasks/[taskId])
 ```
 
-**Not verified this session** (no real Supabase or Anthropic credentials configured in this local environment, and no live GitHub OAuth app/provider to exercise — same infrastructure gap every prior session has carried): the full signed-in GitHub-connect (`linkIdentity` → `app/auth/callback` token capture → encrypted storage) flow; a live public-username/repo GitHub API analysis (mocked in tests, never hit the real API this session); the `/projects` page's actual rendered UI in a browser (no dev server was run — this was a code+test+build verification session, not a manual in-browser one). All new logic is covered by unit tests (mocking `fetch`/the Anthropic client boundary, never faking a function's return value directly, per CLAUDE.md's testing rule) and repository-level integration/RLS tests against pglite. A live Supabase + Anthropic + GitHub smoke test, plus an actual in-browser walkthrough of `/projects`, remains the responsible next verification step before calling this phase fully proven in production.
+**Manually browser-tested this session** (via a local dev server, unauthenticated — no Supabase project is configured in this local environment, so a signed-in walkthrough wasn't possible, same gap every prior session has carried): `/roadmap` in its unauthenticated state, `/jobs`, and `/skillforge` — all render without console or server errors. This caught and fixed a real bug: `AdaptiveRoadmapDashboard`'s first version showed an infinite loading spinner instead of the sign-in prompt for an unauthenticated visitor (see "Adaptive Roadmap Engine" above for the root cause and fix).
+
+**Not verified this session** (same infrastructure gap as sessions 2-3): the adaptive roadmap's full signed-in flow (generate → mark complete → recompute → verify history/change-event persistence → infeasible-deadline banner rendering with a real profile); the GitHub OAuth-connect flow (carried over from session 3); a live public-username/repo GitHub API analysis or live Anthropic call. All new logic is covered by unit tests (pure-function composition, no mocking needed since the adaptive engine has no AI/network calls in its core path) and a dedicated repository-level integration/RLS test against pglite. A live Supabase + Anthropic smoke test, plus an authenticated in-browser walkthrough of `/roadmap`, remains the responsible next verification step before calling this phase fully proven in production.

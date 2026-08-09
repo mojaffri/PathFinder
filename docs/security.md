@@ -72,8 +72,15 @@ The "Try Demo" button (`components/landing/try-demo-button.tsx`) signs the brows
 
 `github_connections.access_token_encrypted` is AES-256-GCM ciphertext (`lib/github/token-crypto.ts`), captured opportunistically in `app/auth/callback/route.ts` when a `supabase.auth.linkIdentity({ provider: "github" })` flow completes (see `components/github/connect-github-button.tsx`) — this reuses the app's *existing* Supabase Auth architecture rather than standing up a second, separate GitHub OAuth app. Only `read:user` scope is ever requested (no `repo` scope — every analysis, connected or not, only ever reads public GitHub data). The decrypted token is read server-side only (`getDecryptedGithubToken()` in `repositories/github-repository.ts`) to make an outbound GitHub API call on the student's behalf, and is never included in any API response — `GET /api/github/connection` returns only `{ connected, username, connectedAt }`. Full detail: [`github-integration.md`](./github-integration.md).
 
-## Known gaps (tracked, not fixed this phase)
+## Phase 4 hardening
+
+- Resume extraction, job extraction, narrative-roadmap generation, and SkillForge evaluation require a verified session and consume an atomic per-profile database window before any external AI call. Rejections return 429 and `Retry-After`.
+- Auth redirects pass through `safeRedirectPath()`; external, protocol-relative, and backslash targets are rejected.
+- Next instrumentation emits structured errors to Vercel logs using only route/method/status/request IDs — never resume text, job descriptions, tokens, or request bodies.
+- Global framing/sniffing/referrer/permissions headers are enabled. `npm audit --omit=dev` reports zero production vulnerabilities after upgrading Next.js to 16.3.0.
+
+## Known gaps
 
 See `project-state.md` → Known Issues for the full, current list. The security-relevant ones as of this phase:
-- No rate limiting on any API route (a `/api/skillforge/evaluate` or job-description-analysis call is a real Anthropic API spend per request — nothing currently throttles a single account's request volume).
-- No audit log beyond `activity_events`, which only records a handful of high-level events (profile created, roadmap saved, onboarding completed) — not a full access log.
+- Profile-based throttling is not a replacement for Vercel Firewall/IP controls against pre-auth traffic.
+- `activity_events` records meaningful product changes for analytics/auditability, not every read as a full access log.

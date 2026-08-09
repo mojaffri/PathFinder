@@ -11,11 +11,15 @@ import { getServerUser } from "@/lib/supabase/server";
 import { saveResume, setResumeStoragePath } from "@/repositories/resume-repository";
 import { uploadResumeFile } from "@/lib/supabase/storage";
 import type { ResumeUploadResult } from "@/types";
+import { logActivityEvent } from "@/repositories/activity-repository";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 export async function POST(request: Request) {
   return withDbErrorHandling(async () => {
     const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "Please sign in before uploading a resume." }, { status: 401 });
+    const limited = await enforceRateLimit(user.id, "resume-analysis", 8, 3600);
+    if (limited) return limited;
 
     // Reject oversized uploads before buffering the body into memory.
     // `formData()` below has to read the entire multipart payload up front, so
@@ -85,6 +89,7 @@ export async function POST(request: Request) {
     // extraction result the student is actually waiting on.
     const storagePath = await uploadResumeFile(profileId, resumeId, validation.fileType, buffer);
     if (storagePath) await setResumeStoragePath(user.id, resumeId, storagePath);
+    await logActivityEvent(user.id, "resume_updated", { resumeId, fileType: validation.fileType, extractionMethod });
 
     const data: ResumeUploadResult = { ...extraction, extractionMethod, resumeId };
     return NextResponse.json(data);
