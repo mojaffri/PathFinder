@@ -2,6 +2,7 @@ import { requestStructuredAI } from "@/lib/ai/structured-output";
 import { AI_ROADMAP_JSON_SCHEMA, AIRoadmapContentSchema, type AIRoadmapContent, type RoadmapRequest } from "./schema";
 import { formatGpa } from "@/lib/gpa";
 import { resolvePlaybooksForCareers } from "./playbooks";
+import { getStageStrategy } from "./stage-strategy";
 import type { GapAnalysis, ResolvedCareer } from "@/types";
 
 const TOOL_NAME = "generate_roadmap";
@@ -57,6 +58,7 @@ function formatCareerList(titles: string[]): string {
 function buildPrompt(request: RoadmapRequest, resolvedCareers: ResolvedCareer[], gapAnalysis: GapAnalysis): string {
   const targetList = formatCareerList(request.targetCareers);
   const isVersatile = request.targetCareers.length > 1;
+  const stage = getStageStrategy(request.educationStage);
 
   const competitivenessBlock = resolvedCareers
     .map(({ title, career }) => {
@@ -75,7 +77,7 @@ function buildPrompt(request: RoadmapRequest, resolvedCareers: ResolvedCareer[],
 
   const playbooks = resolvePlaybooksForCareers(resolvedCareers);
   const playbooksBlock = playbooks
-    .map((p) => `=== ${p.field} playbook ===\nGating exam: ${p.gatingExam ?? "none — no single dominant standardized test for this career"}${p.gatingExam ? ` (${p.gatingExamReadiness === "requires-upperclass-standing" ? "only a realistic near-term priority once the student has upperclass standing (junior year or later); otherwise it belongs in the long-range phase, not Phase A or B" : "eligible whenever"})` : ""}\n${p.keyTools.length > 0 ? `Tools to prioritize learning first for immediate resume leverage: ${p.keyTools.join(", ")}\n` : ""}Immediate resume builders that belong in Phase A regardless of any credential timeline:\n${p.immediateResumeBuilders.map((b) => `- ${b}`).join("\n")}\nNetworking specificity for this career: reach out to ${p.networkingTemplate.roles}, focused on ${p.networkingTemplate.focusAreas} — never just "network with people in the field".\nBanned generic phrases for this career: ${p.genericPhrasesToAvoid.map((g) => `"${g}"`).join(", ")}.`)
+    .map((p) => `=== ${p.field} playbook ===\nGating exam: ${p.gatingExam ?? "none - no single dominant standardized test for this career"}${p.gatingExam ? ` (${p.gatingExamPolicy === "program-dependent" ? "program-dependent: verify the student's actual shortlist before recommending registration or preparation" : p.gatingExamReadiness === "requires-upperclass-standing" ? "only a realistic near-term priority once the student has upperclass standing; otherwise keep it long-range" : "eligible whenever"})` : ""}\n${p.keyTools.length > 0 ? `Tools to prioritize learning first for immediate resume leverage: ${p.keyTools.join(", ")}\n` : ""}Immediate resume builders that belong in Phase A regardless of any credential timeline:\n${p.immediateResumeBuilders.map((b) => `- ${b}`).join("\n")}\nNetworking specificity for this career: reach out to ${p.networkingTemplate.roles}, focused on ${p.networkingTemplate.focusAreas} - never just "network with people in the field".\nBanned generic phrases for this career: ${p.genericPhrasesToAvoid.map((g) => `"${g}"`).join(", ")}.`)
     .join("\n\n");
 
   return `Build a detailed, honest, phase-by-phase career acceleration roadmap for a student targeting ${isVersatile ? `${request.targetCareers.length} careers: ${targetList}` : `"${targetList}"`}.
@@ -98,6 +100,14 @@ Student profile:
 - Career goals: ${request.careerGoals || "Not provided"}
 - Weekly hours available: ${request.weeklyHoursAvailable ?? "Not provided"}
 
+Deterministic stage strategy (authoritative):
+- Current position: ${stage.positionSummary}
+- Immediate focus: ${stage.immediateFocus}
+- Right-sized experience target: ${stage.experienceGoal}
+- Application approach: ${stage.applicationApproach}
+- Competitive edge after the baseline is covered: ${stage.competitiveEdge}
+- Recommended scope for one substantial project at this stage: about ${stage.recommendedProjectHours} hours
+
 Pre-computed gap analysis (authoritative — build on this, don't contradict it). Each gap is tagged with a priority AND a timeHorizon (immediate / near-term / long-term) computed from the student's actual stage and each credential's real eligibility rules — treat timeHorizon as an instruction about which phase it belongs in, not a suggestion:
 ${gapsBlock}
 
@@ -117,6 +127,9 @@ ${isVersatile
 - Do not recommend certifications just because they sound impressive. Use the honest certification guidance given above, and prefer recommending a project or internship instead when that's genuinely more valuable. Only include certifications actually worth mentioning.
 - Ground salary, competitiveness, and timeline claims in reality, don't oversell. The realityCheck field should cover concrete tradeoffs (entry-level competition, degree/grad-school expectations, internship importance, geographic flexibility, common misconceptions, what separates strong candidates from average ones) without fear-based language or invented statistics${isVersatile ? ", including the real tradeoff of pursuing versatility (e.g. some roles specifically want depth in one area, not breadth)" : ""}.
 - Keep every list item concrete and actionable, not abstract advice.
+- STAGE FIT IS NON-NEGOTIABLE: do not give a high-school student a college internship-volume campaign, tell an early undergraduate to spend months on a distant admissions test, tell a graduate student to make a beginner tutorial project, or tell a career changer to erase their prior experience. Use the deterministic stage strategy above. First restore missing foundations, then recommend one hard-to-copy selection signal that is genuinely ahead of peers at the same stage.
+- OPTIONAL OR PROGRAM-DEPENDENT TESTS: never tell the student to register or prepare until a requirement matrix for their actual shortlisted programs shows the test is required or strategically useful. Verification is the action; test prep is not the default.
+- VALUE TEST: remove any recommendation whose only output is passive consumption, a generic certificate, an unreviewed tutorial, or application volume without fit. Every substantial task must produce skill, evidence, access, or selection readiness that the target field actually rewards.
 
 TITLES MUST BE POSITIVE ACTIONS, NEVER DIAGNOSES: every phase title, milestone title, and recommendedAction title must read as something the student goes and DOES, never as an audit finding pointing out what's missing or lacking. Banned patterns: "Missing X", "No X yet", "Lacking X", "X not demonstrated", "Weak X". Instead, name the concrete action with the specific thing involved: "Clear the FE Chemical Exam" instead of "Missing FE Exam credential"; "Build a Python-based distillation column simulation" instead of "No Python experience shown"; "Secure 2-3 informational chats with process engineers" instead of "No documented networking". The gaps given to you above are diagnostic input for your reasoning, not phrasing to copy into output titles.
 

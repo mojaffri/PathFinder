@@ -8,6 +8,8 @@
 4. Persist enriched attempt history and show progress over time.
 5. Make mastery recency- and repeat-performance-aware.
 6. Add request bounds, endpoint throttling, offline regression tests, and architecture documentation.
+7. Make roadmap sequencing stage-aware across the full 46-career catalog and add exhaustive career/stage quality tests.
+8. Replace blanket credential, internship, and portfolio advice with program-aware and field-appropriate evidence guidance.
 
 ## Next priorities
 
@@ -17,3 +19,5 @@
 4. Add artifact-review workflows and reviewer verification for project evidence.
 5. Add browser tests for assessment retry, refresh persistence, keyboard flow, and responsive layouts.
 6. Feed weak SkillForge concepts into saved-roadmap ordering through an explicit, versioned prioritization adapter.
+7. Add a dated source-review workflow for admissions, licensing, and recruiting guidance, plus live official links where practical.
+8. Add outcome analytics to learn which roadmap actions lead to interviews, placements, and verified mastery without turning correlation into scoring truth.

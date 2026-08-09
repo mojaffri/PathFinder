@@ -2,7 +2,7 @@
 
 # PathFinder — Project Overview
 
-PathFinder is a STEM Career & Academic Roadmap Engine built with Next.js (App Router, TypeScript, Tailwind v4). It helps students figure out which STEM career fits them (Discover) and then builds a concrete, personalized plan to become competitive for it (Accelerate). The app is intentionally **STEM-only** — no business/marketing/law/sales career paths are ever added, matched, or recommended.
+PathFinder is a Career & Academic Roadmap Engine built with Next.js (App Router, TypeScript, Tailwind v4). It helps students identify a fitting career (Discover) and build a concrete, personalized plan to become competitive for it (Accelerate). The curated catalog currently contains 46 careers across engineering, technology, data/AI, life sciences, healthcare, research, law, business/finance, and humanities/social sciences.
 
 ## How it works
 
@@ -26,7 +26,10 @@ Every recommendation/milestone carries a real `estimatedHours` figure. Actual pa
 
 **Key invariants to preserve when making changes**:
 - Never expose the Anthropic API key client-side — all AI calls happen server-side (`lib/ai/anthropic-client.ts`).
-- Never recommend or route toward non-STEM industries.
+- Route roadmap advice through the canonical education-stage strategy. High-school, college, graduate, alternative-training, recent-graduate, and career-change users must receive materially different sequencing.
+- Do not schedule program-dependent admissions tests until the user verifies the actual target programs. Retired credentials must be removed, not presented as optional.
+- Every substantial roadmap action must create demonstrated skill, credible evidence, access to a real opportunity, or required readiness. Prefer externally reviewed, hard-to-copy work over generic certificates and passive course consumption.
+- Tactical action hours must add up to their parent gap estimate; phase timelines must be derived from weekly availability.
 - Never fabricate resume achievements/metrics — use bracket placeholders (e.g. `[quantify impact]`) for anything not evidenced.
 - Keep career matching deterministic/explainable — do not replace it with an LLM call.
 - Treat resume-extracted data as unverified until the student confirms it in the review UI.

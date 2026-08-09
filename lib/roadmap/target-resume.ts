@@ -1,6 +1,41 @@
 import type { RoadmapRequest } from "./schema";
 import type { ResolvedCareer, ResumeBenchmarkItem, TargetResumeBenchmark } from "@/types";
 
+function evidenceTargets(career: NonNullable<ResolvedCareer["career"]>): { experience: string; work: string; roleSuffix: string; organization: string } {
+  if (career.category === "healthcare") return {
+    experience: "Sustained, supervised clinical exposure plus the prerequisites required by your target programs",
+    work: "1-2 substantial clinical, service, research, or quality-improvement contributions with verified outcomes",
+    roleSuffix: "Experience target",
+    organization: "[Target clinic, hospital, lab, community organization, or training program]",
+  };
+  if (career.category === "law") return {
+    experience: "Relevant legal, policy, advocacy, research, or client-service experience with strong writing evidence",
+    work: "2-3 polished writing, research, case-analysis, or advocacy samples appropriate to your current stage",
+    roleSuffix: "Experience target",
+    organization: "[Target legal, policy, government, nonprofit, or research organization]",
+  };
+  if (career.category === "science-research" || career.category === "biotech-life-sciences") return {
+    experience: "Sustained research or laboratory experience with a clearly owned contribution",
+    work: "1-2 rigorous studies, posters, analyses, protocols, or reproducible research artifacts",
+    roleSuffix: "Research target",
+    organization: "[Target lab, research group, institute, or science employer]",
+  };
+  if (career.category === "humanities-social-sciences") return {
+    experience: "Relevant field, research, policy, communications, public-service, or community experience",
+    work: "2-3 decision-ready writing, research, campaign, reporting, or policy samples with real audiences",
+    roleSuffix: "Experience target",
+    organization: "[Target newsroom, agency, government office, nonprofit, research group, or community partner]",
+  };
+  return {
+    experience: /essential|mandatory|close to|strongly/i.test(career.internshipExpectations)
+      ? "1-2 relevant internships, co-ops, or equivalent results-bearing experiences"
+      : "1 relevant internship or equivalent hands-on experience",
+    work: "2-3 strong, non-tutorial work samples (depth and external validation over quantity)",
+    roleSuffix: "Experience target",
+    organization: "[Target employer, client, lab, or partner organization]",
+  };
+}
+
 /**
  * Deterministic "current vs. target" resume benchmark. Placeholders use
  * bracket markers (e.g. "[Quantified outcome to capture]") specifically so
@@ -15,21 +50,20 @@ import type { ResolvedCareer, ResumeBenchmarkItem, TargetResumeBenchmark } from 
 export function buildTargetResumeBenchmark(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]): TargetResumeBenchmark {
   const withCareer = resolvedCareers.filter((rc): rc is { title: string; career: NonNullable<ResolvedCareer["career"]> } => rc.career !== null);
   const comparisons: ResumeBenchmarkItem[] = [];
+  const primaryEvidence = withCareer[0] ? evidenceTargets(withCareer[0].career) : null;
 
   comparisons.push({
     label: "Experience",
     current: request.experience.length > 0 ? `${request.experience.length} experience entr${request.experience.length === 1 ? "y" : "ies"}` : "No internship yet",
-    target: withCareer.some((rc) => /essential|mandatory|close to|strongly/i.test(rc.career.internshipExpectations))
-      ? "1-2 relevant internships"
-      : "1 relevant internship or equivalent hands-on experience",
+    target: primaryEvidence?.experience ?? "One relevant, results-bearing experience",
   });
 
   comparisons.push({
     label: "Projects",
     current: request.projects.length > 0 ? `${request.projects.length} project(s)` : "No projects yet",
     target: withCareer.length > 1
-      ? "2-3 strong, non-tutorial portfolio projects, ideally at least one that draws on skills shared across your target careers"
-      : "2-3 strong, non-tutorial portfolio projects (depth over quantity)",
+      ? `${primaryEvidence?.work ?? "2-3 strong work samples"}; include one that demonstrates skills shared across your targets`
+      : primaryEvidence?.work ?? "2-3 strong work samples (depth over quantity)",
   });
 
   const skillCounts = new Map<string, number>();
@@ -74,8 +108,8 @@ export function buildTargetResumeBenchmark(request: RoadmapRequest, resolvedCare
   return {
     comparisons,
     targetExperience: {
-      roleTitle: `${roleTitle} (Intern)`,
-      organizationPlaceholder: "[Target company or company type]",
+      roleTitle: `${roleTitle} — ${primaryEvidence?.roleSuffix ?? "Experience target"}`,
+      organizationPlaceholder: primaryEvidence?.organization ?? "[Target organization]",
       timeframePlaceholder: "[Target summer/semester]",
       bullets: [
         `[Achievement you should aim to produce], using ${topSkills[0] ?? "your core technical skill"}`,

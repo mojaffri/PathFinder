@@ -1,6 +1,7 @@
 import type { AIRoadmapContent, RoadmapRequest } from "./schema";
-import type { GapAnalysis, GapItem, RatingScale, RecommendationTier, ResolvedCareer, RoadmapRecommendation } from "@/types";
+import type { GapAnalysis, GapItem, RatingScale, RecommendationTier, ResolvedCareer, RoadmapRecommendation } from "../../types";
 import { resolvePlaybooksForCareers } from "./playbooks";
+import { getStageStrategy } from "./stage-strategy";
 
 /**
  * Rich, deterministic fallback roadmap, used whenever ANTHROPIC_API_KEY isn't
@@ -100,7 +101,8 @@ export function generateFallbackRoadmap(
   const title = formatCareerList(request.targetCareers);
   const isVersatile = request.targetCareers.length > 1;
   const playbooks = resolvePlaybooksForCareers(resolvedCareers);
-  const gatingPlaybook = playbooks.find((p) => p.gatingExam !== null);
+  const gatingPlaybook = playbooks.find((p) => p.gatingExam !== null && p.gatingExamPolicy !== "program-dependent");
+  const stage = getStageStrategy(request.educationStage);
 
   const experienceSummary = formatExperienceForSummary(request);
   const projectSummary = formatProjectForSummary(request);
@@ -146,16 +148,16 @@ export function generateFallbackRoadmap(
 
   return {
     executiveSummary: isVersatile
-      ? `Here's the plan for becoming a genuinely competitive candidate across all ${request.targetCareers.length} of your target careers (${title}) at the same time. The focus is on the skills and experience that count toward more than one path, so you're not splitting your effort evenly and getting nowhere fast. Everything below comes straight from comparing your actual profile against what each field rewards, not boilerplate advice.`
-      : `Here's a concrete plan for becoming a strong, competitive candidate for ${title}. Everything below comes straight from comparing your actual profile against what this field rewards, not boilerplate advice.`,
-    currentProfileAssessment: gapAnalysis.currentStateSummary.join(". ") + ".",
+      ? `As a ${stage.label}, your plan for ${title} should prioritize ${stage.immediateFocus}. The focus is on evidence that counts toward more than one path, followed by the few career-specific requirements that cannot be shared. This sequence is based on what each field rewards and what is realistic at your current stage.`
+      : `As a ${stage.label}, your plan for ${title} should prioritize ${stage.immediateFocus}. First get on track with the real entry requirements, then build ${stage.competitiveEdge}.`,
+    currentProfileAssessment: `${gapAnalysis.currentStateSummary.join(". ")}. ${stage.positionSummary}`,
     competitiveAdvantages: strengths.slice(0, 5),
     mistakesToAvoid,
     phases: [
       {
         key: "academic-technical-edge",
         title: "Phase A - Immediate Resume Builders",
-        objective: `Build the concrete, resume-ready proof points that make you credible for ${title} right now, before anything that requires a further-off credential or application cycle.`,
+        objective: `Build the concrete proof that makes you credible for ${title} now. At your stage, that means ${stage.immediateFocus}.`,
         timeline: PLACEHOLDER_TIMELINE,
         whyItMattersForTarget: withCareer.length > 0
           ? withCareer.slice(0, 3).map((rc) => `${rc.title} candidates are evaluated first on ${rc.career.competitivenessFactors.slice(0, 2).map((f) => f.factor).join(" and ")}.`).join(" ")
@@ -178,7 +180,7 @@ export function generateFallbackRoadmap(
       {
         key: "experience-portfolio",
         title: "Phase B - Interview Prep & Momentum",
-        objective: "Turn the resume-ready work from Phase A into real conversations and interview readiness.",
+        objective: `Turn Phase A into ${stage.experienceGoal}, then practice the selection process before it becomes high stakes.`,
         timeline: PLACEHOLDER_TIMELINE,
         whyItMattersForTarget: withCareer.length === 1
           ? withCareer[0].career.internshipExpectations

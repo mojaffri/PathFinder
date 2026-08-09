@@ -1,17 +1,17 @@
-import type { RoadmapRequest } from "@/lib/roadmap/schema";
+import type { RoadmapRequest } from "../roadmap/schema";
 import type {
   GapAnalysis,
   GapCategory,
   GapItem,
   GapPriority,
-  GapTimeHorizon,
   ReadinessGate,
   RatingScale,
   ResolvedCareer,
   TopMove,
-} from "@/types";
-import { formatGpa } from "@/lib/gpa";
-import { resolvePlaybooksForCareers } from "@/lib/roadmap/playbooks";
+} from "../../types";
+import { formatGpa } from "../gpa";
+import { resolvePlaybooksForCareers } from "../roadmap/playbooks";
+import { credentialHorizonForStage, getStageStrategy } from "../roadmap/stage-strategy";
 
 /**
  * Deterministic gap analysis: compares the student's confirmed profile
@@ -57,14 +57,6 @@ function containsKeyword(text: string, keywords: string[]): boolean {
   return keywords.some((k) => lower.includes(k));
 }
 
-const UPPERCLASS_STAGES = [
-  "college-junior",
-  "college-senior",
-  "recent-college-grad-undecided",
-  "graduate-student",
-  "career-changer",
-];
-
 /**
  * Whether the student is close enough to a grad-school/licensing application
  * window for an upperclass-gated credential (LSAT, MCAT, FE Exam) to be a
@@ -72,10 +64,6 @@ const UPPERCLASS_STAGES = [
  * no positive evidence it's premature, and hiding a genuinely relevant test
  * is worse than surfacing one slightly early.
  */
-function hasUpperclassStanding(stage: string | null): boolean {
-  return stage === null || UPPERCLASS_STAGES.includes(stage);
-}
-
 /**
  * Converts a credential's intrinsic readiness gate into a phase-placement
  * horizon for THIS student, given their stage. This is the core of the
@@ -84,12 +72,6 @@ function hasUpperclassStanding(stage: string | null): boolean {
  * says it's important, when the student either isn't eligible yet or the
  * credential structurally can't happen until much later regardless of stage.
  */
-function timeHorizonForCredential(gate: ReadinessGate | undefined, stage: string | null): GapTimeHorizon {
-  if (gate === "requires-program-completion") return "long-term";
-  if (gate === "requires-upperclass-standing") return hasUpperclassStanding(stage) ? "near-term" : "long-term";
-  return "immediate";
-}
-
 let gapCounter = 0;
 function nextId(category: GapCategory): string {
   gapCounter += 1;
@@ -133,34 +115,57 @@ function academicGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]
   const gaps: GapItem[] = [];
   const titles = resolvedCareers.map((rc) => rc.title);
   const withCareer = resolvedCareers.filter((rc): rc is { title: string; career: NonNullable<ResolvedCareer["career"]> } => rc.career !== null);
+  const stage = getStageStrategy(request.educationStage);
 
   if (!request.major) {
     const majorsSample = [...new Set(withCareer.flatMap((rc) => rc.career.commonMajors))].slice(0, 6);
+    const isSecondary = stage.group === "secondary-school";
+    const needsBridgeRoute = ["post-college-transition", "alternative-training", "career-change", "unknown"].includes(stage.group);
     gaps.push({
       id: nextId("academic"),
       category: "academic",
-      title: "Declare a major or field of study",
+      title: isSecondary
+        ? `Choose courses and a postsecondary route that keep ${joinNatural(titles)} open`
+        : needsBridgeRoute
+          ? `Choose the shortest credible education or training bridge into ${joinNatural(titles)}`
+          : "Declare a major or field of study",
       description: majorsSample.length > 0
-        ? `Common majors across your target career${withCareer.length > 1 ? "s" : ""} include ${majorsSample.join(", ")}.`
+        ? `Common academic routes across your target career${withCareer.length > 1 ? "s" : ""} include ${majorsSample.join(", ")}. ${stage.positionSummary}`
         : "Declaring a specific major or field of study will sharpen every other recommendation.",
       priority: "medium",
       impact: 3,
       effort: 2,
       timeHorizon: "immediate",
-      estimatedHours: 2,
+      estimatedHours: 4,
       relevantCareers: titles,
-      evidenceOfCompletion: "Your official declared major on file with the registrar, or an updated major on your resume",
+      evidenceOfCompletion: isSecondary
+        ? "A written course and postsecondary plan reviewed with a school counselor, including prerequisites for at least two viable programs"
+        : needsBridgeRoute
+          ? "A one-page comparison of credible routes, their prerequisites, cost, and expected time to target-role eligibility"
+          : "Your official declared major on file with the registrar, or an updated major on your resume",
       tacticalActions: [
         {
-          title: "Book a 15-minute appointment with your academic advisor this week",
-          detail: "An advisor can confirm which majors actually keep your timeline to graduation intact.",
-          estimatedHours: 1,
-          evidenceOfCompletion: "A confirmed advising appointment on your calendar, or notes from the meeting",
+          title: isSecondary
+            ? "Review next-year courses and target-program prerequisites with your school counselor"
+            : needsBridgeRoute
+              ? "Compare degree, certificate, prerequisite-course, and portfolio-first routes before enrolling"
+              : "Book a 15-minute appointment with your academic advisor this week",
+          detail: isSecondary
+            ? "The right math, science, writing, or technical sequence keeps options open without forcing an early commitment."
+            : needsBridgeRoute
+              ? "A new degree is sometimes necessary, but often it is the slowest and most expensive bridge. Verify that before paying."
+              : "An advisor can confirm which majors actually keep your timeline to graduation intact.",
+          estimatedHours: 2,
+          evidenceOfCompletion: isSecondary
+            ? "Counselor meeting notes plus a proposed course list"
+            : needsBridgeRoute
+              ? "A comparison table covering prerequisites, cost, duration, and proof produced by each route"
+              : "A confirmed advising appointment on your calendar, or notes from the meeting",
         },
         {
           title: majorsSample.length > 0 ? `Compare 2-3 candidate majors against ${joinNatural(majorsSample.slice(0, 3))}` : "Compare 2-3 candidate majors against what your target field actually requires",
           detail: "Narrowing to a short list you can defend beats agonizing over every option.",
-          estimatedHours: 1,
+          estimatedHours: 2,
           evidenceOfCompletion: "A short written comparison, even a few bullet points, of your top 2-3 options",
         },
       ],
@@ -214,11 +219,15 @@ function academicGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]
       // being told to study for the GRE.
       const playbooks = resolvePlaybooksForCareers(advancedCareers);
       const gatingPlaybook = playbooks.find((p) => p.gatingExam !== null);
-      const admissionsTest = gatingPlaybook?.gatingExam ?? "GRE or required subject test";
-      const timeHorizon = timeHorizonForCredential(gatingPlaybook?.gatingExamReadiness, request.educationStage);
+      const admissionsTest = gatingPlaybook?.gatingExam ?? "any program-specific admissions requirement";
+      const examPolicy = gatingPlaybook?.gatingExamPolicy ?? "required";
+      const timeHorizon = credentialHorizonForStage(gatingPlaybook?.gatingExamReadiness, request.educationStage);
+      const examIsActionable = timeHorizon === "near-term" && examPolicy === "required";
       const isLaw = advancedCareers.some((rc) => rc.career.category === "law");
       const isHealthcare = advancedCareers.some((rc) => rc.career.category === "healthcare");
-      const planTitle = isLaw ? "Map out your law school plan" : isHealthcare ? "Map out your medical/graduate school plan" : "Map out your graduate school plan";
+      const planTitle = stage.group === "secondary-school"
+        ? `Map the education and experience path toward ${joinNatural(advancedCareers.map((rc) => rc.title))}`
+        : isLaw ? "Map out your law school plan" : isHealthcare ? "Map out your medical/graduate school plan" : "Map out your graduate school plan";
       gaps.push({
         id: nextId("academic"),
         category: "academic",
@@ -228,9 +237,11 @@ function academicGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]
         impact: 4,
         effort: 4,
         timeHorizon,
-        estimatedHours: 20,
+        estimatedHours: examIsActionable ? 18 : 10,
         relevantCareers: advancedCareers.map((rc) => rc.title),
-        evidenceOfCompletion: `A shortlist of 3-5 target programs, ${/^[aeiou]/i.test(admissionsTest) ? "an" : "a"} ${admissionsTest} test date, and an email sent to at least one professor or admissions contact of interest`,
+        evidenceOfCompletion: examIsActionable
+          ? `A shortlist of 3-5 target programs, a verified requirement and realistic date for the ${admissionsTest}, and a backwards-planned application calendar`
+          : "A shortlist of 3-5 target programs with a prerequisite, experience, cost/funding, deadline, and standardized-test requirement matrix",
         tacticalActions: [
           {
             title: "Research 5 graduate programs and shortlist your top 3",
@@ -238,538 +249,20 @@ function academicGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]
             estimatedHours: 4,
             evidenceOfCompletion: "A shortlist doc with program name, advisor of interest, and funding notes for each",
           },
+          examIsActionable
+            ? {
+                title: `Confirm the ${admissionsTest} requirement, take a diagnostic, and schedule a realistic test window`,
+                detail: "Use official program and test-provider pages, then build the prep plan from your diagnostic instead of buying a course by default.",
+                estimatedHours: 12,
+                evidenceOfCompletion: "A saved requirements check, diagnostic result, registration confirmation, and weekly prep schedule",
+              }
+            : {
+                title: `Verify whether each shortlisted program actually requires or values the ${admissionsTest}`,
+                detail: examPolicy === "program-dependent"
+                  ? "Requirements vary. Do not spend time or money preparing until the programs on your real shortlist justify it."
+                  : "This credential is not close enough to your current stage to displace foundational coursework and experience.",
+                estimatedHours: 4,
+                evidenceOfCompletion: "A program-by-program requirement matrix linked to official admissions pages",
+              },
           {
-            title: `Register for and study for the ${admissionsTest}`,
-            detail: "Most programs still weight this more than students expect, even when they call it optional.",
-            estimatedHours: 12,
-            evidenceOfCompletion: "A test registration confirmation and a score report once you've taken it",
-          },
-          {
-            title: "Email one professor of interest at each shortlisted program",
-            detail: "A specific, informed email referencing their actual work gets replies; a generic one doesn't.",
-            estimatedHours: 2,
-            evidenceOfCompletion: "Sent emails, ideally with at least one reply, in your inbox",
-          },
-          {
-            title: "Draft a one-paragraph statement of purpose",
-            detail: "Getting a rough draft down early gives you months to sharpen it instead of scrambling before deadlines.",
-            estimatedHours: 2,
-            evidenceOfCompletion: "A saved draft statement of purpose, even a rough one",
-          },
-        ],
-      });
-    }
-  }
-
-  return gaps;
-}
-
-/**
- * Round-robins single-career items (one skill belongs to exactly one
- * career's Set) across their careers, so a top-N slice can't be entirely
- * dominated by whichever career's items happened to sort first â€” every
- * target career gets fair representation among non-overlapping gaps.
- */
-function pickFairly<T extends { careers: Set<string> }>(items: T[]): T[] {
-  const byCareer = new Map<string, T[]>();
-  for (const item of items) {
-    const careerTitle = [...item.careers][0];
-    const queue = byCareer.get(careerTitle) ?? [];
-    queue.push(item);
-    byCareer.set(careerTitle, queue);
-  }
-
-  const queues = [...byCareer.values()];
-  const result: T[] = [];
-  let index = 0;
-  while (result.length < items.length) {
-    const queue = queues[index % queues.length];
-    const next = queue.shift();
-    if (next) result.push(next);
-    index++;
-    if (queues.every((q) => q.length === 0)) break;
-  }
-  return result;
-}
-
-function technicalGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]): GapItem[] {
-  const gaps: GapItem[] = [];
-  const withCareer = resolvedCareers.filter((rc): rc is { title: string; career: NonNullable<ResolvedCareer["career"]> } => rc.career !== null);
-  const titles = resolvedCareers.map((rc) => rc.title);
-
-  if (withCareer.length === 0) {
-    // Every target career is free-text/unrecognized ("Other / not listed"),
-    // so there's no structured skill or cert data to diff against. Rather
-    // than silently returning zero technical gaps, give the student a real,
-    // concrete research task so this path never looks like an empty/broken
-    // roadmap just because their career wasn't in the curated dataset yet.
-    if (titles.length === 0) return gaps;
-    gaps.push({
-      id: nextId("technical"),
-      category: "technical",
-      title: `Identify the specific skills ${joinNatural(titles)} actually rewards`,
-      description: `"${joinNatural(titles)}" isn't in our curated career database yet, so we can't compare your skills against a structured list the way we do for recognized careers. Real job postings and working professionals are the fastest way to find out what's actually screened for.`,
-      priority: "medium",
-      impact: 3,
-      effort: 2,
-      timeHorizon: "immediate",
-      estimatedHours: 5,
-      relevantCareers: titles,
-      evidenceOfCompletion: "A written list of 3-5 specific skills or tools pulled directly from real job postings for this career",
-      tacticalActions: [
-        {
-          title: `Read 8-10 real job postings for ${joinNatural(titles)} and list the skills that show up repeatedly`,
-          detail: "Real postings tell you what's actually screened for, more reliably than general career advice.",
-          estimatedHours: 2,
-          evidenceOfCompletion: "A written list of the skills and tools that appeared most often",
-        },
-        {
-          title: "Find any certification or credential commonly listed in those postings and decide if it's worth pursuing",
-          detail: "Not every listed certification is worth chasing, but knowing which ones actually show up matters.",
-          estimatedHours: 2,
-          evidenceOfCompletion: "A short note on which certification, if any, you're pursuing and why",
-        },
-        {
-          title: "Start building one piece of evidence, a project, writing sample, or credential, toward the top skill you identified",
-          detail: "Turning the research into a concrete next step is what actually closes the gap.",
-          estimatedHours: 1,
-          evidenceOfCompletion: "A started project, writing sample, or credential tied directly to the top skill you found",
-        },
-      ],
-    });
-    return gaps;
-  }
-
-  const demonstrated = allDemonstratedSkillText(request);
-
-  const skillMap = new Map<string, { skill: string; careers: Set<string> }>();
-  for (const { title, career } of withCareer) {
-    for (const skill of career.highValueSkills) {
-      if (fuzzyIncludes(demonstrated, skill)) continue;
-      const key = normalize(skill);
-      const entry = skillMap.get(key) ?? { skill, careers: new Set<string>() };
-      entry.careers.add(title);
-      skillMap.set(key, entry);
-    }
-  }
-
-  const missingSkills = [...skillMap.values()].sort((a, b) => b.careers.size - a.careers.size);
-  if (missingSkills.length > 0) {
-    const overlapping = missingSkills.filter((s) => s.careers.size > 1);
-    const top = [...overlapping, ...pickFairly(missingSkills.filter((s) => s.careers.size === 1))].slice(0, 4);
-    const relevantCareers = [...new Set(top.flatMap((s) => [...s.careers]))];
-    const topSkillNames = top.map((s) => s.skill);
-
-    gaps.push({
-      id: nextId("technical"),
-      category: "technical",
-      title: overlapping.length > 0
-        ? `Build the skills that boost every target career at once: ${joinNatural(overlapping.slice(0, 3).map((s) => s.skill))}`
-        : `Learn ${joinNatural(topSkillNames)}`,
-      description: overlapping.length > 0
-        ? `${joinNatural(overlapping.slice(0, 3).map((s) => s.skill))} ${overlapping.length === 1 ? "is" : "are"} valued by more than one of your target careers, so building ${overlapping.length === 1 ? "it" : "these"} once pays off across your whole versatility strategy, not just one path.`
-        : `${top[0].careers.size > 1 ? "These" : `${top[0].skill} and similar skills`} are expected for ${joinNatural([...new Set(top.flatMap((s) => [...s.careers]))])}.`,
-      priority: overlapping.length > 0 ? "high" : missingSkills.length >= 3 ? "high" : "medium",
-      impact: overlapping.length > 0 ? 5 : 4,
-      effort: 4,
-      timeHorizon: "immediate",
-      estimatedHours: top.length * 15,
-      relevantCareers,
-      evidenceOfCompletion: `A finished project, writing sample, or completed course module that puts ${joinNatural(topSkillNames)} to visible use (a GitHub repo for coding skills, a memo or brief for legal/policy writing, a case study for business/strategy skills)`,
-      tacticalActions: topSkillNames.map((skill) => ({
-        title: `Complete a focused mini-project or course module in ${skill}`,
-        detail: `Hands-on practice with ${skill} beats reading about it. Pick one small, finishable build rather than an open-ended tutorial series.`,
-        estimatedHours: 15,
-        evidenceOfCompletion: `A committed project or completed course module specifically demonstrating ${skill}`,
-      })),
-    });
-  }
-
-  const certNames = request.certifications.map((c) => c.name);
-  const certMap = new Map<string, { name: string; careers: Set<string>; reasoning: string; readinessGate?: ReadinessGate }>();
-  for (const { title, career } of withCareer) {
-    for (const cert of career.certifications) {
-      if (!cert.recommend || fuzzyIncludes(certNames, cert.name)) continue;
-      const key = normalize(cert.name);
-      const entry = certMap.get(key) ?? { name: cert.name, careers: new Set<string>(), reasoning: cert.reasoning, readinessGate: cert.readinessGate };
-      entry.careers.add(title);
-      certMap.set(key, entry);
-    }
-  }
-
-  const rankedCerts = [...certMap.values()].sort((a, b) => b.careers.size - a.careers.size);
-  if (rankedCerts.length > 0) {
-    const cert = rankedCerts[0];
-    gaps.push({
-      id: nextId("technical"),
-      category: "technical",
-      title: `Clear ${cert.name}`,
-      description: cert.careers.size > 1
-        ? `${cert.name} is valued across ${cert.careers.size} of your target careers (${[...cert.careers].join(", ")}). ${cert.reasoning}`
-        : cert.reasoning,
-      priority: "low",
-      impact: cert.careers.size > 1 ? 4 : 3,
-      effort: 3,
-      timeHorizon: timeHorizonForCredential(cert.readinessGate, request.educationStage),
-      estimatedHours: 25,
-      relevantCareers: [...cert.careers],
-      evidenceOfCompletion: `Your ${withExamSuffix(cert.name)} registration confirmation now, and the certificate itself once you pass`,
-      tacticalActions: [
-        {
-          title: `Register for the ${withExamSuffix(cert.name)} and set a target date`,
-          detail: "A real date on the calendar is what turns 'someday' into an actual study schedule.",
-          estimatedHours: 1,
-          evidenceOfCompletion: "Your exam registration confirmation email",
-        },
-        {
-          title: "Work through the official study guide or a structured prep course",
-          detail: "Use the official materials first; third-party crash courses are a poor substitute for the real content outline.",
-          estimatedHours: 18,
-          evidenceOfCompletion: "Completed chapters or modules checked off in the study guide/course",
-        },
-        {
-          title: "Take 2-3 full-length practice tests under timed conditions",
-          detail: "Practice tests are the single best predictor of whether you're actually ready.",
-          estimatedHours: 6,
-          evidenceOfCompletion: "Practice test scores showing improvement across attempts",
-        },
-      ],
-    });
-  }
-
-  return gaps;
-}
-
-function experienceGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]): GapItem[] {
-  const gaps: GapItem[] = [];
-  const titles = resolvedCareers.map((rc) => rc.title);
-  const withCareer = resolvedCareers.filter((rc): rc is { title: string; career: NonNullable<ResolvedCareer["career"]> } => rc.career !== null);
-
-  const strongExpectation = (text: string) =>
-    containsKeyword(text, ["essential", "mandatory", "close to", "strongly", "extremely important"]);
-
-  if (request.experience.length === 0) {
-    const criticalCareers = withCareer.filter((rc) => strongExpectation(rc.career.internshipExpectations));
-    const priority: GapPriority = criticalCareers.length > 0 ? "critical" : "high";
-    const description = withCareer.length === 1
-      ? withCareer[0].career.internshipExpectations
-      : withCareer.length > 1
-        ? `Internships (or equivalent hands-on experience) are expected across your target careers, especially ${(criticalCareers.length > 0 ? criticalCareers : withCareer).map((rc) => rc.title).join(", ")}.`
-        : "Internships (or equivalent hands-on experience) are one of the strongest signals employers look for.";
-
-    gaps.push({
-      id: nextId("experience"),
-      category: "experience",
-      title: "Land an internship or hands-on role",
-      description,
-      priority,
-      impact: 5,
-      effort: 4,
-      timeHorizon: "immediate",
-      estimatedHours: 120,
-      relevantCareers: titles,
-      evidenceOfCompletion: "An offer letter, a LinkedIn experience entry, or your name on an employer or lab roster",
-      tacticalActions: [
-        {
-          title: "Build a target list of 20+ employers (companies, firms, or labs) and set up alerts on Handshake and LinkedIn",
-          detail: "A specific target list beats scrolling job boards aimlessly.",
-          estimatedHours: 5,
-          evidenceOfCompletion: "A saved list of target employers with active job alerts running",
-        },
-        {
-          title: "Tailor your resume and write a specific cover letter for your first 10 applications",
-          detail: "Generic applications get filtered out before a human ever reads them.",
-          estimatedHours: 15,
-          evidenceOfCompletion: "10 tailored resume/cover letter pairs, one per target role",
-        },
-        {
-          title: "Apply to at least 20 positions in weekly batches",
-          detail: "Steady weekly output compounds; one big application weekend usually doesn't.",
-          estimatedHours: 20,
-          evidenceOfCompletion: "An applications tracker showing 20+ submitted applications",
-        },
-        {
-          title: "Run mock interviews and drill practice problems for your target role type",
-          detail: "This is where most candidates lose offers despite having the right resume.",
-          estimatedHours: 60,
-          evidenceOfCompletion: "Completed mock interview sessions and a practice-problem log",
-        },
-        {
-          title: "Follow up on every application after 1-2 weeks of silence",
-          detail: "A short, polite follow-up regularly moves an application off the pile.",
-          estimatedHours: 20,
-          evidenceOfCompletion: "Follow-up emails sent, logged in your applications tracker",
-        },
-      ],
-    });
-  }
-
-  if (request.projects.length === 0) {
-    const portfolioHeavyCareers = withCareer.filter((rc) => rc.career.codingIntensity >= 4 || rc.career.handsOnIntensity >= 4);
-    const writingHeavyCareers = withCareer.filter((rc) => rc.career.communicationIntensity >= 4 && rc.career.codingIntensity < 4 && rc.career.handsOnIntensity < 4);
-    const description = withCareer.length === 1
-      ? withCareer[0].career.portfolioExpectations
-      : withCareer.length > 1
-        ? "A concrete work sample you can explain in depth is one of the fastest ways to stand out, and one that draws on skills shared across your target careers demonstrates versatility directly."
-        : "A concrete work sample you can explain in depth is one of the fastest ways to stand out.";
-
-    if (portfolioHeavyCareers.length > 0 || writingHeavyCareers.length === 0) {
-      gaps.push({
-        id: nextId("experience"),
-        category: "experience",
-        title: "Build a portfolio project",
-        description,
-        priority: portfolioHeavyCareers.length > 0 ? "high" : "medium",
-        impact: 4,
-        effort: 3,
-        timeHorizon: "immediate",
-        estimatedHours: 30,
-        relevantCareers: titles,
-        evidenceOfCompletion: "A live GitHub repo with a real README, plus a deployed demo link on Vercel, Streamlit Community Cloud, or Netlify if it's shippable",
-        tacticalActions: [
-          {
-            title: "Pick one real, specific problem to solve, not a tutorial clone",
-            detail: "A project that solves something you actually ran into is easier to talk about convincingly in an interview.",
-            estimatedHours: 2,
-            evidenceOfCompletion: "A one-paragraph project spec you wrote yourself",
-          },
-          {
-            title: "Build the core functionality end-to-end before polishing anything",
-            detail: "A rough but complete build beats a polished half-finished one every time.",
-            estimatedHours: 20,
-            evidenceOfCompletion: "A working end-to-end version, even if the UI is rough",
-          },
-          {
-            title: "Write a clear README and deploy a live demo",
-            detail: "A recruiter will look for 60 seconds; make those seconds count.",
-            estimatedHours: 5,
-            evidenceOfCompletion: "A README with a live demo link, both working",
-          },
-          {
-            title: "Get feedback from one person outside your head and iterate once",
-            detail: "You're too close to your own project to see what's confusing about it.",
-            estimatedHours: 3,
-            evidenceOfCompletion: "Notes from the feedback session and at least one change made in response",
-          },
-        ],
-      });
-    } else {
-      gaps.push({
-        id: nextId("experience"),
-        category: "experience",
-        title: "Produce a polished work sample",
-        description,
-        priority: "high",
-        impact: 4,
-        effort: 3,
-        timeHorizon: "immediate",
-        estimatedHours: 25,
-        relevantCareers: titles,
-        evidenceOfCompletion: "A polished writing sample, memo, brief, or case study you can send directly to an employer or attach to an application",
-        tacticalActions: [
-          {
-            title: "Pick one real, specific issue or case to analyze, not a generic overview",
-            detail: "A piece that takes a clear position on something real is far more convincing than a broad summary of a topic.",
-            estimatedHours: 2,
-            evidenceOfCompletion: "A one-paragraph outline of your position and argument",
-          },
-          {
-            title: "Write a full first draft end-to-end before polishing anything",
-            detail: "A complete, rough draft beats a polished, half-finished one every time.",
-            estimatedHours: 12,
-            evidenceOfCompletion: "A complete first draft, even if the phrasing is still rough",
-          },
-          {
-            title: "Revise for clarity and cut anything that doesn't support your argument",
-            detail: "A reader will spend a minute deciding if this is worth their time; make that minute count.",
-            estimatedHours: 6,
-            evidenceOfCompletion: "A tightened final draft with a clear thesis and structure",
-          },
-          {
-            title: "Get feedback from one person outside your head and revise once",
-            detail: "You're too close to your own writing to see what's unclear or unconvincing.",
-            estimatedHours: 3,
-            evidenceOfCompletion: "Notes from the feedback session and at least one revision made in response",
-          },
-        ],
-      });
-    }
-  }
-
-  const researchCareers = withCareer.filter((rc) => rc.career.researchIntensity >= 4 && strongExpectation(rc.career.researchExpectations));
-  if (researchCareers.length > 0) {
-    const researchText = [
-      ...request.projects.flatMap((p) => [p.title, p.summary ?? "", ...p.bullets]),
-      ...request.experience.flatMap((e) => [e.title ?? "", e.summary ?? "", ...e.bullets]),
-      request.careerGoals,
-    ].join(" ");
-    if (!containsKeyword(researchText, ["research"])) {
-      gaps.push({
-        id: nextId("experience"),
-        category: "experience",
-        title: "Get involved in research",
-        description: researchCareers.map((rc) => rc.career.researchExpectations).join(" "),
-        priority: "medium",
-        impact: 4,
-        effort: 4,
-        timeHorizon: "immediate",
-        estimatedHours: 60,
-        relevantCareers: researchCareers.map((rc) => rc.title),
-        evidenceOfCompletion: "Your name on a lab website, an email from a PI confirming your role, or an authorship/acknowledgment on a paper or poster",
-        tacticalActions: [
-          {
-            title: "Identify 3-5 labs doing work relevant to your target field and read one recent paper from each",
-            detail: "You need a genuine, specific reason to reach out, not just 'I'm interested in research.'",
-            estimatedHours: 8,
-            evidenceOfCompletion: "Notes on 3-5 labs, each with a specific paper or project you can reference",
-          },
-          {
-            title: "Email each lab with a specific, informed question about their work",
-            detail: "PIs get generic requests constantly; referencing their actual paper is what gets a reply.",
-            estimatedHours: 2,
-            evidenceOfCompletion: "Sent emails, ideally with at least one reply",
-          },
-          {
-            title: "Complete an onboarding task or literature review if accepted into a lab",
-            detail: "Most labs start new members on a small, low-risk task before trusting them with real work.",
-            estimatedHours: 30,
-            evidenceOfCompletion: "A completed literature review or onboarding deliverable you can show",
-          },
-          {
-            title: "Contribute to an ongoing project or propose a small supervised mini-project",
-            detail: "This is the step that turns 'I emailed a professor' into an actual research credential.",
-            estimatedHours: 20,
-            evidenceOfCompletion: "A specific contribution you can name and describe in an interview",
-          },
-        ],
-      });
-    }
-  }
-
-  return gaps;
-}
-
-function professionalGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]): GapItem[] {
-  const titles = resolvedCareers.map((rc) => rc.title);
-  const playbooks = resolvePlaybooksForCareers(resolvedCareers);
-  // Concrete role/focus phrasing beats generic "network with X" filler â€”
-  // e.g. "reach out to firm associates... focusing on litigation practices"
-  // instead of "network with lawyers".
-  const roles = playbooks.length > 0 ? joinNatural(playbooks.map((p) => p.networkingTemplate.roles)) : null;
-  const focusAreas = playbooks.length > 0 ? joinNatural(playbooks.map((p) => p.networkingTemplate.focusAreas)) : null;
-
-  const gaps: GapItem[] = [
-    {
-      id: nextId("professional"),
-      category: "professional",
-      title: roles
-        ? `Line up 2 to 3 informational interviews with ${roles}, focusing on ${focusAreas}`
-        : titles.length > 0
-          ? `Line up 2 to 3 informational chats with people working as a ${titles.join(" or a ")}`
-          : "Line up 2 to 3 informational chats with people in your target field",
-      description: roles
-        ? `Talking directly to ${roles} about ${focusAreas} is one of the highest-leverage, lowest-cost moves available.`
-        : titles.length > 0
-          ? `Talking directly to people working as a ${titles.join(" or a ")} is one of the highest-leverage, lowest-cost moves available.`
-          : "Talking directly to people in your target field is one of the highest-leverage, lowest-cost moves available.",
-      priority: "medium",
-      impact: 3,
-      effort: 2,
-      timeHorizon: "near-term",
-      estimatedHours: 5,
-      relevantCareers: titles,
-      evidenceOfCompletion: "A LinkedIn connection accepted, a calendar invite that happened, or notes from the conversation you can reference in an interview",
-      tacticalActions: [
-        {
-          title: roles ? `Find 5-8 ${roles} on LinkedIn, prioritizing ${focusAreas}` : titles.length > 0 ? `Find 5-8 people on LinkedIn currently working as a ${titles.join(" or a ")}` : "Find 5-8 people on LinkedIn currently working in your target field",
-          detail: "Search alumni from your school first; they're the most likely to respond.",
-          estimatedHours: 1,
-          evidenceOfCompletion: "A saved list of 5-8 names with LinkedIn profile links",
-        },
-        {
-          title: "Send each a short, specific connection message referencing their actual work",
-          detail: "A message that mentions a specific project or post they wrote gets replies; a copy-pasted template doesn't.",
-          estimatedHours: 1,
-          evidenceOfCompletion: "Sent connection requests with personalized notes",
-        },
-        {
-          title: "Prepare 3-4 real questions before each call",
-          detail: "Specific questions about their day-to-day get you far more useful answers than 'any advice for someone starting out?'",
-          estimatedHours: 1,
-          evidenceOfCompletion: "A written question list for each scheduled conversation",
-        },
-        {
-          title: "Have 2-3 conversations and send a genuine thank-you follow-up",
-          detail: "The follow-up is what turns a one-time chat into an actual relationship you can go back to.",
-          estimatedHours: 2,
-          evidenceOfCompletion: "Completed calls plus sent thank-you messages referencing something specific they said",
-        },
-      ],
-    },
-  ];
-
-  if (!request.careerGoals) {
-    gaps.push({
-      id: nextId("professional"),
-      category: "professional",
-      title: "Write down a specific career goal",
-      description: "A specific, articulated goal makes your applications, interviews, and networking conversations sharper.",
-      priority: "low",
-      impact: 2,
-      effort: 1,
-      timeHorizon: "immediate",
-      estimatedHours: 1,
-      relevantCareers: titles,
-      evidenceOfCompletion: "A one-paragraph goal statement saved in your PathFinder profile and at the top of your resume draft",
-      tacticalActions: [
-        {
-          title: "Draft a one-paragraph goal answering what role, why it, and by when",
-          detail: "Specificity is what makes a goal usable in applications and interviews instead of just a nice sentiment.",
-          estimatedHours: 1,
-          evidenceOfCompletion: "A saved one-paragraph goal statement",
-        },
-      ],
-    });
-  }
-
-  return gaps;
-}
-
-export function analyzeGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]): GapAnalysis {
-  const gaps = [
-    ...academicGaps(request, resolvedCareers),
-    ...technicalGaps(request, resolvedCareers),
-    ...experienceGaps(request, resolvedCareers),
-    ...professionalGaps(request, resolvedCareers),
-  ];
-
-  return {
-    currentStateSummary: buildCurrentStateSummary(request),
-    targetCareers: resolvedCareers.map((rc) => rc.title),
-    gaps,
-  };
-}
-
-const PRIORITY_RANK: Record<GapPriority, number> = { critical: 4, high: 3, medium: 2, low: 1 };
-
-export function deriveTopMoves(gapAnalysis: GapAnalysis): TopMove[] {
-  const ranked = [...gapAnalysis.gaps].sort((a, b) => {
-    const priorityDiff = PRIORITY_RANK[b.priority] - PRIORITY_RANK[a.priority];
-    if (priorityDiff !== 0) return priorityDiff;
-    const overlapDiff = b.relevantCareers.length - a.relevantCareers.length;
-    if (overlapDiff !== 0) return overlapDiff;
-    const impactDiff = b.impact - a.impact;
-    if (impactDiff !== 0) return impactDiff;
-    return a.effort - b.effort;
-  });
-
-  return ranked.slice(0, 3).map((gap, index) => ({
-    id: `top-move-${index + 1}`,
-    title: gap.title,
-    impact: gap.impact as RatingScale,
-    effort: gap.effort as RatingScale,
-    estimatedHours: gap.estimatedHours,
-    why: gap.description,
-    relevantCareers: gap.relevantCareers,
-  }));
-}
+            title: stage.group === "secondary-school" ? "Choose one experience that builds a rï^÷¶‰žËkºwµçMÑ!½ÕÉÌ€´€ÄÀ¤°(€€€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰Ý½É­¥¹œ•¹µÑ¼µ•¹Ù•ÉÍ¥½¸°•Ù•¸¥˜Ñ¡”U$¥ÌÉ½Õ ˆ°4(€€€€€€€€€ô°4(€€€€€€€€€ì4(€€€€€€€€€€€Ñ¥Ñ±”è€‰A…­…”Ñ¡”Ý½É¬Í¼„ÁÉ…Ñ¥Ñ¥½¹•È…¸•Ù…±Õ…Ñ”¥Ð¥¸Õ¹‘•ÈÑÝ¼µ¥¹ÕÑ•Ìˆ°(€€€€€€€€€€€‘•Ñ…¥°è€‰UÍ”Ñ¡”™½Éµ…Ðå½ÕÈ™¥•±É•ÍÁ•ÑÌèÉ•Á½Í¥Ñ½Éä…¹‘•µ¼°Ñ•¡¹¥…°É•Á½ÉÐ°‘•Í¥¸Á…­…”°µ½‘•°°µ•µ¼°‰É¥•˜°Á½ÍÑ•È°½È…Í”ÍÑÕ‘ä¸ˆ°(€€€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ô°(€€€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰ÁÕ‰±¥Œ½ÈÍ¡…É•…‰±”…ÉÑ¥™…ÐÝ¥Ñ „±•…È½Ù•ÉÙ¥•Ü°µ•Ñ¡½‘Ì½È‘•¥Í¥½¹Ì°…¹É•ÍÕ±Ðˆ°(€€€€€€€€€ô°4(€€€€€€€€€ì4(€€€€€€€€€€€Ñ¥Ñ±”è€‰•Ð™••‘‰…¬™É½´½¹”Á•ÉÍ½¸½ÕÑÍ¥‘”å½ÕÈ¡•……¹¥Ñ•É…Ñ”½¹”ˆ°4(€€€€€€€€€€€‘•Ñ…¥°è€‰e½ÔÉ”Ñ½¼±½Í”Ñ¼å½ÕÈ½Ý¸ÁÉ½©•ÐÑ¼Í•”Ý¡…ÐÌ½¹™ÕÍ¥¹œ…‰½ÕÐ¥Ð¸ˆ°4(€€€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ì°(€€€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰9½Ñ•Ì™É½´Ñ¡”™••‘‰…¬Í•ÍÍ¥½¸…¹…Ð±•…ÍÐ½¹”¡…¹”µ…‘”¥¸É•ÍÁ½¹Í”ˆ°4(€€€€€€€€€ô°4(€€€€€€€t°4(€€€€€ô¤ì4(€€€ô•±Í”ì4(€€€€€…ÁÌ¹ÁÕÍ ¡ì4(€€€€€€€¥è¹•áÑ% ‰•áÁ•É¥•¹”ˆ¤°4(€€€€€€€…Ñ•½Éäè€‰•áÁ•É¥•¹”ˆ°4(€€€€€€€Ñ¥Ñ±”èAÉ½‘Õ”„Á½±¥Í¡•€‘í©½¥¹9…ÑÕÉ…°¡Ñ¥Ñ±•Ì¥ôÝ½É¬Í…µÁ±•€°(€€€€€€€‘•ÍÉ¥ÁÑ¥½¸è€‘í‘•ÍÉ¥ÁÑ¥½¹ôÍÑÉ½¹œÍÑ…ÉÑ¥¹œ‰É¥•˜¥Ì€‘íÁÉ½½™Q…É•Ñô¹€°(€€€€€€€ÁÉ¥½É¥Ñäè€‰¡¥ ˆ°4(€€€€€€€¥µÁ…Ðè€Ð°4(€€€€€€€•™™½ÉÐè€Ì°4(€€€€€€€Ñ¥µ•!½É¥é½¸è€‰¥µµ•‘¥…Ñ”ˆ°4(€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌèÍÑ…”¹É•½µµ•¹‘•‘AÉ½©•Ñ!½ÕÉÌ°(€€€€€€€É•±•Ù…¹Ñ…É••ÉÌèÑ¥Ñ±•Ì°4(€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰Á½±¥Í¡•ÝÉ¥Ñ¥¹œÍ…µÁ±”°µ•µ¼°‰É¥•˜°½È…Í”ÍÑÕ‘äå½Ô…¸Í•¹‘¥É•Ñ±äÑ¼…¸•µÁ±½å•È½È…ÑÑ… Ñ¼…¸…ÁÁ±¥…Ñ¥½¸ˆ°4(€€€€€€€Ñ…Ñ¥…±Ñ¥½¹Ìèl4(€€€€€€€€€ì4(€€€€€€€€€€€Ñ¥Ñ±”è€‰A¥¬½¹”É•…°°ÍÁ•¥™¥Œ¥ÍÍÕ”½È…Í”Ñ¼…¹…±åé”°¹½Ð„•¹•É¥Œ½Ù•ÉÙ¥•Üˆ°4(€€€€€€€€€€€‘•Ñ…¥°è€‰Á¥•”Ñ¡…ÐÑ…­•Ì„±•…ÈÁ½Í¥Ñ¥½¸½¸Í½µ•Ñ¡¥¹œÉ•…°¥Ì™…Èµ½É”½¹Ù¥¹¥¹œÑ¡…¸„‰É½…ÍÕµµ…Éä½˜„Ñ½Á¥Œ¸ˆ°4(€€€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€È°4(€€€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰½¹”µÁ…É…É…Á ½ÕÑ±¥¹”½˜å½ÕÈÁ½Í¥Ñ¥½¸…¹…ÉÕµ•¹Ðˆ°4(€€€€€€€€€ô°4(€€€€€€€€€ì4(€€€€€€€€€€€Ñ¥Ñ±”è€‰]É¥Ñ”„™Õ±°™¥ÉÍÐ‘É…™Ð•¹µÑ¼µ•¹‰•™½É”Á½±¥Í¡¥¹œ…¹åÑ¡¥¹œˆ°4(€€€€€€€€€€€‘•Ñ…¥°è€‰½µÁ±•Ñ”°É½Õ ‘É…™Ð‰•…ÑÌ„Á½±¥Í¡•°¡…±˜µ™¥¹¥Í¡•½¹”•Ù•ÉäÑ¥µ”¸ˆ°4(€€€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè5…Ñ ¹µ…à Ä°ÍÑ…”¹É•½µµ•¹‘•‘AÉ½©•Ñ!½ÕÉÌ€´€ÄÄ¤°(€€€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰½µÁ±•Ñ”™¥ÉÍÐ‘É…™Ð°•Ù•¸¥˜Ñ¡”Á¡É…Í¥¹œ¥ÌÍÑ¥±°É½Õ ˆ°4(€€€€€€€€€ô°4(€€€€€€€€€ì4(€€€€€€€€€€€Ñ¥Ñ±”è€‰I•Ù¥Í”™½È±…É¥Ñä…¹ÕÐ…¹åÑ¡¥¹œÑ¡…Ð‘½•Í¸ÐÍÕÁÁ½ÉÐå½ÕÈ…ÉÕµ•¹Ðˆ°4(€€€€€€€€€€€‘•Ñ…¥°è€‰É•…‘•ÈÝ¥±°ÍÁ•¹„µ¥¹ÕÑ”‘•¥‘¥¹œ¥˜Ñ¡¥Ì¥ÌÝ½ÉÑ Ñ¡•¥ÈÑ¥µ”ìµ…­”Ñ¡…Ðµ¥¹ÕÑ”½Õ¹Ð¸ˆ°4(€€€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ø°(€€€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰Ñ¥¡Ñ•¹•™¥¹…°‘É…™ÐÝ¥Ñ „±•…ÈÑ¡•Í¥Ì…¹ÍÑÉÕÑÕÉ”ˆ°4(€€€€€€€€€ô°4(€€€€€€€€€ì4(€€€€€€€€€€€Ñ¥Ñ±”è€‰•Ð™••‘‰…¬™É½´½¹”Á•ÉÍ½¸½ÕÑÍ¥‘”å½ÕÈ¡•……¹É•Ù¥Í”½¹”ˆ°4(€€€€€€€€€€€‘•Ñ…¥°è€‰e½ÔÉ”Ñ½¼±½Í”Ñ¼å½ÕÈ½Ý¸ÝÉ¥Ñ¥¹œÑ¼Í•”Ý¡…ÐÌÕ¹±•…È½ÈÕ¹½¹Ù¥¹¥¹œ¸ˆ°4(€€€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ì°4(€€€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰9½Ñ•Ì™É½´Ñ¡”™••‘‰…¬Í•ÍÍ¥½¸…¹…Ð±•…ÍÐ½¹”É•Ù¥Í¥½¸µ…‘”¥¸É•ÍÁ½¹Í”ˆ°4(€€€€€€€€€ô°4(€€€€€€€t°4(€€€€€ô¤ì4(€€€ô4(€ô4(4(€½¹ÍÐÉ•Í•…É¡…É••ÉÌ€ôÝ¥Ñ¡…É••È¹™¥±Ñ•È ¡ÉŒ¤€ôøÉŒ¹…É••È¹É•Í•…É¡%¹Ñ•¹Í¥Ñä€øô€Ð€˜˜ÍÑÉ½¹áÁ•Ñ…Ñ¥½¸¡ÉŒ¹…É••È¹É•Í•…É¡áÁ•Ñ…Ñ¥½¹Ì¤¤ì4(€¥˜€¡É•Í•…É¡…É••ÉÌ¹±•¹Ñ €ø€À¤ì4(€€€½¹ÍÐÉ•Í•…É¡Q•áÐ€ôl4(€€€€€€¸¸¹É•ÅÕ•ÍÐ¹ÁÉ½©•ÑÌ¹™±…Ñ5…À ¡À¤€ôømÀ¹Ñ¥Ñ±”°À¹ÍÕµµ…Éä€üü€ˆˆ°€¸¸¹À¹‰Õ±±•ÑÍt¤°4(€€€€€€¸¸¹É•ÅÕ•ÍÐ¹•áÁ•É¥•¹”¹™±…Ñ5…À ¡”¤€ôøm”¹Ñ¥Ñ±”€üü€ˆˆ°”¹ÍÕµµ…Éä€üü€ˆˆ°€¸¸¹”¹‰Õ±±•ÑÍt¤°4(€€€€€É•ÅÕ•ÍÐ¹…É••É½…±Ì°4(€€€t¹©½¥¸ ˆ€ˆ¤ì4(€€€¥˜€ …½¹Ñ…¥¹Í-•åÝ½É¡É•Í•…É¡Q•áÐ°l‰É•Í•…É ‰t¤¤ì4(€€€€€…ÁÌ¹ÁÕÍ ¡ì4(€€€€€€€¥è¹•áÑ% ‰•áÁ•É¥•¹”ˆ¤°4(€€€€€€€…Ñ•½Éäè€‰•áÁ•É¥•¹”ˆ°4(€€€€€€€Ñ¥Ñ±”è€‰•Ð¥¹Ù½±Ù•¥¸É•Í•…É ˆ°4(€€€€€€€‘•ÍÉ¥ÁÑ¥½¸èÉ•Í•…É¡…É••ÉÌ¹µ…À ¡ÉŒ¤€ôøÉŒ¹…É••È¹É•Í•…É¡áÁ•Ñ…Ñ¥½¹Ì¤¹©½¥¸ ˆ€ˆ¤°4(€€€€€€€ÁÉ¥½É¥Ñäè€‰µ•‘¥Õ´ˆ°4(€€€€€€€¥µÁ…Ðè€Ð°4(€€€€€€€•™™½ÉÐè€Ð°4(€€€€€€€Ñ¥µ•!½É¥é½¸è€‰¥µµ•‘¥…Ñ”ˆ°4(€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€ØÀ°4(€€€€€€€É•±•Ù…¹Ñ…É••ÉÌèÉ•Í•…É¡…É••ÉÌ¹µ…À ¡ÉŒ¤€ôøÉŒ¹Ñ¥Ñ±”¤°4(€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰e½ÕÈ¹…µ”½¸„±…ˆÝ•‰Í¥Ñ”°…¸•µ…¥°™É½´„A$½¹™¥Éµ¥¹œå½ÕÈÉ½±”°½È…¸…ÕÑ¡½ÉÍ¡¥À½…­¹½Ý±•‘µ•¹Ð½¸„Á…Á•È½ÈÁ½ÍÑ•Èˆ°4(€€€€€€€Ñ…Ñ¥…±Ñ¥½¹Ìèl4(€€€€€€€€€ì4(€€€€€€€€€€€Ñ¥Ñ±”è€‰%‘•¹Ñ¥™ä€Ì´Ô±…‰Ì‘½¥¹œÝ½É¬É•±•Ù…¹ÐÑ¼å½ÕÈÑ…É•Ð™¥•±…¹É•…½¹”É••¹ÐÁ…Á•È™É½´•… ˆ°4(€€€€€€€€€€€‘•Ñ…¥°è€‰e½Ô¹••„•¹Õ¥¹”°ÍÁ•¥™¥ŒÉ•…Í½¸Ñ¼É•… ½ÕÐ°¹½Ð©ÕÍÐ€$´¥¹Ñ•É•ÍÑ•¥¸É•Í•…É ¸œˆ°4(€€€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€à°4(€€€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰9½Ñ•Ì½¸€Ì´Ô±…‰Ì°•… Ý¥Ñ „ÍÁ•¥™¥ŒÁ…Á•È½ÈÁÉ½©•Ðå½Ô…¸É•™•É•¹”ˆ°4(€€€€€€€€€ô°4(€€€€€€€€€ì4(€€€€€€€€€€€Ñ¥Ñ±”è€‰µ…¥°•… ±…ˆÝ¥Ñ „ÍÁ•¥™¥Œ°¥¹™½Éµ•ÅÕ•ÍÑ¥½¸…‰½ÕÐÑ¡•¥ÈÝ½É¬ˆ°4(€€€€€€€€€€€‘•Ñ…¥°è€‰A%Ì•Ð•¹•É¥ŒÉ•ÅÕ•ÍÑÌ½¹ÍÑ…¹Ñ±äìÉ•™•É•¹¥¹œÑ¡•¥È…ÑÕ…°Á…Á•È¥ÌÝ¡…Ð•ÑÌ„É•Á±ä¸ˆ°4(€€€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€È°4(€€€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰M•¹Ð•µ…¥±Ì°¥‘•…±±äÝ¥Ñ …Ð±•…ÍÐ½¹”É•Á±äˆ°4(€€€€€€€€€ô°4(€€€€€€€€€ì4(€€€€€€€€€€€Ñ¥Ñ±”è€‰½µÁ±•Ñ”…¸½¹‰½…É‘¥¹œÑ…Í¬½È±¥Ñ•É…ÑÕÉ”É•Ù¥•Ü¥˜…•ÁÑ•¥¹Ñ¼„±…ˆˆ°4(€€€€€€€€€€€‘•Ñ…¥°è€‰5½ÍÐ±…‰ÌÍÑ…ÉÐ¹•Üµ•µ‰•ÉÌ½¸„Íµ…±°°±½ÜµÉ¥Í¬Ñ…Í¬‰•™½É”ÑÉÕÍÑ¥¹œÑ¡•´Ý¥Ñ É•…°Ý½É¬¸ˆ°4(€€€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€ÌÀ°4(€€€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰½µÁ±•Ñ•±¥Ñ•É…ÑÕÉ”É•Ù¥•Ü½È½¹‰½…É‘¥¹œ‘•±¥Ù•É…‰±”å½Ô…¸Í¡½Üˆ°4(€€€€€€€€€ô°4(€€€€€€€€€ì4(€€€€€€€€€€€Ñ¥Ñ±”è€‰½¹ÑÉ¥‰ÕÑ”Ñ¼…¸½¹½¥¹œÁÉ½©•Ð½ÈÁÉ½Á½Í”„Íµ…±°ÍÕÁ•ÉÙ¥Í•µ¥¹¤µÁÉ½©•Ðˆ°4(€€€€€€€€€€€‘•Ñ…¥°è€‰Q¡¥Ì¥ÌÑ¡”ÍÑ•ÀÑ¡…ÐÑÕÉ¹Ì€$•µ…¥±•„ÁÉ½™•ÍÍ½Èœ¥¹Ñ¼…¸…ÑÕ…°É•Í•…É É•‘•¹Ñ¥…°¸ˆ°4(€€€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€ÈÀ°4(€€€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰ÍÁ•¥™¥Œ½¹ÑÉ¥‰ÕÑ¥½¸å½Ô…¸¹…µ”…¹‘•ÍÉ¥‰”¥¸…¸¥¹Ñ•ÉÙ¥•Üˆ°4(€€€€€€€€€ô°4(€€€€€€€t°4(€€€€€ô¤ì4(€€€ô4(€ô4(4(€É•ÑÕÉ¸…ÁÌì)ô()™Õ¹Ñ¥½¸…‘Ù…¹•µ•¹Ñ…ÁÌ¡É•ÅÕ•ÍÐèI½…‘µ…ÁI•ÅÕ•ÍÐ°É•Í½±Ù•‘…É••ÉÌèI•Í½±Ù•‘…É••Émt¤è…Á%Ñ•µmtì(€¥˜€¡É•ÅÕ•ÍÐ¹ÁÉ½©•ÑÌ¹±•¹Ñ €ôôô€À€˜˜É•ÅÕ•ÍÐ¹•áÁ•É¥•¹”¹±•¹Ñ €ôôô€À¤É•ÑÕÉ¸mtì((€½¹ÍÐÍÑ…”€ô•ÑMÑ…•MÑÉ…Ñ•ä¡É•ÅÕ•ÍÐ¹•‘Õ…Ñ¥½¹MÑ…”¤ì(€½¹ÍÐÝ¥Ñ¡…É••È€ôÉ•Í½±Ù•‘…É••ÉÌ¹™¥±Ñ•È ¡ÉŒ¤èÉŒ¥ÌìÑ¥Ñ±”èÍÑÉ¥¹œì…É••Èè9½¹9Õ±±…‰±”ñI•Í½±Ù•‘…É••Él‰…É••È‰tøô€ôøÉŒ¹…É••È€„ôô¹Õ±°¤ì(€É•ÑÕÉ¸Ý¥Ñ¡…É••È¹Í±¥” À°€Ì¤¹µ…À ¡ìÑ¥Ñ±”°…É••Èô¤€ôøì(€€€½¹ÍÐÍÑÉ…Ñ•ä€ô…É••È¹‘¥™™•É•¹Ñ¥…Ñ¥½¹MÑÉ…Ñ•¥•ÍlÁt€üüÉ•…Ñ”Õ¹ÕÍÕ…±±äÍÑÉ½¹œ°É•Ù¥•Ý…‰±”•Ù¥‘•¹”™½È€‘íÑ¥Ñ±•õ€ì(€€€½¹ÍÐ…ÉÑ¥™…Ð€ô…É••È¹½‘¥¹%¹Ñ•¹Í¥Ñä€øô€Ð(€€€€€€ü€‰„ÁÕ‰±¥ŒÉ•Á½Í¥Ñ½Éä°Ý½É­¥¹œ‘•µ¼°‰•¹¡µ…É¬°…¹½¹¥Í”Ñ•¡¹¥…°ÝÉ¥Ñ”µÕÀˆ(€€€€€€è…É••È¹¡…¹‘Í=¹%¹Ñ•¹Í¥Ñä€øô€Ðñð…É••È¹É•Í•…É¡%¹Ñ•¹Í¥Ñä€øô€Ð(€€€€€€€€ü€‰„Ñ•¡¹¥…°É•Á½ÉÐ°‘•Í¥¸½È•áÁ•É¥µ•¹Ñ…°…ÉÑ¥™…Ð°‘…Ñ„½È…±Õ±…Ñ¥½¹Ì°…¹ÁÉ…Ñ¥Ñ¥½¹•È™••‘‰…¬ˆ(€€€€€€€€è…É••È¹½µµÕ¹¥…Ñ¥½¹%¹Ñ•¹Í¥Ñä€øô€Ðñð…É••È¹…Ñ•½Éä€ôôô€‰±…Üˆñð…É••È¹…Ñ•½Éä€ôôô€‰¡Õµ…¹¥Ñ¥•ÌµÍ½¥…°µÍ¥•¹•Ìˆ(€€€€€€€€€€ü€‰„Á½±¥Í¡•µ•µ¼°‰É¥•˜°…ÉÑ¥±”°…µÁ…¥¸°½È…Í”ÍÑÕ‘äÝ¥Ñ Í½ÕÉ”¹½Ñ•Ì…¹•áÁ•ÉÐ™••‘‰…¬ˆ(€€€€€€€€€€è€‰„Á½±¥Í¡•µ½‘•°°…¹…±åÍ¥Ì°…Í”ÍÑÕ‘ä°½È‘•¥Í¥½¸µ•µ¼Ý¥Ñ …ÍÍÕµÁÑ¥½¹Ì°É•½µµ•¹‘…Ñ¥½¹Ì°…¹É•Ù¥•Ý•È™••‘‰…¬ˆì((€€€É•ÑÕÉ¸ì(€€€€€¥è¹•áÑ% ‰•áÁ•É¥•¹”ˆ¤°(€€€€€…Ñ•½Éäè€‰•áÁ•É¥•¹”ˆ…Ì½¹ÍÐ°(€€€€€Ñ¥Ñ±”èÉ•…Ñ”„¡…ÉµÑ¼µ½ÁäÍ•±•Ñ¥½¸Í¥¹…°™½È€‘íÑ¥Ñ±•õ€°(€€€€€‘•ÍÉ¥ÁÑ¥½¸è€‘íÍÑÉ…Ñ•åô¸Q¡¥Ì¥ÌÑ¡”•Ðµ…¡•…µ½Ù”™½È„€‘íÍÑ…”¹±…‰•±ôè¥ÐÍ¡½Õ±É•…Ñ”•Ù¥‘•¹”µ½ÍÐ…ÁÁ±¥…¹ÑÌ…ÐÑ¡”Í…µ”ÍÑ…”…¹¹½ÐÍ¡½Ü°¹½Ð…¹½Ñ¡•È½µÁ±•Ñ¥½¸•ÉÑ¥™¥…Ñ”¹€°(€€€€€ÁÉ¥½É¥Ñäè€‰µ•‘¥Õ´ˆ…Ì½¹ÍÐ°(€€€€€¥µÁ…Ðè€Ð…ÌI…Ñ¥¹M…±”°(€€€€€•™™½ÉÐè€Ì…ÌI…Ñ¥¹M…±”°(€€€€€Ñ¥µ•!½É¥é½¸è€‰¥µµ•‘¥…Ñ”ˆ…Ì½¹ÍÐ°(€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€ÈÀ°(€€€€€É•±•Ù…¹Ñ…É••ÉÌèmÑ¥Ñ±•t°(€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‘í…ÉÑ¥™…Ñô°±¥¹­•™É½´å½ÕÈÉ•ÍÕµ”½È…ÁÁ±¥…Ñ¥½¸µ…Ñ•É¥…±Í€°(€€€€€Ñ…Ñ¥…±Ñ¥½¹Ìèl(€€€€€€€ì(€€€€€€€€€Ñ¥Ñ±”èQÕÉ¸Ñ¡¥Ì‘¥™™•É•¹Ñ¥…Ñ½È¥¹Ñ¼„½¹”µÁ…”‰É¥•˜è€‘íÍÑÉ…Ñ•åõ€°(€€€€€€€€€‘•Ñ…¥°è€‰•™¥¹”Ñ¡”…Õ‘¥•¹”°¡…É½¹ÍÑÉ…¥¹Ð°ÁÉ½½˜ÍÑ…¹‘…É°…¹™¥¹¥Í ±¥¹”‰•™½É”‘½¥¹œÑ¡”Ý½É¬¸ˆ°(€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€È°(€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰½¹”µÁ…”‰É¥•˜Ý¥Ñ „¹…µ•…Õ‘¥•¹”°Í½Á”°ÁÉ½½˜ÍÑ…¹‘…É°…¹‘•…‘±¥¹”ˆ°(€€€€€€€ô°(€€€€€€€ì(€€€€€€€€€Ñ¥Ñ±”è€‰	Õ¥±Ñ¡”Íµ…±±•ÍÐ½µÁ±•Ñ”Ù•ÉÍ¥½¸Ñ¡…Ð‘•µ½¹ÍÑÉ…Ñ•ÌÉ•…°©Õ‘µ•¹Ðˆ°(€€€€€€€€€‘•Ñ…¥°è€‰Q¡”Á½¥¹Ð¥Ì¹½ÐÍ¥é”¸M¡½Ü„‘•¥Í¥½¸°ÑÉ…‘•½™˜°Ñ•ÍÐ°¥Ñ•É…Ñ¥½¸°½ÈÉ•ÍÕ±ÐÑ¡…Ð„ÁÉ…Ñ¥Ñ¥½¹•È…¸•Ù…±Õ…Ñ”¸ˆ°(€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€ÄÄ°(€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è…ÉÑ¥™…Ð°(€€€€€€€ô°(€€€€€€€ì(€€€€€€€€€Ñ¥Ñ±”è•ÐÍÁ•¥™¥ŒÉ¥Ñ¥¥Í´™É½´ÑÝ¼Á•½Á±”™…µ¥±¥…ÈÝ¥Ñ €‘íÑ¥Ñ±•õ€°(€€€€€€€€€‘•Ñ…¥°è€‰Í¬Ý¡…ÐÝ½Õ±µ…­”Ñ¡”Ý½É¬É•‘¥‰±”¥¸…¸…ÑÕ…°Í•±•Ñ¥½¸ÁÉ½•ÍÌ°Ñ¡•¸É•Ù¥Í”Ñ¡”…ÉÑ¥™…ÐÉ…Ñ¡•ÈÑ¡…¸µ•É•±ä½±±•Ñ¥¹œÁÉ…¥Í”¸ˆ°(€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ð°(€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰QÝ¼Í•ÑÌ½˜™••‘‰…¬¹½Ñ•Ì…¹…Ð±•…ÍÐ½¹”‘½Õµ•¹Ñ•É•Ù¥Í¥½¸ˆ°(€€€€€€€ô°(€€€€€€€ì(€€€€€€€€€Ñ¥Ñ±”è€‰AÕ‰±¥Í Ñ¡”•Ù¥‘•¹”…¹ÝÉ¥Ñ”Ñ¡É•”‘•™•¹Í¥‰±”¥¹Ñ•ÉÙ¥•Ü‰Õ±±•ÑÌˆ°(€€€€€€€€€‘•Ñ…¥°è€‰5…­”Ñ¡”Ý½É¬•…ÍäÑ¼¥¹ÍÁ•Ð…¹ÁÉ•Á…É”Ñ¼•áÁ±…¥¸å½ÕÈ‘•¥Í¥½¹ÌÝ¥Ñ¡½ÕÐ•á…•É…Ñ¥¹œ¥µÁ…Ð¸ˆ°(€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ì°(€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰Í¡…É•…‰±”±¥¹¬Á±ÕÌÑ¡É•”…ÕÉ…Ñ”Í¥ÑÕ…Ñ¥½¸µ…Ñ¥½¸µÉ•ÍÕ±Ð‰Õ±±•ÑÌˆ°(€€€€€€€ô°(€€€€€t°(€€€ôì(€ô¤ì)ô()™Õ¹Ñ¥½¸ÁÉ½™•ÍÍ¥½¹…±…ÁÌ¡É•ÅÕ•ÍÐèI½…‘µ…ÁI•ÅÕ•ÍÐ°É•Í½±Ù•‘…É••ÉÌèI•Í½±Ù•‘…É••Émt¤è…Á%Ñ•µmtì(€½¹ÍÐÑ¥Ñ±•Ì€ôÉ•Í½±Ù•‘…É••ÉÌ¹µ…À ¡ÉŒ¤€ôøÉŒ¹Ñ¥Ñ±”¤ì4(€½¹ÍÐÁ±…å‰½½­Ì€ôÉ•Í½±Ù•A±…å‰½½­Í½É…É••ÉÌ¡É•Í½±Ù•‘…É••ÉÌ¤ì4(€€¼¼½¹É•Ñ”É½±”½™½ÕÌÁ¡É…Í¥¹œ‰•…ÑÌ•¹•É¥Œ€‰¹•ÑÝ½É¬Ý¥Ñ `ˆ™¥±±•ÈƒŠP4(€€¼¼”¹œ¸€‰É•… ½ÕÐÑ¼™¥É´…ÍÍ½¥…Ñ•Ì¸¸¸™½ÕÍ¥¹œ½¸±¥Ñ¥…Ñ¥½¸ÁÉ…Ñ¥•Ìˆ4(€€¼¼¥¹ÍÑ•…½˜€‰¹•ÑÝ½É¬Ý¥Ñ ±…Ýå•ÉÌˆ¸4(€½¹ÍÐÉ½±•Ì€ôÁ±…å‰½½­Ì¹±•¹Ñ €ø€À€ü©½¥¹9…ÑÕÉ…°¡Á±…å‰½½­Ì¹µ…À ¡À¤€ôøÀ¹¹•ÑÝ½É­¥¹Q•µÁ±…Ñ”¹É½±•Ì¤¤€è¹Õ±°ì4(€½¹ÍÐ™½ÕÍÉ•…Ì€ôÁ±…å‰½½­Ì¹±•¹Ñ €ø€À€ü©½¥¹9…ÑÕÉ…°¡Á±…å‰½½­Ì¹µ…À ¡À¤€ôøÀ¹¹•ÑÝ½É­¥¹Q•µÁ±…Ñ”¹™½ÕÍÉ•…Ì¤¤€è¹Õ±°ì4(4(€½¹ÍÐ…ÁÌè…Á%Ñ•µmt€ôl4(€€€ì4(€€€€€¥è¹•áÑ% ‰ÁÉ½™•ÍÍ¥½¹…°ˆ¤°4(€€€€€…Ñ•½Éäè€‰ÁÉ½™•ÍÍ¥½¹…°ˆ°4(€€€€€Ñ¥Ñ±”èÉ½±•Ì4(€€€€€€€€ü1¥¹”ÕÀ€ÈÑ¼€Ì¥¹™½Éµ…Ñ¥½¹…°¥¹Ñ•ÉÙ¥•ÝÌÝ¥Ñ €‘íÉ½±•Íô°™½ÕÍ¥¹œ½¸€‘í™½ÕÍÉ•…Íõ€4(€€€€€€€€èÑ¥Ñ±•Ì¹±•¹Ñ €ø€À4(€€€€€€€€€€ü1¥¹”ÕÀ€ÈÑ¼€Ì¥¹™½Éµ…Ñ¥½¹…°¡…ÑÌÝ¥Ñ Á•½Á±”Ý½É­¥¹œ…Ì„€‘íÑ¥Ñ±•Ì¹©½¥¸ ˆ½È„€ˆ¥õ€4(€€€€€€€€€€è€‰1¥¹”ÕÀ€ÈÑ¼€Ì¥¹™½Éµ…Ñ¥½¹…°¡…ÑÌÝ¥Ñ Á•½Á±”¥¸å½ÕÈÑ…É•Ð™¥•±ˆ°4(€€€€€‘•ÍÉ¥ÁÑ¥½¸èÉ½±•Ì4(€€€€€€€€üQ…±­¥¹œ‘¥É•Ñ±äÑ¼€‘íÉ½±•Íô…‰½ÕÐ€‘í™½ÕÍÉ•…Íô¥Ì½¹”½˜Ñ¡”¡¥¡•ÍÐµ±•Ù•É…”°±½Ý•ÍÐµ½ÍÐµ½Ù•Ì…Ù…¥±…‰±”¹€4(€€€€€€€€èÑ¥Ñ±•Ì¹±•¹Ñ €ø€À4(€€€€€€€€€€üQ…±­¥¹œ‘¥É•Ñ±äÑ¼Á•½Á±”Ý½É­¥¹œ…Ì„€‘íÑ¥Ñ±•Ì¹©½¥¸ ˆ½È„€ˆ¥ô¥Ì½¹”½˜Ñ¡”¡¥¡•ÍÐµ±•Ù•É…”°±½Ý•ÍÐµ½ÍÐµ½Ù•Ì…Ù…¥±…‰±”¹€4(€€€€€€€€€€è€‰Q…±­¥¹œ‘¥É•Ñ±äÑ¼Á•½Á±”¥¸å½ÕÈÑ…É•Ð™¥•±¥Ì½¹”½˜Ñ¡”¡¥¡•ÍÐµ±•Ù•É…”°±½Ý•ÍÐµ½ÍÐµ½Ù•Ì…Ù…¥±…‰±”¸ˆ°4(€€€€€ÁÉ¥½É¥Ñäè€‰µ•‘¥Õ´ˆ°4(€€€€€¥µÁ…Ðè€Ì°4(€€€€€•™™½ÉÐè€È°4(€€€€€Ñ¥µ•!½É¥é½¸è€‰¹•…ÈµÑ•É´ˆ°4(€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ô°4(€€€€€É•±•Ù…¹Ñ…É••ÉÌèÑ¥Ñ±•Ì°4(€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰1¥¹­•‘%¸½¹¹•Ñ¥½¸…•ÁÑ•°„…±•¹‘…È¥¹Ù¥Ñ”Ñ¡…Ð¡…ÁÁ•¹•°½È¹½Ñ•Ì™É½´Ñ¡”½¹Ù•ÉÍ…Ñ¥½¸å½Ô…¸É•™•É•¹”¥¸…¸¥¹Ñ•ÉÙ¥•Üˆ°4(€€€€€Ñ…Ñ¥…±Ñ¥½¹Ìèl4(€€€€€€€ì4(€€€€€€€€€Ñ¥Ñ±”èÉ½±•Ì€ü¥¹€Ô´à€‘íÉ½±•Íô½¸1¥¹­•‘%¸°ÁÉ¥½É¥Ñ¥é¥¹œ€‘í™½ÕÍÉ•…Íõ€€èÑ¥Ñ±•Ì¹±•¹Ñ €ø€À€ü¥¹€Ô´àÁ•½Á±”½¸1¥¹­•‘%¸ÕÉÉ•¹Ñ±äÝ½É­¥¹œ…Ì„€‘íÑ¥Ñ±•Ì¹©½¥¸ ˆ½È„€ˆ¥õ€€è€‰¥¹€Ô´àÁ•½Á±”½¸1¥¹­•‘%¸ÕÉÉ•¹Ñ±äÝ½É­¥¹œ¥¸å½ÕÈÑ…É•Ð™¥•±ˆ°4(€€€€€€€€€‘•Ñ…¥°è€‰M•…É …±Õµ¹¤™É½´å½ÕÈÍ¡½½°™¥ÉÍÐìÑ¡•äÉ”Ñ¡”µ½ÍÐ±¥­•±äÑ¼É•ÍÁ½¹¸ˆ°4(€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ä°4(€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰Í…Ù•±¥ÍÐ½˜€Ô´à¹…µ•ÌÝ¥Ñ 1¥¹­•‘%¸ÁÉ½™¥±”±¥¹­Ìˆ°4(€€€€€€€ô°4(€€€€€€€ì4(€€€€€€€€€Ñ¥Ñ±”è€‰M•¹•… „Í¡½ÉÐ°ÍÁ•¥™¥Œ½¹¹•Ñ¥½¸µ•ÍÍ…”É•™•É•¹¥¹œÑ¡•¥È…ÑÕ…°Ý½É¬ˆ°4(€€€€€€€€€‘•Ñ…¥°è€‰µ•ÍÍ…”Ñ¡…Ðµ•¹Ñ¥½¹Ì„ÍÁ•¥™¥ŒÁÉ½©•Ð½ÈÁ½ÍÐÑ¡•äÝÉ½Ñ”•ÑÌÉ•Á±¥•Ìì„½ÁäµÁ…ÍÑ•Ñ•µÁ±…Ñ”‘½•Í¸Ð¸ˆ°4(€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ä°4(€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰M•¹Ð½¹¹•Ñ¥½¸É•ÅÕ•ÍÑÌÝ¥Ñ Á•ÉÍ½¹…±¥é•¹½Ñ•Ìˆ°4(€€€€€€€ô°4(€€€€€€€ì4(€€€€€€€€€Ñ¥Ñ±”è€‰AÉ•Á…É”€Ì´ÐÉ•…°ÅÕ•ÍÑ¥½¹Ì‰•™½É”•… …±°ˆ°4(€€€€€€€€€‘•Ñ…¥°è€‰MÁ•¥™¥ŒÅÕ•ÍÑ¥½¹Ì…‰½ÕÐÑ¡•¥È‘…äµÑ¼µ‘…ä•Ðå½Ô™…Èµ½É”ÕÍ•™Õ°…¹ÍÝ•ÉÌÑ¡…¸€…¹ä…‘Ù¥”™½ÈÍ½µ•½¹”ÍÑ…ÉÑ¥¹œ½ÕÐüœˆ°4(€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ä°4(€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰ÝÉ¥ÑÑ•¸ÅÕ•ÍÑ¥½¸±¥ÍÐ™½È•… Í¡•‘Õ±•½¹Ù•ÉÍ…Ñ¥½¸ˆ°4(€€€€€€€ô°4(€€€€€€€ì4(€€€€€€€€€Ñ¥Ñ±”è€‰!…Ù”€È´Ì½¹Ù•ÉÍ…Ñ¥½¹Ì…¹Í•¹„•¹Õ¥¹”Ñ¡…¹¬µå½Ô™½±±½ÜµÕÀˆ°4(€€€€€€€€€‘•Ñ…¥°è€‰Q¡”™½±±½ÜµÕÀ¥ÌÝ¡…ÐÑÕÉ¹Ì„½¹”µÑ¥µ”¡…Ð¥¹Ñ¼…¸…ÑÕ…°É•±…Ñ¥½¹Í¡¥Àå½Ô…¸¼‰…¬Ñ¼¸ˆ°4(€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€È°4(€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰½µÁ±•Ñ•…±±ÌÁ±ÕÌÍ•¹ÐÑ¡…¹¬µå½Ôµ•ÍÍ…•ÌÉ•™•É•¹¥¹œÍ½µ•Ñ¡¥¹œÍÁ•¥™¥ŒÑ¡•äÍ…¥ˆ°4(€€€€€€€ô°4(€€€€€t°4(€€€ô°4(€tì4(4(€¥˜€ …É•ÅÕ•ÍÐ¹…É••É½…±Ì¤ì4(€€€…ÁÌ¹ÁÕÍ ¡ì4(€€€€€¥è¹•áÑ% ‰ÁÉ½™•ÍÍ¥½¹…°ˆ¤°4(€€€€€…Ñ•½Éäè€‰ÁÉ½™•ÍÍ¥½¹…°ˆ°4(€€€€€Ñ¥Ñ±”è€‰]É¥Ñ”‘½Ý¸„ÍÁ•¥™¥Œ…É••È½…°ˆ°4(€€€€€‘•ÍÉ¥ÁÑ¥½¸è€‰ÍÁ•¥™¥Œ°…ÉÑ¥Õ±…Ñ•½…°µ…­•Ìå½ÕÈ…ÁÁ±¥…Ñ¥½¹Ì°¥¹Ñ•ÉÙ¥•ÝÌ°…¹¹•ÑÝ½É­¥¹œ½¹Ù•ÉÍ…Ñ¥½¹ÌÍ¡…ÉÁ•È¸ˆ°4(€€€€€ÁÉ¥½É¥Ñäè€‰±½Üˆ°4(€€€€€¥µÁ…Ðè€È°4(€€€€€•™™½ÉÐè€Ä°4(€€€€€Ñ¥µ•!½É¥é½¸è€‰¥µµ•‘¥…Ñ”ˆ°4(€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ä°4(€€€€€É•±•Ù…¹Ñ…É••ÉÌèÑ¥Ñ±•Ì°4(€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰½¹”µÁ…É…É…Á ½…°ÍÑ…Ñ•µ•¹ÐÍ…Ù•¥¸å½ÕÈA…Ñ¡¥¹‘•ÈÁÉ½™¥±”…¹…ÐÑ¡”Ñ½À½˜å½ÕÈÉ•ÍÕµ”‘É…™Ðˆ°4(€€€€€Ñ…Ñ¥…±Ñ¥½¹Ìèl4(€€€€€€€ì4(€€€€€€€€€Ñ¥Ñ±”è€‰É…™Ð„½¹”µÁ…É…É…Á ½…°…¹ÍÝ•É¥¹œÝ¡…ÐÉ½±”°Ý¡ä¥Ð°…¹‰äÝ¡•¸ˆ°4(€€€€€€€€€‘•Ñ…¥°è€‰MÁ•¥™¥¥Ñä¥ÌÝ¡…Ðµ…­•Ì„½…°ÕÍ…‰±”¥¸…ÁÁ±¥…Ñ¥½¹Ì…¹¥¹Ñ•ÉÙ¥•ÝÌ¥¹ÍÑ•…½˜©ÕÍÐ„¹¥”Í•¹Ñ¥µ•¹Ð¸ˆ°4(€€€€€€€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè€Ä°4(€€€€€€€€€•Ù¥‘•¹•=™½µÁ±•Ñ¥½¸è€‰Í…Ù•½¹”µÁ…É…É…Á ½…°ÍÑ…Ñ•µ•¹Ðˆ°4(€€€€€€€ô°4(€€€€€t°4(€€€ô¤ì4(€ô4(4(€É•ÑÕÉ¸…ÁÌì4)ô4(4)•áÁ½ÉÐ™Õ¹Ñ¥½¸…¹…±åé•…ÁÌ¡É•ÅÕ•ÍÐèI½…‘µ…ÁI•ÅÕ•ÍÐ°É•Í½±Ù•‘…É••ÉÌèI•Í½±Ù•‘…É••Émt¤è…Á¹…±åÍ¥Ìì(€½¹ÍÐ…ÁÌ€ôl(€€€€¸¸¹……‘•µ¥…ÁÌ¡É•ÅÕ•ÍÐ°É•Í½±Ù•‘…É••ÉÌ¤°(€€€€¸¸¹Ñ•¡¹¥…±…ÁÌ¡É•ÅÕ•ÍÐ°É•Í½±Ù•‘…É••ÉÌ¤°(€€€€¸¸¹•áÁ•É¥•¹•…ÁÌ¡É•ÅÕ•ÍÐ°É•Í½±Ù•‘…É••ÉÌ¤°(€€€€¸¸¹…‘Ù…¹•µ•¹Ñ…ÁÌ¡É•ÅÕ•ÍÐ°É•Í½±Ù•‘…É••ÉÌ¤°(€€€€¸¸¹ÁÉ½™•ÍÍ¥½¹…±…ÁÌ¡É•ÅÕ•ÍÐ°É•Í½±Ù•‘…É••ÉÌ¤°(€tì(4(€É•ÑÕÉ¸ì4(€€€ÕÉÉ•¹ÑMÑ…Ñ•MÕµµ…Éäè‰Õ¥±‘ÕÉÉ•¹ÑMÑ…Ñ•MÕµµ…Éä¡É•ÅÕ•ÍÐ¤°4(€€€Ñ…É•Ñ…É••ÉÌèÉ•Í½±Ù•‘…É••ÉÌ¹µ…À ¡ÉŒ¤€ôøÉŒ¹Ñ¥Ñ±”¤°4(€€€…ÁÌ°4(€ôì4)ô4(4)½¹ÍÐAI%=I%Qe}I9,èI•½Éñ…ÁAÉ¥½É¥Ñä°¹Õµ‰•Èø€ôìÉ¥Ñ¥…°è€Ð°¡¥ è€Ì°µ•‘¥Õ´è€È°±½Üè€Äôì4(4)•áÁ½ÉÐ™Õ¹Ñ¥½¸‘•É¥Ù•Q½Á5½Ù•Ì¡…Á¹…±åÍ¥Ìè…Á¹…±åÍ¥Ì¤èQ½Á5½Ù•mtì4(€½¹ÍÐÉ…¹­•€ôl¸¸¹…Á¹…±åÍ¥Ì¹…ÁÍt¹Í½ÉÐ ¡„°ˆ¤€ôøì4(€€€½¹ÍÐÁÉ¥½É¥Ñå¥™˜€ôAI%=I%Qe}I9-mˆ¹ÁÉ¥½É¥Ñåt€´AI%=I%Qe}I9-m„¹ÁÉ¥½É¥Ñåtì4(€€€¥˜€¡ÁÉ¥½É¥Ñå¥™˜€„ôô€À¤É•ÑÕÉ¸ÁÉ¥½É¥Ñå¥™˜ì4(€€€½¹ÍÐ½Ù•É±…Á¥™˜€ôˆ¹É•±•Ù…¹Ñ…É••ÉÌ¹±•¹Ñ €´„¹É•±•Ù…¹Ñ…É••ÉÌ¹±•¹Ñ ì4(€€€¥˜€¡½Ù•É±…Á¥™˜€„ôô€À¤É•ÑÕÉ¸½Ù•É±…Á¥™˜ì4(€€€½¹ÍÐ¥µÁ…Ñ¥™˜€ôˆ¹¥µÁ…Ð€´„¹¥µÁ…Ðì4(€€€¥˜€¡¥µÁ…Ñ¥™˜€„ôô€À¤É•ÑÕÉ¸¥µÁ…Ñ¥™˜ì4(€€€É•ÑÕÉ¸„¹•™™½ÉÐ€´ˆ¹•™™½ÉÐì4(€ô¤ì4(4(€É•ÑÕÉ¸É…¹­•¹Í±¥” À°€Ì¤¹µ…À ¡…À°¥¹‘•à¤€ôø€¡ì4(€€€¥èÑ½Àµµ½Ù”´‘í¥¹‘•à€¬€Åõ€°4(€€€Ñ¥Ñ±”è…À¹Ñ¥Ñ±”°4(€€€¥µÁ…Ðè…À¹¥µÁ…Ð…ÌI…Ñ¥¹M…±”°4(€€€•™™½ÉÐè…À¹•™™½ÉÐ…ÌI…Ñ¥¹M…±”°4(€€€•ÍÑ¥µ…Ñ•‘!½ÕÉÌè…À¹•ÍÑ¥µ…Ñ•‘!½ÕÉÌ°4(€€€Ý¡äè…À¹‘•ÍÉ¥ÁÑ¥½¸°4(€€€É•±•Ù…¹Ñ…É••ÉÌè…À¹É•±•Ù…¹Ñ…É••ÉÌ°4(€ô¤¤ì4)ô4(

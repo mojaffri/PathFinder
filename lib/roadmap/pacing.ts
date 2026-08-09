@@ -56,8 +56,8 @@ export function computePhaseTimelines(phaseHours: number[], weeklyHoursAvailable
     const { expectedWeeks } = calculateExpectedDuration(hours, weeklyHoursAvailable);
     const durationMonths = Math.max(1, Math.round(expectedWeeks / WEEKS_PER_MONTH));
     const startMonth = cumulativeMonths + 1;
-    const endMonth = startMonth + durationMonths;
-    cumulativeMonths = endMonth - 1;
-    return `Months ${startMonth}-${endMonth}`;
+    const endMonth = startMonth + durationMonths - 1;
+    cumulativeMonths = endMonth;
+    return startMonth === endMonth ? `Month ${startMonth}` : `Months ${startMonth}-${endMonth}`;
   });
 }
