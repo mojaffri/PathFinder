@@ -21,7 +21,7 @@ A full-stack TypeScript app that turns "I don't know what I want to do" or "I kn
 
 ## What it does
 
-PathFinder is a STEM career and academic roadmap engine with three connected products:
+PathFinder is a career and academic roadmap engine with three connected products:
 
 | | |
 |---|---|
