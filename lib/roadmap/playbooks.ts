@@ -237,4 +237,471 @@ const CAREER_PLAYBOOKS: Record<CareerId, CareerPlaybook> = {
       "A project that handles a genuinely tricky mobile problem (offline sync, background tasks)",
     ],
     networkingTemplate: { roles: "mobile engineers", focusAreas: "iOS, Android, or cross-platform development" },
-    genericPhrasesToAvoid: ["network with engineers", "learn mobile development", "gain app experienγ­ψ¶‰ΛkΊwµηUΑΑ•Ι±…ΝΜµΝΡ…Ή‘¥Ή°4(€€€­•εQ½½±Μθmt°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰MΥΝΡ…¥Ή•Ν΅…‘½έ¥Ή΅½ΥΙΜέ¥Ρ ‰½Ρ „•Ή•Ι…°‘•ΉΡ¥ΝΠ…Ή…Π±•…ΝΠ½Ή”ΝΑ•¥…±¥ΝΠ°4(€€€€€€‰MΡΙ½ΉΑΙ•Ι•ΕΥ¥Ν¥Ρ”΅•µ¥ΝΡΙδ½‰¥½±½δ½ΥΙΝ•έ½Ι¬Α•Ι™½Ιµ…Ή”°4(€€€€€€‰Ήδ‘•µ½ΉΝΡΙ…Ρ••Ω¥‘•Ή”½µ…ΉΥ…°‘•αΡ•Ι¥Ρδ€΅…ΙΠ°¥ΉΝΡΙΥµ•ΉΡΜ°΅…Ή‘Μµ½Έ΅½‰‰¥•Μ¤°έ΅¥ Ν½µ”ΑΙ½Ι…µΜΝΑ•¥™¥…±±δΩ…±Υ”°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰‘•ΉΡ¥ΝΡΜ°™½ΥΝΙ•…Μθ€‰•Ή•Ι…°ΑΙ…Ρ¥”½ΘΡ΅”ΝΑ•¥…±Ρδε½ΤΙ”µ½ΝΠ‘Ι…έΈΡΌτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰…¥Έ±¥Ή¥…°•αΑ•Ι¥•Ή”°€‰Ν΅…‘½ά„‘•ΉΡ¥ΝΠ°€‰Ή•Ρέ½Ι¬έ¥Ρ ‘•ΉΡ¥ΝΡΜ‰t°4(€€€½™™¥¥…±AΙ•ΑI•Ν½ΥΙ”θ€‰Ή½Ι™½Θ½™™¥¥…°PΙ•¥ΝΡΙ…Ρ¥½Έ…Ή½ΉΡ•ΉΠ½ΥΡ±¥Ή”°…ΉML™½ΘΡ΅”‘•ΉΡ…°Ν΅½½°…ΑΑ±¥…Ρ¥½ΈΑ½ΙΡ…°°4(€τ°4(4(€€ΌΌ€ττττττττττττττττττττττττττττM%9€ΌIMI €ττττττττττττττττττττττττττττ4(€€‰Ι•Ν•…Ι µΝ¥•ΉΡ¥ΝΠµΑ΅εΝ¥…°µΝ¥•Ή•Μθμ(€€€™¥•±θ€‰I•Ν•…Ι M¥•ΉΡ¥ΝΠ€΅A΅εΝ¥…°M¥•Ή•Μ¤°4(€€€…Ρ¥Ήα…΄θ€‰I€΅A΅εΝ¥ΜIέ΅•Ι”Ι•ΕΥ¥Ι•¤°(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰Ι•ΕΥ¥Ι•ΜµΥΑΑ•Ι±…ΝΜµΝΡ…Ή‘¥Ή°(€€€…Ρ¥Ήα…µA½±¥δθ€‰ΑΙ½Ι…΄µ‘•Α•Ή‘•ΉΠ°(€€€­•εQ½½±Μθl‰AεΡ΅½Έ½5Q1°€‰ΝΑ•¥…±¥ι•Ν¥µΥ±…Ρ¥½Έ½Θ•αΑ•Ι¥µ•ΉΡ…°Ν½™Ρέ…Ι”°€‰1…Q•`‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰I•…°Ι•Ν•…Ι µΙ½Υΐ¥ΉΩ½±Ω•µ•ΉΠ…Μ•…Ι±δ…ΜΑ½ΝΝ¥‰±”°…¥µ¥Ή™½ΘΌµ…ΥΡ΅½ΙΝ΅¥ΐ½Θ„ΝΡΙ½ΉΝ•Ή¥½ΘΡ΅•Ν¥Μ°4(€€€€€€‰AΙ½Ι…µµ¥Ή™±Υ•Ήδ€΅AεΡ΅½Έ½¬¬¤°Ν¥Ή”Ή•…Ι±δ•Ω•ΙδΑ΅εΝ¥ΜΝΥµ™¥•±Ή½άΙ•ΕΥ¥Ι•Μ¥Π°4(€€€€€€‰UΉ‘•ΙΙ…‘Υ…Ρ”Ι•Ν•…Ι •αΑ•Ι¥•Ή”Ρ΅Ι½Υ …ΈIT½Θ½Έµ…µΑΥΜ±…°Ρ΅”™¥•±Μ­•δ•…Ι±δΝ¥Ή…°°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰Ι•Ν•…Ι΅•ΙΜ…ΉA%Μ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥Ι•Ν•…Ι ΝΥµ™¥•±ε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ Ι•Ν•…Ι΅•ΙΜ°€‰•Π±…•αΑ•Ι¥•Ή”°€‰±•…ΙΈΡ΅”™¥•±‰t°4(€€€½™™¥¥…±AΙ•ΑI•Ν½ΥΙ”θ€‰QLΉ½Ι™½ΘI½A΅εΝ¥ΜIΙ•¥ΝΡΙ…Ρ¥½Έ°έ΅•Ι”Ρ΅”ΑΙ½Ι…µΜε½ΤΙ”Ρ…Ι•Ρ¥ΉΝΡ¥±°Ι•ΕΥ¥Ι”¥Π°4(€τ°4(€΅•µ¥ΝΠθμ4(€€€™¥•±θ€‰΅•µ¥ΝΠ°4(€€€…Ρ¥Ήα…΄θΉΥ±°°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰•±¥¥‰±”µΉ½ά°4(€€€­•εQ½½±Μθl‰…Ή…±εΡ¥…°¥ΉΝΡΙΥµ•ΉΡ…Ρ¥½Έ€΅!A1°µ5L°95H¤°€‰΅•µ¥…°‘…Ρ…‰…Ν•Μ€΅M¥¥Ή‘•Θ½I•…αεΜ¤‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰MΥΝΡ…¥Ή•Ι•Ν•…Ι ½Θ¥Ή‘ΥΝΡΙδ±…•αΑ•Ι¥•Ή”έ¥Ρ ΝΑ•¥™¥¥ΉΝΡΙΥµ•ΉΡ…Ρ¥½Έε½ΤΩ”Α•ΙΝ½Ή…±±δΥΝ•°Ή½Π©ΥΝΠ½ΥΙΝ•έ½Ι¬±…‰Μ°4(€€€€€€‰…Ι•™Υ°°Ι•ΑΙ½‘Υ¥‰±”‘½Υµ•ΉΡ…Ρ¥½Έ΅…‰¥ΡΜ‘•µ½ΉΝΡΙ…Ρ•Ρ΅Ι½Υ „±…Ή½Ρ•‰½½¬½ΘέΙ¥Ρ”µΥΐ°4(€€€€€€‰±•…Θ¥Ή‘ΥΝΡΙδµΝ•µ•ΉΠ‘¥Ι•Ρ¥½Έ€΅Α΅…Ιµ„°µ…Ρ•Ι¥…±Μ°•ΉΩ¥Ι½Ήµ•ΉΡ…°°™½Ι•ΉΝ¥¤ΡΌ™½ΥΜε½ΥΘ…ΑΑ±¥…Ρ¥½ΉΜ°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰΅•µ¥ΝΡΜ…Ή±…Ν¥•ΉΡ¥ΝΡΜ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥¥Ή‘ΥΝΡΙδΝ•µ•ΉΠε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ Ν¥•ΉΡ¥ΝΡΜ°€‰…¥Έ±…•αΑ•Ι¥•Ή”°€‰±•…ΙΈ΅•µ¥ΝΡΙδΡ•΅Ή¥ΕΥ•Μ‰t°4(€τ°4(€€‰µ…Ρ•Ι¥…±ΜµΝ¥•ΉΡ¥ΝΠθμ4(€€€™¥•±θ€‰5…Ρ•Ι¥…±ΜM¥•ΉΡ¥ΝΠ°4(€€€…Ρ¥Ήα…΄θΉΥ±°°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰•±¥¥‰±”µΉ½ά°4(€€€­•εQ½½±Μθl‰M4½Q4°€‰aI°€‰µ•΅…Ή¥…°Ρ•ΝΡ¥Ή•ΕΥ¥Αµ•ΉΠ‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰I•…°΅…Ή‘Μµ½ΈΡ¥µ”έ¥Ρ ½Ι”΅…Ι…Ρ•Ι¥ι…Ρ¥½Έ¥ΉΝΡΙΥµ•ΉΡΜ€΅M4°aI¤°Ή½Π©ΥΝΠΡ΅•½Ιδ°4(€€€€€€‰™…¥±ΥΙ”µ…Ή…±εΝ¥Μ…Ν”ΝΡΥ‘δε½Τ…Έ•αΑ±…¥Έ±•…Ι±δΝΡ…ΙΠΡΌ™¥Ή¥Ν °„ΝΑ•¥™¥…±±δΩ…±Υ•Ν­¥±°¥ΈΡ΅¥Μ™¥•±°4(€€€€€€‰I•Ν•…Ι ½Θ¥Ή‘ΥΝΡΙδ±…•αΑ½ΝΥΙ”‰•ε½Ή½ΥΙΝ•έ½Ι¬°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰µ…Ρ•Ι¥…±ΜΝ¥•ΉΡ¥ΝΡΜ…Ή•Ή¥Ή••ΙΜ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥¥Ή‘ΥΝΡΙδ€΅Ν•µ¥½Ή‘ΥΡ½ΙΜ°…•Ι½ΝΑ…”°•Ή•Ιδ°½ΉΝΥµ•ΘΑΙ½‘ΥΡΜ¤ε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ Ν¥•ΉΡ¥ΝΡΜ°€‰…¥Έ±…•αΑ•Ι¥•Ή”°€‰±•…ΙΈµ…Ρ•Ι¥…±Μ΅…Ι…Ρ•Ι¥ι…Ρ¥½Έ‰t°4(€τ°4(4(€€ΌΌ€ττττττττττττττττττττττττττττττττττ1\€τττττττττττττττττττττττττττττττττττ4(€€‰±…έε•Θµ…ΡΡ½ΙΉ•δθμ4(€€€™¥•±θ€‰1…έε•Θ€ΌΡΡ½ΙΉ•δ°4(€€€…Ρ¥Ήα…΄θ€‰1MP°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰Ι•ΕΥ¥Ι•ΜµΥΑΑ•Ι±…ΝΜµΝΡ…Ή‘¥Ή°4(€€€­•εQ½½±Μθl‰]•ΝΡ±…ά°€‰1•α¥Ν9•α¥Μ‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰Α½±¥Ν΅•±•…°έΙ¥Ρ¥ΉΝ…µΑ±”€΅„µ•µΌ½Θ‰Ι¥•¤°4(€€€€€€‰1…άµΙ•±…Ρ••αΑ•Ι¥•Ή”€΅Α…Ι…±•…°έ½Ι¬°„±•…°¥ΉΡ•ΙΉΝ΅¥ΐ°„±¥Ή¥°½Θµ½½Π½ΥΙΠ¤°4(€€€€€€‰•µ½ΉΝΡΙ…Ρ•±•…°Ι•Ν•…Ι Ν­¥±°½Έ„Ι•…°°ΝΑ•¥™¥¥ΝΝΥ”°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰™¥Ι΄…ΝΝ½¥…Ρ•Μ°ΑΥ‰±¥‘•™•Ή‘•ΙΜ°½Θ¥Έµ΅½ΥΝ”½ΥΉΝ•°°™½ΥΝΙ•…Μθ€‰±¥Ρ¥…Ρ¥½Έ°½ΙΑ½Ι…Ρ”°½ΘΑΥ‰±¥¥ΉΡ•Ι•ΝΠΑΙ…Ρ¥”…Ι•…Μτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ ±…έε•ΙΜ°€‰±•…ΙΈ…‰½ΥΠΡ΅”±•…°™¥•±°€‰…¥Έ±•…°•αΑ•Ι¥•Ή”‰t°4(€€€½™™¥¥…±AΙ•ΑI•Ν½ΥΙ”θ€‰1MΉ½Ι°Ρ΅”½™™¥¥…°1MPΙ•¥ΝΡΙ…Ρ¥½Έ…Ή±…άΝ΅½½°…ΑΑ±¥…Ρ¥½ΈΑ½ΙΡ…°°™½ΘΙ•…°‘…Ρ•Μ…Ή™Ι•”½™™¥¥…°ΑΙ•ΐΡ•ΝΡΜ°4(€τ°4(€€‰Α…Ρ•ΉΠµ…ΡΡ½ΙΉ•δθμ4(€€€™¥•±θ€‰A…Ρ•ΉΠΡΡ½ΙΉ•δ°4(€€€…Ρ¥Ήα…΄θ€‰1MP°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰Ι•ΕΥ¥Ι•ΜµΥΑΑ•Ι±…ΝΜµΝΡ…Ή‘¥Ή°4(€€€­•εQ½½±Μθl‰Ρ΅”UMAQ<A…Ρ•ΉΠΥ±°µQ•αΠ…Ή%µ…”…Ρ…‰…Ν”°€‰Α…Ρ•ΉΠ‘½­•Ρ¥ΉΝ½™Ρέ…Ι”‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰Ρ•΅Ή¥…°έΙ¥Ρ¥ΉΝ…µΑ±”€΅„±…¥΄…Ή…±εΝ¥Μ½Θµ½¬ΑΙ½Ν•ΥΡ¥½Έµ•µΌ¤‰Υ¥±Π‘¥Ι•Ρ±δ½Έε½ΥΘMQ4‘•Ι•”°4(€€€€€€‰Έ%@µΙ•±…Ρ•¥ΉΡ•ΙΉΝ΅¥ΐ½Θ±•Ι­Ν΅¥ΐ°•Ω•Έ½ΥΡΝ¥‘”„‰¥™¥Ι΄°4(€€€€€€‰αΑ±¥¥Π™Ι…µ¥Ή½ε½ΥΘΡ•΅Ή¥…°ΥΉ‘•ΙΙ…‘Υ…Ρ”‘•Ι•”…ΜΡ΅”Ι•‘•ΉΡ¥…°Ρ΅…Πµ…­•ΜΡ΅¥ΜΝΑ•¥…±Ρδ…•ΝΝ¥‰±”°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰%@…ΝΝ½¥…Ρ•Μ…ΉΑ…Ρ•ΉΠ…•ΉΡΜ°™½ΥΝΙ•…Μθ€‰Ρ΅”Ρ•΅Ή¥…°ΑΙ…Ρ¥”…Ι•„€΅Ν½™Ρέ…Ι”°‰¥½Ρ• °µ•΅…Ή¥…°°΅•µ¥…°Α…Ρ•ΉΡΜ¤µ…Ρ΅¥Ήε½ΥΘMQ4‰…­Ι½ΥΉτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ ±…έε•ΙΜ°€‰±•…ΙΈ…‰½ΥΠΑ…Ρ•ΉΠ±…ά°€‰…¥Έ±•…°•αΑ•Ι¥•Ή”‰t°4(€€€½™™¥¥…±AΙ•ΑI•Ν½ΥΙ”θ€‰1MΉ½Ι™½Θ1MP½±…άΝ΅½½°…‘µ¥ΝΝ¥½ΉΜ°…ΉUMAQ<Ή½Ψ™½ΘΑ…Ρ•ΉΠ‰…Θ•±¥¥‰¥±¥Ρδ…ΉΙ•¥ΝΡΙ…Ρ¥½ΈΙ•ΕΥ¥Ι•µ•ΉΡΜ°4(€τ°4(€€‰½ΙΑ½Ι…Ρ”µ½ΥΉΝ•°θμ4(€€€™¥•±θ€‰½ΙΑ½Ι…Ρ”½ΥΉΝ•°°4(€€€…Ρ¥Ήα…΄θ€‰1MP°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰Ι•ΕΥ¥Ι•ΜµΥΑΑ•Ι±…ΝΜµΝΡ…Ή‘¥Ή°4(€€€­•εQ½½±Μθl‰½ΉΡΙ…Π±¥™•ε±”µ…Ή…•µ•ΉΠ€΅14¤Ν½™Ρέ…Ι”°€‰]•ΝΡ±…ά°€‰1•α¥Ν9•α¥Μ‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰½ΉΡΙ…Π‘Ι…™Ρ¥Ή½ΘΉ•½Ρ¥…Ρ¥½ΈέΙ¥Ρ¥ΉΝ…µΑ±”°4(€€€€€€‰‘•±¥‰•Ι…Ρ”™½ΥΜ½Έ½ΙΑ½Ι…Ρ”°ΡΙ…ΉΝ…Ρ¥½Ή…°°½Θ•µΑ±½εµ•ΉΠ±…ά½ΥΙΝ•έ½Ι¬…Ή¥ΉΡ•ΙΉΝ΅¥ΑΜ°Ν¥Ή”Ρ΅•Ν”ΑΙ…Ρ¥”Ι½ΥΑΜµ½ΝΠ‘¥Ι•Ρ±δ™••¥Έµ΅½ΥΝ”Ι½±•Μ°4(€€€€€€‰•ΉΥ¥Ή”™±Υ•Ήδ¥Έ„ΝΑ•¥™¥¥Ή‘ΥΝΡΙδ€΅Ρ• °΅•…±Ρ΅…Ι”°™¥Ή…Ή”¤ΡΌµ…­”…Έ•Ω•ΉΡΥ…°¥Έµ΅½ΥΝ”ΡΙ…ΉΝ¥Ρ¥½ΈΡ…Ι•Ρ•°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰¥Έµ΅½ΥΝ”½ΥΉΝ•°…Ή½ΙΑ½Ι…Ρ”…ΝΝ½¥…Ρ•Μ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥¥Ή‘ΥΝΡΙδε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ ±…έε•ΙΜ°€‰±•…ΙΈ…‰½ΥΠ½ΙΑ½Ι…Ρ”±…ά°€‰…¥Έ±•…°•αΑ•Ι¥•Ή”‰t°4(€€€½™™¥¥…±AΙ•ΑI•Ν½ΥΙ”θ€‰1MΉ½Ι°Ρ΅”½™™¥¥…°1MPΙ•¥ΝΡΙ…Ρ¥½Έ…Ή±…άΝ΅½½°…ΑΑ±¥…Ρ¥½ΈΑ½ΙΡ…°°4(€τ°4(4(€€ΌΌ€ττττττττττττττττττττττττττ	UM%9ML€%99€ττττττττττττττττττττττττττττ4(€€‰‰ΥΝ¥Ή•ΝΜµ…Ή…±εΝΠθμ4(€€€™¥•±θ€‰	ΥΝ¥Ή•ΝΜΉ…±εΝΠ°4(€€€…Ρ¥Ήα…΄θΉΥ±°°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰•±¥¥‰±”µΉ½ά°4(€€€­•εQ½½±Μθl‰α•°°€‰ME0°€‰Q…‰±•…Τ½A½έ•Θ	$‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰½µΑ±•Ρ•‰ΥΝ¥Ή•ΝΜ…Ν”…Ή…±εΝ¥Μ½ΘΑΙ½•ΝΜµ¥µΑΙ½Ω•µ•ΉΠΑΙ½©•Πέ¥Ρ „±•…Θ‰•™½Ι”½…™Ρ•ΘΙ•½µµ•Ή‘…Ρ¥½Έ°4(€€€€€€‰ME0™±Υ•Ήδ‰•ε½Ήα•°°Ν¥Ή”¥ΠΜ¥ΉΙ•…Ν¥Ή±δ•αΑ•Ρ•°4(€€€€€€‰Έ¥ΉΡ•ΙΉΝ΅¥ΐ¥Έ…Ή…±εΡ¥Μ°½Α•Ι…Ρ¥½ΉΜ°½Θ½ΉΝΥ±Ρ¥Ή°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰…Ή…±εΝΡΜ°…ΝΝ½¥…Ρ•Μ°½Θ…±ΥµΉ¤…ΠΡ…Ι•Π™¥ΙµΜ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥Ι½Υΐ½ΘΑΙ…Ρ¥”€΅‰…Ή­¥Ή°½ΙΑ½Ι…Ρ”™¥Ή…Ή”°½ΉΝΥ±Ρ¥Ή¤ε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ ‰ΥΝ¥Ή•ΝΜΑΙ½™•ΝΝ¥½Ή…±Μ°€‰±•…ΙΈ‰ΥΝ¥Ή•ΝΜ…Ή…±εΝ¥Μ°€‰…¥Έ‰ΥΝ¥Ή•ΝΜ•αΑ•Ι¥•Ή”‰t°4(€τ°4(€€‰™¥Ή…Ή¥…°µ…Ή…±εΝΠθμ4(€€€™¥•±θ€‰¥Ή…Ή¥…°Ή…±εΝΠ°4(€€€…Ρ¥Ήα…΄θΉΥ±°°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰•±¥¥‰±”µΉ½ά°4(€€€­•εQ½½±Μθl‰α•°°€‰	±½½µ‰•ΙQ•Ιµ¥Ή…°°€‰…Α¥Ρ…°%D‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰Ν•±µ‰Υ¥±Π™¥Ή…Ή¥…°µ½‘•°½ΘΝΡ½¬Α¥Ρ ε½Τ…Έ‘•™•Ή±¥Ή”‰δ±¥Ή”°4(€€€€€€‰…ΝΠ°…ΥΙ…Ρ”°Ν΅½ΙΡΥΠµ‘Ι¥Ω•Έα•°έ½Ι¬°4(€€€€€€‰™¥Ή…Ή”µΝΑ•¥™¥¥ΉΡ•ΙΉΝ΅¥ΐ°¥Ω•Έ΅½ά•…Ι±δΡ΅¥Μ™¥•±ΜΙ•ΙΥ¥Ρ¥ΉΝΡ…ΙΡΜ°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰…Ή…±εΝΡΜ…Ή…ΝΝ½¥…Ρ•Μ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥Ι½Υΐ€΅‰…Ή­¥Ή°½ΙΑ½Ι…Ρ”™¥Ή…Ή”°…ΝΝ•Πµ…Ή…•µ•ΉΠ¤ε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ ™¥Ή…Ή”ΑΙ½™•ΝΝ¥½Ή…±Μ°€‰±•…ΙΈ™¥Ή…Ή”°€‰…¥Έ‰ΥΝ¥Ή•ΝΜ•αΑ•Ι¥•Ή”‰t°4(€τ°4(€€‰µ…Ή…•µ•ΉΠµ½ΉΝΥ±Ρ…ΉΠθμ4(€€€™¥•±θ€‰5…Ή…•µ•ΉΠ½ΉΝΥ±Ρ…ΉΠ°4(€€€…Ρ¥Ήα…΄θΉΥ±°°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰•±¥¥‰±”µΉ½ά°4(€€€­•εQ½½±Μθl‰α•°°€‰A½έ•ΙA½¥ΉΠ‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰½ΉΝ¥ΝΡ•ΉΠ°Α…ΙΡΉ•ΘµΑΙ…Ρ¥•…Ν”¥ΉΡ•ΙΩ¥•άΙ•ΑΜ½Ω•Θµ½ΉΡ΅Μ°Ή½Π„±…ΝΠµµ¥ΉΥΡ”Ι…΄°4(€€€€€€‰…Ν”½µΑ•Ρ¥Ρ¥½Έ•ΉΡΙδ°‰½Ρ •ΉΥ¥Ή”ΑΙ…Ρ¥”…Ή„Ι•…°Ι•ΝΥµ”±¥Ή”°4(€€€€€€‰•µ½ΉΝΡΙ…Ρ•±•…‘•ΙΝ΅¥ΐ¥Έ„±Υ°Ρ•…΄°½ΘΑΙ½©•Π°Ή½Π©ΥΝΠ½ΥΙΝ•έ½Ι¬°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰½ΉΝΥ±Ρ…ΉΡΜ…ΠΡ…Ι•Π™¥ΙµΜ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥ΑΙ…Ρ¥”…Ι•„ε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ ½ΉΝΥ±Ρ…ΉΡΜ°€‰±•…ΙΈ…Ν”¥ΉΡ•ΙΩ¥•έΜ°€‰…¥Έ‰ΥΝ¥Ή•ΝΜ•αΑ•Ι¥•Ή”‰t°4(€τ°4(€€‰¥ΉΩ•ΝΡµ•ΉΠµ‰…Ή­¥Ήµ…Ή…±εΝΠθμ4(€€€™¥•±θ€‰%ΉΩ•ΝΡµ•ΉΠ	…Ή­¥ΉΉ…±εΝΠ°4(€€€…Ρ¥Ήα…΄θΉΥ±°°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰•±¥¥‰±”µΉ½ά°4(€€€­•εQ½½±Μθl‰α•°°€‰	±½½µ‰•ΙQ•Ιµ¥Ή…°°€‰…Α¥Ρ…°%D½…ΡM•Π‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰Ν•±µ‰Υ¥±Π1	<½Θ4™µ½‘•°ε½Τ…Έ‘•™•Ή±¥Ή”‰δ±¥Ή”°4(€€€€€€‰Ι•ΝΝ¥Ω”°•…Ι±δΉ•Ρέ½Ι­¥Ήέ¥Ρ ‰…Ή­•ΙΜ°ΝΡ…ΙΡ¥Ή™Ι•Ν΅µ…Έ½Ν½Α΅½µ½Ι”ε•…Θ¥Ω•Έ΅½ά½µΑΙ•ΝΝ•Ι•ΙΥ¥Ρ¥Ή¥Μ°4(€€€€€€‰Q•΅Ή¥…°¥ΉΡ•ΙΩ¥•άµ…ΝΡ•Ιδ½Έ…½ΥΉΡ¥Ή°Ω…±Υ…Ρ¥½Έ°…Ήµ½‘•±¥ΉΕΥ•ΝΡ¥½ΉΜ°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰‰…Ή­•ΙΜ…ΠΡ…Ι•Π™¥ΙµΜ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥½Ω•Ι…”Ι½Υΐ½ΘΑΙ½‘ΥΠ…Ι•„ε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ ‰…Ή­•ΙΜ°€‰±•…ΙΈ¥ΉΩ•ΝΡµ•ΉΠ‰…Ή­¥Ή°€‰…¥Έ™¥Ή…Ή”•αΑ•Ι¥•Ή”‰t°4(€τ°4(€€‰ΑΙ½‘ΥΠµµ…Ή…•Θθμ4(€€€™¥•±θ€‰AΙ½‘ΥΠ5…Ή…•Θ°4(€€€…Ρ¥Ήα…΄θΉΥ±°°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰•±¥¥‰±”µΉ½ά°4(€€€­•εQ½½±Μθl‰)¥Ι„½1¥Ή•…Θ°€‰¥µ„€΅™½Θ‘•Ν¥Έ½±±…‰½Ι…Ρ¥½Έ¤°€‰ME0½…Ή…±εΡ¥Μ‘…Ν΅‰½…Ι‘Μ‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰Ι•…°ΑΙ½‘ΥΠ…Ν”ΝΡΥ‘δθΡ΅”ΑΙ½‰±•΄°ΡΙ…‘•½™™Μ½ΉΝ¥‘•Ι•°‘•¥Ν¥½Έµ…‘”°…Ή€΅¥‘•…±±δ¤Ρ΅”µ•…ΝΥΙ•½ΥΡ½µ”°4(€€€€€€‰AΙ½‘ΥΠµΝ•ΉΝ”½…Ν”µΝΡε±”¥ΉΡ•ΙΩ¥•άΑΙ…Ρ¥”°Ρ΅”έ…δε½ΤΑΙ…Ρ¥”™½Θ„½ΉΝΥ±Ρ¥Ή…Ν”°4(€€€€€€‰ΉδΙ½±”°•Ω•Έ½ΥΡΝ¥‘”„™½Ιµ…°A4Ρ¥Ρ±”°έ΅•Ι”ε½Τ…ΈΑ½¥ΉΠΡΌ‘Ι¥Ω¥Ή„Ι½ΝΜµ™ΥΉΡ¥½Ή…°‘•¥Ν¥½Έ°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰ΑΙ½‘ΥΠµ…Ή…•ΙΜ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥½µΑ…Ήδ½ΘΑΙ½‘ΥΠ…Ι•„ε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ A5Μ°€‰±•…ΙΈΑΙ½‘ΥΠµ…Ή…•µ•ΉΠ°€‰…¥ΈΑΙ½‘ΥΠ•αΑ•Ι¥•Ή”‰t°4(€τ°4(4(€€ΌΌ€τττττττττττττττττττ!U59%Q%L€ΌM=%0M%9L€ΌA=1%d€ττττττττττττττττ4(€€‰Α½±¥δµ…Ή…±εΝΠθμ4(€€€™¥•±θ€‰A½±¥δΉ…±εΝΠ°4(€€€…Ρ¥Ήα…΄θΉΥ±°°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰•±¥¥‰±”µΉ½ά°4(€€€­•εQ½½±Μθl‰α•°°€‰ΝΡ…Ρ¥ΝΡ¥…°Ν½™Ρέ…Ι”€΅H½MAML½MΡ…Ρ„¤‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰Α½±¥Ν΅•Α½±¥δµ•µΌ½Θ‰Ι¥•½Έ„Ι•…°¥ΝΝΥ”Ρ΅…ΠΡ…­•Μ„±•…ΘΑ½Ν¥Ρ¥½Έ…ΉΝΥΑΑ½ΙΡΜ¥Πέ¥Ρ •Ω¥‘•Ή”°4(€€€€€€‰Έ¥ΉΡ•ΙΉΝ΅¥ΐ…Π„½Ω•ΙΉµ•ΉΠ½™™¥”°Ή½ΉΑΙ½™¥Π°½ΘΡ΅¥Ή¬Ρ…Ή¬°4(€€€€€€‰	…Ν¥ΝΡ…Ρ¥ΝΡ¥…°½‘…Ρ„±¥Ρ•Ι…δ‘•µ½ΉΝΡΙ…Ρ•…±½ΉΝ¥‘”ΕΥ…±¥Ρ…Ρ¥Ω”Ι•Ν•…Ι °4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰Α½±¥δ…Ή…±εΝΡΜ°ΑΙ½Ι…΄ΝΡ…™°½ΘΙ•Ν•…Ι΅•ΙΜ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥Α½±¥δ…Ι•„ε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ Α½±¥δΑ•½Α±”°€‰±•…ΙΈ…‰½ΥΠΑ½±¥δ°€‰…¥Έ•αΑ•Ι¥•Ή”‰t°4(€τ°4(€€‰©½ΥΙΉ…±¥ΝΠµ½ΉΡ•ΉΠµΝΡΙ…Ρ•¥ΝΠθμ4(€€€™¥•±θ€‰)½ΥΙΉ…±¥ΝΠ€Ό½ΉΡ•ΉΠMΡΙ…Ρ•¥ΝΠ°4(€€€…Ρ¥Ήα…΄θΉΥ±°°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰•±¥¥‰±”µΉ½ά°4(€€€­•εQ½½±Μθl‰„5L€΅]½Ι‘AΙ•ΝΜ½ΘΝ¥µ¥±…Θ¤°€‰½½±”Ή…±εΡ¥Μ½M<Ρ½½±Μ°€‰@MΡε±”‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰Α½ΙΡ™½±¥Ό½€Τ΄ΰΑΥ‰±¥Ν΅•±¥ΑΜ½Θ½ΉΡ•ΉΠΑ¥••ΜΝ΅½έ¥ΉΙ…Ή”…ΉΩ½¥”°4(€€€€€€‰ΝΑ•¥™¥‰•…Π½Θ½ΉΡ•ΉΠΩ•ΙΡ¥…°€΅Ρ• °΅•…±Ρ °ΝΑ½ΙΡΜ°™¥Ή…Ή”¤¥ΉΝΡ•…½•Ή•Ι…±¥ΝΠ¥ΉΡ•Ι•ΝΠ°4(€€€€€€‰	…Ν¥M<½½ΉΡ•ΉΠ…Ή…±εΡ¥Μ±¥Ρ•Ι…δ‘•µ½ΉΝΡΙ…Ρ•¥Έ„Ι•…°Α¥•”½Θ…µΑ…¥Έ°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰Ι•Α½ΙΡ•ΙΜ°•‘¥Ρ½ΙΜ°½Θ½ΉΡ•ΉΠΝΡΙ…Ρ•¥ΝΡΜ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥‰•…Π½Θ½ΉΡ•ΉΠΩ•ΙΡ¥…°ε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ ©½ΥΙΉ…±¥ΝΡΜ°€‰±•…ΙΈ…‰½ΥΠΡ΅”™¥•±°€‰…¥ΈέΙ¥Ρ¥Ή•αΑ•Ι¥•Ή”‰t°4(€τ°4(€€‰ΑΥ‰±¥µΙ•±…Ρ¥½ΉΜµΝΑ•¥…±¥ΝΠθμ4(€€€™¥•±θ€‰AΥ‰±¥I•±…Ρ¥½ΉΜMΑ•¥…±¥ΝΠ°4(€€€…Ρ¥Ήα…΄θΉΥ±°°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰•±¥¥‰±”µΉ½ά°4(€€€­•εQ½½±Μθl‰¥Ν¥½Έ½Θ5Υ¬I…¬°€‰„Ν½¥…°µ•‘¥„Ν΅•‘Υ±¥ΉΡ½½°°€‰½½±”Ή…±εΡ¥Μ‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰Α½ΙΡ™½±¥Ό½ΑΙ•ΝΜΙ•±•…Ν•Μ½ΘΑ¥Ρ •µ…¥±Μ°¥‘•…±±δΡ¥•ΡΌ„‘½Υµ•ΉΡ•µ•‘¥„Α±…•µ•ΉΠ½ΘΙ•ΝΥ±Π°4(€€€€€€‰I•…°µ•‘¥„Ι•±…Ρ¥½ΉΝ΅¥ΐµ‰Υ¥±‘¥Ή•αΑ•Ι¥•Ή”°•Ω•Έ…Π„Νµ…±°™¥Ι΄°Ή½ΉΑΙ½™¥Π°½ΘΝΡΥ‘•ΉΠ½Ι…Ή¥ι…Ρ¥½Έ°4(€€€€€€‰ΑΙ•Α…Ι•µ½¬Ι¥Ν¥Μµ½µµΥΉ¥…Ρ¥½ΈΝ•Ή…Ι¥Όε½Τ…Έέ…±¬Ρ΅Ι½Υ ¥Έ…Έ¥ΉΡ•ΙΩ¥•ά°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰AH…Ή½µµΥΉ¥…Ρ¥½ΉΜΑΙ½™•ΝΝ¥½Ή…±Μ°™½ΥΝΙ•…Μθ€‰…•Ήδ½Θ¥Έµ΅½ΥΝ”έ½Ι¬¥Έε½ΥΘΡ…Ι•Π¥Ή‘ΥΝΡΙδτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ AHΑΙ½™•ΝΝ¥½Ή…±Μ°€‰±•…ΙΈΑΥ‰±¥Ι•±…Ρ¥½ΉΜ°€‰…¥Έ½µµΥΉ¥…Ρ¥½ΉΜ•αΑ•Ι¥•Ή”‰t°4(€τ°4(€€‰±•…°µ…ΝΝ¥ΝΡ…ΉΠµΑ…Ι…±•…°θμ4(€€€™¥•±θ€‰1•…°ΝΝ¥ΝΡ…ΉΠ€ΌA…Ι…±•…°°4(€€€…Ρ¥Ήα…΄θΉΥ±°°4(€€€…Ρ¥Ήα…µI•…‘¥Ή•ΝΜθ€‰•±¥¥‰±”µΉ½ά°4(€€€­•εQ½½±Μθl‰]•ΝΡ±…ά°€‰1•α¥Ν9•α¥Μ°€‰…Ν”µ…Ή…•µ•ΉΠΝ½™Ρέ…Ι”€΅±¥Ό½ΘΝ¥µ¥±…Θ¤‰t°4(€€€¥µµ•‘¥…Ρ•I•ΝΥµ•	Υ¥±‘•ΙΜθl4(€€€€€€‰Έ	µ…ΑΑΙ½Ω•Α…Ι…±•…°•ΙΡ¥™¥…Ρ”°½ΘΙ•±•Ω…ΉΠ½ΥΙΝ•έ½Ι¬°½µΑ±•Ρ•…±½ΉΝ¥‘”½Θ…™Ρ•Θε½ΥΘ‘•Ι•”°4(€€€€€€‰I•…°±…άµ½™™¥”•αΑ½ΝΥΙ”Ρ΅Ι½Υ …Έ¥ΉΡ•ΙΉΝ΅¥ΐ½ΘΑ…ΙΠµΡ¥µ”Ι½±”°•Ω•Έ…Π„Νµ…±°™¥Ι΄°4(€€€€€€‰•µ½ΉΝΡΙ…Ρ•]•ΝΡ±…ά½1•α¥Ν9•α¥ΜΙ•Ν•…Ι ™±Υ•Ήδ°4(€€€t°4(€€€Ή•Ρέ½Ι­¥ΉQ•µΑ±…Ρ”θμΙ½±•Μθ€‰Α…Ι…±•…±Μ…Ή±•…°…ΝΝ¥ΝΡ…ΉΡΜ°™½ΥΝΙ•…Μθ€‰Ρ΅”ΝΑ•¥™¥ΑΙ…Ρ¥”…Ι•„€΅±¥Ρ¥…Ρ¥½Έ°½ΙΑ½Ι…Ρ”°%@¤ε½ΤΙ”Ρ…Ι•Ρ¥Ήτ°4(€€€•Ή•Ι¥A΅Ι…Ν•ΝQ½Ω½¥θl‰Ή•Ρέ½Ι¬έ¥Ρ ±•…°ΑΙ½™•ΝΝ¥½Ή…±Μ°€‰±•…ΙΈ…‰½ΥΠΡ΅”±•…°™¥•±°€‰…¥Έ±•…°•αΑ•Ι¥•Ή”‰t°4(€€€½™™¥¥…±AΙ•ΑI•Ν½ΥΙ”θ€‰91€΅Ρ΅”9…Ρ¥½Ή…°ΝΝ½¥…Ρ¥½Έ½1•…°ΝΝ¥ΝΡ…ΉΡΜ¤™½ΘΑ…Ι…±•…°•ΙΡ¥™¥…Ρ¥½ΈΑΙ½Ι…΄¥Ή™Ό°4(€τ°4)τμ4(4(Ό¨¨I•…µ½Ή±δ±½½­Υΐ‰δ…Ι••Θ¥°ΥΝ•½Ή±δ™½ΘΡ΅”•α΅…ΥΝΡ¥Ω•Ή•ΝΜΡ΅”I•½Ιρ…Ι••Ι%°…Ι••ΙA±…ε‰½½¬ω€ΡεΑ”…‰½Ω”•Ή™½Ι•Μ…Π½µΑ¥±”Ρ¥µ”Έ€¨Ό4)•αΑ½ΙΠ™ΥΉΡ¥½ΈΙ•Ν½±Ω•A±…ε‰½½­½Ι…Ι••Θ΅…Ι••Θθ…Ι••Θ¤θ…Ι••ΙA±…ε‰½½¬μ4(€€ΌΌM…™”θ…Ι••Ι%¥Μ‘•Ι¥Ω•‘¥Ι•Ρ±δ™Ι½΄IIL°…Ή•Ω•Ιδ…Ι••Θ½‰©•Π4(€€ΌΌΑ…ΝΝ•¥Έ΅•Ι”½Ι¥¥Ή…Ρ•Μ™Ι½΄Ρ΅…ΠΝ…µ”…ΙΙ…δ°ΝΌΡ΅¥Μ¥¥Μ…±έ…εΜ„4(€€ΌΌΩ…±¥­•δƒPQεΑ•MΙ¥ΑΠ©ΥΝΠ…ΈΠΝ•”Ρ΅…Π„Α±…¥ΈΝΡΙ¥Ή€™¥•±½Έ4(€€ΌΌ…Ι••Ι€¥ΜΉ…ΙΙ½έ•ΡΌΡ΅”±¥Ρ•Ι…°ΥΉ¥½Έέ¥Ρ΅½ΥΠΡ΅¥Μ…ΝΠΈ4(€Ι•ΡΥΙΈII}A1e	==-Mm…Ι••ΘΉ¥…Μ…Ι••Ι%‘tμ4)τ4(4(Ό¨¨¥ΝΡ¥ΉΠΑ±…ε‰½½­Μ…Ι½ΝΜ•Ω•ΙδΙ•Ν½±Ω•…Ι••Θ°½Ή”Α•Θ…Ι••Θ€΅Ή½ΠΑ•Θ…Ρ•½Ιδ¤°¥Έ™¥ΙΝΠµΝ••Έ½Ι‘•ΘΈ€¨Ό4)•αΑ½ΙΠ™ΥΉΡ¥½ΈΙ•Ν½±Ω•A±…ε‰½½­Ν½Ι…Ι••ΙΜ΅Ι•Ν½±Ω•‘…Ι••ΙΜθI•Ν½±Ω•‘…Ι••Ιmt¤θ…Ι••ΙA±…ε‰½½­mtμ4(€½ΉΝΠΝ••Έ€τΉ•άM•ΠρΝΡΙ¥Ήψ ¤μ4(€½ΉΝΠΙ•ΝΥ±Πθ…Ι••ΙA±…ε‰½½­mt€τmtμ4(€™½Θ€΅½ΉΝΠΙ½Ι•Ν½±Ω•‘…Ι••ΙΜ¤μ4(€€€¥€ …ΙΉ…Ι••ΘρπΝ••ΈΉ΅…Μ΅ΙΉ…Ι••ΘΉ¥¤¤½ΉΡ¥ΉΥ”μ4(€€€Ν••ΈΉ…‘΅ΙΉ…Ι••ΘΉ¥¤μ4(€€€Ι•ΝΥ±ΠΉΑΥΝ ΅Ι•Ν½±Ω•A±…ε‰½½­½Ι…Ι••Θ΅ΙΉ…Ι••Θ¤¤μ4(€τ4(€Ι•ΡΥΙΈΙ•ΝΥ±Πμ4)τ4(
+    genericPhrasesToAvoid: ["network with engineers", "learn mobile development", "gain app experience"],
+  },
+  "cloud-devops-engineer": {
+    field: "Cloud / DevOps Engineer",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Terraform", "Docker/Kubernetes", "a CI/CD platform (GitHub Actions/Jenkins)"],
+    immediateResumeBuilders: [
+      "A deployed project with a real CI/CD pipeline and infrastructure-as-code setup, not just an app running locally",
+      "Hands-on Linux and networking fundamentals demonstrated through a real project",
+      "One cloud certification (AWS/GCP/Azure Associate) paired with the hands-on project that actually uses it",
+    ],
+    networkingTemplate: { roles: "DevOps and site reliability engineers", focusAreas: "the specific cloud platform or reliability practice you're targeting" },
+    genericPhrasesToAvoid: ["network with engineers", "learn DevOps", "gain infrastructure experience"],
+  },
+  "cybersecurity-analyst": {
+    field: "Cybersecurity Analyst",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["a SIEM platform (Splunk or similar)", "Wireshark", "Linux CLI"],
+    immediateResumeBuilders: [
+      "A documented home-lab writeup or CTF participation showing real hands-on security work",
+      "Networking and Linux fundamentals demonstrated through a specific exercise, not just coursework",
+      "CompTIA Security+ paired with visible hands-on lab work, not as a substitute for it",
+    ],
+    networkingTemplate: { roles: "security analysts and engineers", focusAreas: "offensive, defensive, or GRC (governance/risk/compliance) work" },
+    genericPhrasesToAvoid: ["network with security professionals", "learn cybersecurity", "gain hands-on experience"],
+    officialPrepResource: "CompTIA.org for official Security+ exam objectives and registration",
+  },
+
+  // ================================ DATA / AI ================================
+  "data-analyst": {
+    field: "Data Analyst",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["SQL", "Tableau or Power BI", "Excel"],
+    immediateResumeBuilders: [
+      "1-2 analyses that answer a real business question end-to-end, with a clear write-up, not just charts",
+      "Genuinely strong SQL practiced on real, messy datasets, not just tutorials",
+      "Basic Python or R, since the field increasingly expects it beyond SQL/Excel alone",
+    ],
+    networkingTemplate: { roles: "data analysts", focusAreas: "the specific industry you're targeting" },
+    genericPhrasesToAvoid: ["network with analysts", "learn SQL", "gain data experience"],
+  },
+  "data-scientist": {
+    field: "Data Scientist",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Python (pandas, scikit-learn)", "SQL", "a visualization library"],
+    immediateResumeBuilders: [
+      "1-2 end-to-end projects: messy real data through cleaning, modeling, to clearly communicated results",
+      "Comfort with genuinely messy, real-world data, not just clean competition datasets",
+      "The ability to explain a model's assumptions, tradeoffs, and failure modes, not just its accuracy",
+    ],
+    networkingTemplate: { roles: "data scientists", focusAreas: "the specific modeling or analytics domain you're targeting" },
+    genericPhrasesToAvoid: ["network with data scientists", "learn machine learning", "build a model"],
+  },
+  "machine-learning-engineer": {
+    field: "Machine Learning Engineer",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["PyTorch/TensorFlow", "Docker", "a cloud ML platform"],
+    immediateResumeBuilders: [
+      "At least one model deployed as a real, callable service, not just a training notebook",
+      "Data structures & algorithms fluency, since it's still commonly tested for this role",
+      "MLOps basics (model versioning, monitoring) demonstrated in a real project",
+    ],
+    networkingTemplate: { roles: "ML engineers", focusAreas: "the specific applied ML domain or MLOps focus you're targeting" },
+    genericPhrasesToAvoid: ["network with ML engineers", "learn machine learning", "build a model"],
+  },
+  "ai-engineer": {
+    field: "AI Engineer",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["an LLM provider's API/SDK", "a vector database", "LangChain or a similar framework"],
+    immediateResumeBuilders: [
+      "One real, working AI-powered application (not just an API wrapper demo) that handles edge cases thoughtfully",
+      "Evaluation/testing infrastructure for a non-deterministic AI feature β€” a genuine differentiator",
+      "Solid software engineering fundamentals demonstrated alongside the AI-specific work",
+    ],
+    networkingTemplate: { roles: "AI engineers", focusAreas: "the specific applied AI product area you're targeting" },
+    genericPhrasesToAvoid: ["network with AI engineers", "learn prompt engineering", "build an AI app"],
+  },
+  "data-engineer": {
+    field: "Data Engineer",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Airflow or dbt", "SQL", "a cloud data warehouse (Snowflake/BigQuery/Redshift)"],
+    immediateResumeBuilders: [
+      "A real data pipeline project (ingestion through transformation to warehouse) with real-world messiness handled",
+      "Genuine familiarity with an orchestration tool (Airflow or dbt), not just ad hoc scripts",
+      "Depth in one cloud data warehouse platform",
+    ],
+    networkingTemplate: { roles: "data engineers", focusAreas: "the specific pipeline or warehouse specialization you're targeting" },
+    genericPhrasesToAvoid: ["network with data engineers", "learn data pipelines", "gain data experience"],
+  },
+  "quantitative-researcher": {
+    field: "Quantitative Researcher",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Python (numpy/pandas)", "C++", "statistical/ML libraries"],
+    immediateResumeBuilders: [
+      "Strong competition-math results (Putnam, IMO-adjacent) or a rigorous quantitative research project/thesis",
+      "Probability and quant-brainteaser interview practice, since it's a distinct skill from general technical interviewing",
+      "A quant-fund or trading-firm internship, given how compressed and early this field's recruiting is",
+    ],
+    networkingTemplate: { roles: "quantitative researchers", focusAreas: "the specific strategy class (equities, macro, systematic) you're targeting" },
+    genericPhrasesToAvoid: ["network with quants", "learn quantitative finance", "gain research experience"],
+  },
+  "quantitative-developer": {
+    field: "Quantitative Developer",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["C++", "Python", "Linux"],
+    immediateResumeBuilders: [
+      "A performance-conscious systems or low-latency programming project, a genuine differentiator here",
+      "Rigorous data structures & algorithms practice, since the bar at top trading firms often exceeds typical SWE interviews",
+      "A trading-firm internship, given how compressed this field's recruiting timeline is",
+    ],
+    networkingTemplate: { roles: "quantitative developers", focusAreas: "trading-systems engineering or infrastructure" },
+    genericPhrasesToAvoid: ["network with quants", "learn C++", "gain trading experience"],
+  },
+
+  // ========================= BIOTECH / LIFE SCIENCES =========================
+  "biotech-research-scientist": {
+    field: "Biotech Research Scientist",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["standard wet-lab equipment", "an electronic lab notebook (ELN)", "basic statistical software"],
+    immediateResumeBuilders: [
+      "Sustained, real lab research experience with a specific molecular biology technique you can speak fluently about",
+      "Careful, documented record-keeping habits shown through a lab notebook or research write-up",
+      "An early, explicit choice between the technician track and the PhD-driven research track, since they call for different preparation",
+    ],
+    networkingTemplate: { roles: "researchers and industry scientists", focusAreas: "the specific sub-field (pharma, genomics, diagnostics) you're targeting" },
+    genericPhrasesToAvoid: ["network with scientists", "gain lab experience", "learn about the field"],
+  },
+  "bioinformatics-scientist": {
+    field: "Bioinformatics Scientist",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Python/R", "a bioinformatics pipeline tool (Nextflow/Snakemake)", "command-line/Linux"],
+    immediateResumeBuilders: [
+      "A computational analysis project on real (even public) genomics/proteomics data with a clear methods write-up",
+      "Genuine dual fluency: a programming language plus real biology domain knowledge, not just one or the other",
+      "Comfort with command-line bioinformatics tools, not just high-level libraries",
+    ],
+    networkingTemplate: { roles: "bioinformatics scientists", focusAreas: "the specific computational biology sub-field you're targeting" },
+    genericPhrasesToAvoid: ["network with scientists", "learn bioinformatics", "gain research experience"],
+  },
+
+  // ================================ HEALTHCARE ================================
+  physician: {
+    field: "Physician",
+    gatingExam: "MCAT",
+    gatingExamReadiness: "requires-upperclass-standing",
+    keyTools: [],
+    immediateResumeBuilders: [
+      "Sustained (not last-minute) clinical hours through shadowing, scribing, or direct patient-facing volunteer work",
+      "Research experience with a faculty mentor, especially if targeting a competitive specialty",
+      "Long-term, meaningful community or clinical service rather than a short burst before applications",
+    ],
+    networkingTemplate: { roles: "physicians and residents", focusAreas: "the specialty you're most drawn to" },
+    genericPhrasesToAvoid: ["gain clinical experience", "shadow a doctor", "network with physicians"],
+    officialPrepResource: "The AAMC's official MCAT prep resources (AAMC.org) for the real content outline and official practice exams",
+  },
+  "physician-assistant": {
+    field: "Physician Assistant",
+    gatingExam: "GRE or another program-specific exam, only where required",
+    gatingExamReadiness: "requires-upperclass-standing",
+    gatingExamPolicy: "program-dependent",
+    keyTools: [],
+    immediateResumeBuilders: [
+      "Direct, hands-on patient-care hours (EMT, CNA, medical scribe) β€” the single biggest lever for PA program admission",
+      "Strong performance in prerequisite science coursework",
+      "Genuine relationships with supervising clinicians who can write specific, detailed letters",
+    ],
+    networkingTemplate: { roles: "PAs and supervising physicians", focusAreas: "the clinical setting or specialty you're targeting" },
+    genericPhrasesToAvoid: ["gain clinical experience", "network with PAs", "learn about the field"],
+    officialPrepResource: "CASPA (the Central Application Service for PAs) for program requirements and application timelines",
+  },
+  "registered-nurse": {
+    field: "Registered Nurse",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: [],
+    immediateResumeBuilders: [
+      "Strong clinical rotation performance during your nursing program, with specific units or patient populations you can speak to",
+      "BLS/ACLS certification secured proactively rather than waiting for an employer to require it",
+      "A clear sense of which unit or specialty genuinely fits, built through rotations or externships",
+    ],
+    networkingTemplate: { roles: "nurses and preceptors", focusAreas: "the specific unit or specialty you're targeting" },
+    genericPhrasesToAvoid: ["gain clinical experience", "network with nurses", "learn about nursing"],
+  },
+  pharmacist: {
+    field: "Pharmacist",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: [],
+    immediateResumeBuilders: [
+      "Pharmacy technician experience before or during the PharmD program β€” both useful experience and a genuine test of fit",
+      "Strong prerequisite chemistry/biology coursework performance",
+      "Early research into whether a retail or hospital/clinical track (and whether a residency) fits your goals",
+    ],
+    networkingTemplate: { roles: "pharmacists", focusAreas: "retail, hospital/clinical, or industry pharmacy" },
+    genericPhrasesToAvoid: ["gain pharmacy experience", "network with pharmacists", "learn about the field"],
+    officialPrepResource: "PharmCAS for current PharmD prerequisites, experience expectations, and application timelines; the PCAT was retired in January 2024",
+  },
+  "physical-therapist": {
+    field: "Physical Therapist",
+    gatingExam: "GRE (where required)",
+    gatingExamReadiness: "requires-upperclass-standing",
+    gatingExamPolicy: "program-dependent",
+    keyTools: [],
+    immediateResumeBuilders: [
+      "Observation hours across at least three distinct clinical settings (outpatient ortho, inpatient, and a specialty), the core DPT-application requirement",
+      "Strong prerequisite anatomy/physiology coursework performance",
+      "Genuine relationships with supervising PTs who can write specific, detailed letters",
+    ],
+    networkingTemplate: { roles: "physical therapists", focusAreas: "the clinical setting (outpatient, sports, pediatric) you're targeting" },
+    genericPhrasesToAvoid: ["gain clinical experience", "network with PTs", "learn about the field"],
+    officialPrepResource: "PTCAS (the Physical Therapist Centralized Application Service) for program requirements and timelines",
+  },
+  dentist: {
+    field: "Dentist",
+    gatingExam: "DAT",
+    gatingExamReadiness: "requires-upperclass-standing",
+    keyTools: [],
+    immediateResumeBuilders: [
+      "Sustained shadowing hours with both a general dentist and at least one specialist",
+      "Strong prerequisite chemistry/biology coursework performance",
+      "Any demonstrated evidence of manual dexterity (art, instruments, hands-on hobbies), which some programs specifically value",
+    ],
+    networkingTemplate: { roles: "dentists", focusAreas: "general practice or the specialty you're most drawn to" },
+    genericPhrasesToAvoid: ["gain clinical experience", "shadow a dentist", "network with dentists"],
+    officialPrepResource: "ADA.org for official DAT registration and content outline, and AADSAS for the dental school application portal",
+  },
+
+  // ============================ SCIENCE / RESEARCH ============================
+  "research-scientist-physical-sciences": {
+    field: "Research Scientist (Physical Sciences)",
+    gatingExam: "GRE (Physics GRE where required)",
+    gatingExamReadiness: "requires-upperclass-standing",
+    gatingExamPolicy: "program-dependent",
+    keyTools: ["Python/MATLAB", "specialized simulation or experimental software", "LaTeX"],
+    immediateResumeBuilders: [
+      "Real research-group involvement as early as possible, aiming for co-authorship or a strong senior thesis",
+      "Programming fluency (Python/C++), since nearly every physics sub-field now requires it",
+      "Undergraduate research experience through an REU or on-campus lab, the field's key early signal",
+    ],
+    networkingTemplate: { roles: "researchers and PIs", focusAreas: "the specific research sub-field you're targeting" },
+    genericPhrasesToAvoid: ["network with researchers", "get lab experience", "learn the field"],
+    officialPrepResource: "ETS.org for GRE/Physics GRE registration, where the programs you're targeting still require it",
+  },
+  chemist: {
+    field: "Chemist",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["analytical instrumentation (HPLC, GC-MS, NMR)", "chemical databases (SciFinder/Reaxys)"],
+    immediateResumeBuilders: [
+      "Sustained research or industry lab experience with specific instrumentation you've personally used, not just coursework labs",
+      "Careful, reproducible documentation habits demonstrated through a lab notebook or write-up",
+      "A clear industry-segment direction (pharma, materials, environmental, forensic) to focus your applications",
+    ],
+    networkingTemplate: { roles: "chemists and lab scientists", focusAreas: "the specific industry segment you're targeting" },
+    genericPhrasesToAvoid: ["network with scientists", "gain lab experience", "learn chemistry techniques"],
+  },
+  "materials-scientist": {
+    field: "Materials Scientist",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["SEM/TEM", "XRD", "mechanical testing equipment"],
+    immediateResumeBuilders: [
+      "Real hands-on time with core characterization instruments (SEM, XRD), not just theory",
+      "A failure-analysis case study you can explain clearly start to finish, a specifically valued skill in this field",
+      "Research or industry lab exposure beyond coursework",
+    ],
+    networkingTemplate: { roles: "materials scientists and engineers", focusAreas: "the specific industry (semiconductors, aerospace, energy, consumer products) you're targeting" },
+    genericPhrasesToAvoid: ["network with scientists", "gain lab experience", "learn materials characterization"],
+  },
+
+  // ================================== LAW ===================================
+  "lawyer-attorney": {
+    field: "Lawyer / Attorney",
+    gatingExam: "LSAT",
+    gatingExamReadiness: "requires-upperclass-standing",
+    keyTools: ["Westlaw", "LexisNexis"],
+    immediateResumeBuilders: [
+      "A polished legal writing sample (a memo or brief)",
+      "Law-related experience (paralegal work, a legal internship, a clinic, or moot court)",
+      "Demonstrated legal research skill on a real, specific issue",
+    ],
+    networkingTemplate: { roles: "firm associates, public defenders, or in-house counsel", focusAreas: "litigation, corporate, or public interest practice areas" },
+    genericPhrasesToAvoid: ["network with lawyers", "learn about the legal field", "gain legal experience"],
+    officialPrepResource: "LSAC.org, the official LSAT registration and law school application portal, for real dates and free official prep tests",
+  },
+  "patent-attorney": {
+    field: "Patent Attorney",
+    gatingExam: "LSAT",
+    gatingExamReadiness: "requires-upperclass-standing",
+    keyTools: ["the USPTO Patent Full-Text and Image Database", "patent docketing software"],
+    immediateResumeBuilders: [
+      "A technical writing sample (a claim analysis or mock prosecution memo) built directly on your STEM degree",
+      "An IP-related internship or clerkship, even outside a big firm",
+      "Explicit framing of your technical undergraduate degree as the credential that makes this specialty accessible",
+    ],
+    networkingTemplate: { roles: "IP associates and patent agents", focusAreas: "the technical practice area (software, biotech, mechanical, chemical patents) matching your STEM background" },
+    genericPhrasesToAvoid: ["network with lawyers", "learn about patent law", "gain legal experience"],
+    officialPrepResource: "LSAC.org for LSAT/law school admissions, and USPTO.gov for patent bar eligibility and registration requirements",
+  },
+  "corporate-counsel": {
+    field: "Corporate Counsel",
+    gatingExam: "LSAT",
+    gatingExamReadiness: "requires-upperclass-standing",
+    keyTools: ["contract lifecycle management (CLM) software", "Westlaw", "LexisNexis"],
+    immediateResumeBuilders: [
+      "A contract drafting or negotiation writing sample",
+      "A deliberate focus on corporate, transactional, or employment law coursework and internships, since these practice groups most directly feed in-house roles",
+      "Genuine fluency in a specific industry (tech, healthcare, finance) to make an eventual in-house transition targeted",
+    ],
+    networkingTemplate: { roles: "in-house counsel and corporate associates", focusAreas: "the specific industry you're targeting" },
+    genericPhrasesToAvoid: ["network with lawyers", "learn about corporate law", "gain legal experience"],
+    officialPrepResource: "LSAC.org, the official LSAT registration and law school application portal",
+  },
+
+  // ========================== BUSINESS & FINANCE ============================
+  "business-analyst": {
+    field: "Business Analyst",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Excel", "SQL", "Tableau/Power BI"],
+    immediateResumeBuilders: [
+      "A completed business case analysis or process-improvement project with a clear before/after recommendation",
+      "SQL fluency beyond Excel, since it's increasingly expected",
+      "An internship in analytics, operations, or consulting",
+    ],
+    networkingTemplate: { roles: "analysts, associates, or alumni at target firms", focusAreas: "the specific group or practice (banking, corporate finance, consulting) you're targeting" },
+    genericPhrasesToAvoid: ["network with business professionals", "learn business analysis", "gain business experience"],
+  },
+  "financial-analyst": {
+    field: "Financial Analyst",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Excel", "Bloomberg Terminal", "Capital IQ"],
+    immediateResumeBuilders: [
+      "A self-built financial model or stock pitch you can defend line by line",
+      "Fast, accurate, shortcut-driven Excel work",
+      "A finance-specific internship, given how early this field's recruiting starts",
+    ],
+    networkingTemplate: { roles: "analysts and associates", focusAreas: "the specific group (banking, corporate finance, asset management) you're targeting" },
+    genericPhrasesToAvoid: ["network with finance professionals", "learn finance", "gain business experience"],
+  },
+  "management-consultant": {
+    field: "Management Consultant",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Excel", "PowerPoint"],
+    immediateResumeBuilders: [
+      "Consistent, partner-practiced case interview reps over months, not a last-minute cram",
+      "A case competition entry, both genuine practice and a real resume line",
+      "Demonstrated leadership in a club, team, or project, not just coursework",
+    ],
+    networkingTemplate: { roles: "consultants at target firms", focusAreas: "the specific practice area you're targeting" },
+    genericPhrasesToAvoid: ["network with consultants", "learn case interviews", "gain business experience"],
+  },
+  "investment-banking-analyst": {
+    field: "Investment Banking Analyst",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Excel", "Bloomberg Terminal", "Capital IQ/FactSet"],
+    immediateResumeBuilders: [
+      "A self-built LBO or M&A model you can defend line by line",
+      "Aggressive, early networking with bankers, starting freshman/sophomore year given how compressed recruiting is",
+      "Technical interview mastery on accounting, valuation, and modeling questions",
+    ],
+    networkingTemplate: { roles: "bankers at target firms", focusAreas: "the specific coverage group or product area you're targeting" },
+    genericPhrasesToAvoid: ["network with bankers", "learn investment banking", "gain finance experience"],
+  },
+  "product-manager": {
+    field: "Product Manager",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Jira/Linear", "Figma (for design collaboration)", "SQL/analytics dashboards"],
+    immediateResumeBuilders: [
+      "A real product case study: the problem, tradeoffs considered, decision made, and (ideally) the measured outcome",
+      "Product-sense/case-style interview practice, the way you'd practice for a consulting case",
+      "Any role, even outside a formal PM title, where you can point to driving a cross-functional decision",
+    ],
+    networkingTemplate: { roles: "product managers", focusAreas: "the specific company or product area you're targeting" },
+    genericPhrasesToAvoid: ["network with PMs", "learn product management", "gain product experience"],
+  },
+
+  // =================== HUMANITIES / SOCIAL SCIENCES / POLICY ================
+  "policy-analyst": {
+    field: "Policy Analyst",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Excel", "statistical software (R/SPSS/Stata)"],
+    immediateResumeBuilders: [
+      "A polished policy memo or brief on a real issue that takes a clear position and supports it with evidence",
+      "An internship at a government office, nonprofit, or think tank",
+      "Basic statistical/data literacy demonstrated alongside qualitative research",
+    ],
+    networkingTemplate: { roles: "policy analysts, program staff, or researchers", focusAreas: "the specific policy area you're targeting" },
+    genericPhrasesToAvoid: ["network with policy people", "learn about policy", "gain experience"],
+  },
+  "journalist-content-strategist": {
+    field: "Journalist / Content Strategist",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["a CMS (WordPress or similar)", "Google Analytics/SEO tools", "AP Style"],
+    immediateResumeBuilders: [
+      "A portfolio of 5-8 published clips or content pieces showing range and voice",
+      "A specific beat or content vertical (tech, health, sports, finance) instead of generalist interest",
+      "Basic SEO/content analytics literacy demonstrated in a real piece or campaign",
+    ],
+    networkingTemplate: { roles: "reporters, editors, or content strategists", focusAreas: "the specific beat or content vertical you're targeting" },
+    genericPhrasesToAvoid: ["network with journalists", "learn about the field", "gain writing experience"],
+  },
+  "public-relations-specialist": {
+    field: "Public Relations Specialist",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Cision or Muck Rack", "a social media scheduling tool", "Google Analytics"],
+    immediateResumeBuilders: [
+      "A portfolio of press releases or pitch emails, ideally tied to a documented media placement or result",
+      "Real media relationship-building experience, even at a small firm, nonprofit, or student organization",
+      "A prepared mock crisis-communication scenario you can walk through in an interview",
+    ],
+    networkingTemplate: { roles: "PR and communications professionals", focusAreas: "agency or in-house work in your target industry" },
+    genericPhrasesToAvoid: ["network with PR professionals", "learn public relations", "gain communications experience"],
+  },
+  "legal-assistant-paralegal": {
+    field: "Legal Assistant / Paralegal",
+    gatingExam: null,
+    gatingExamReadiness: "eligible-now",
+    keyTools: ["Westlaw", "LexisNexis", "case management software (Clio or similar)"],
+    immediateResumeBuilders: [
+      "An ABA-approved paralegal certificate, or relevant coursework, completed alongside or after your degree",
+      "Real law-office exposure through an internship or part-time role, even at a small firm",
+      "Demonstrated Westlaw/LexisNexis research fluency",
+    ],
+    networkingTemplate: { roles: "paralegals and legal assistants", focusAreas: "the specific practice area (litigation, corporate, IP) you're targeting" },
+    genericPhrasesToAvoid: ["network with legal professionals", "learn about the legal field", "gain legal experience"],
+    officialPrepResource: "NALA (the National Association of Legal Assistants) for paralegal certification program info",
+  },
+};
+
+/** Read-only lookup by career id, used only for the exhaustiveness the `Record<CareerId, CareerPlaybook>` type above enforces at compile time. */
+export function resolvePlaybookForCareer(career: Career): CareerPlaybook {
+  // Safe: CareerId is derived directly from CAREERS, and every Career object
+  // passed in here originates from that same array, so this id is always a
+  // valid key β€” TypeScript just can't see that a plain `string` field on
+  // `Career` is narrowed to the literal union without this cast.
+  return CAREER_PLAYBOOKS[career.id as CareerId];
+}
+
+/** Distinct playbooks across every resolved career, one per career (not per category), in first-seen order. */
+export function resolvePlaybooksForCareers(resolvedCareers: ResolvedCareer[]): CareerPlaybook[] {
+  const seen = new Set<string>();
+  const result: CareerPlaybook[] = [];
+  for (const rc of resolvedCareers) {
+    if (!rc.career || seen.has(rc.career.id)) continue;
+    seen.add(rc.career.id);
+    result.push(resolvePlaybookForCareer(rc.career));
+  }
+  return result;
+}

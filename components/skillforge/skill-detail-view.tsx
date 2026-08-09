@@ -353,7 +353,38 @@ function SkillDetailBody({
                 <Badge variant="neutral">{p.name}</Badge>
               </Link>
             ))}
- ãŸm¢G§²ÚîÆ­yÓt title="Examples" items={skillModule.learnOverview.examples} />
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className={`mt-6 ${activeStage !== "diagnose" ? "hidden" : ""}`} id="diagnostic-section">
+        <CardHeader>
+          <CardTitle className="text-base">Test Me First</CardTitle>
+          <p className="text-sm text-muted-foreground">{skillModule.diagnostic.instructions}</p>
+        </CardHeader>
+        <CardContent>
+          <SkillCheckPanel
+            userId={userId}
+            skillModule={skillModule}
+            stage="diagnostic"
+            questions={skillModule.diagnostic.prompts}
+            allModules={allModules}
+            onProgressChange={onProgressChange}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className={`mt-6 ${activeStage !== "learn" ? "hidden" : ""}`} id="learn-section">
+        <CardHeader>
+          <CardTitle className="text-base">Learn</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-5">
+          <div>
+            <p className="text-sm leading-relaxed text-foreground">{skillModule.learnOverview.explanation}</p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <LearnList title="Objectives" items={skillModule.learnOverview.objectives} />
+              <LearnList title="Key concepts" items={skillModule.learnOverview.keyConcepts} />
+              <LearnList title="Examples" items={skillModule.learnOverview.examples} />
               <LearnList title="Common mistakes" items={skillModule.learnOverview.commonMistakes} />
             </div>
           </div>
