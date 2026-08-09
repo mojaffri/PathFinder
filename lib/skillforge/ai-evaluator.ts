@@ -1,10 +1,17 @@
-import { ANTHROPIC_MODEL, getAnthropicClient } from "@/lib/ai/anthropic-client";
+import { requestStructuredAI } from "@/lib/ai/structured-output";
 import { EVALUATION_TOOL_JSON_SCHEMA, SkillEvaluationResultSchema, type EvaluateRequest } from "./evaluation-schema";
 import type { SkillEvaluationResult } from "@/types";
 
 const TOOL_NAME = "evaluate_skill_responses";
 
-function buildPrompt(req: EvaluateRequest): string {
+type TrustedEvaluateRequest = EvaluateRequest & {
+  moduleName: string;
+  moduleDescription: string;
+  concepts: { id: string; title: string; description: string }[];
+  questions: { id: string; conceptId: string; prompt: string }[];
+};
+
+function buildPrompt(req: TrustedEvaluateRequest): string {
   const conceptsBlock = req.concepts.map((c) => `- ${c.id}: ${c.title} — ${c.description}`).join("\n");
   const qaBlock = req.questions
     .map((q) => {
@@ -36,6 +43,11 @@ Then give:
 - weaknesses: specific gaps, tied to concept names (empty array if genuinely none).
 - weakestConceptId: the single concept id (must match one of the concept ids above) they struggled with most, or null if no real weakness showed up.
 - recommendedNextStep: one concrete, specific sentence telling the student what to do next (e.g. "Review [concept], then retry the assessment" or "You're ready to move on to the project").
+- dimensionScores (0-100 each): accuracy, reasoning, application, and communication. Score only demonstrated work.
+- overallScore (0-100): accuracy 35%, reasoning 30%, application 25%, communication 10%.
+- passed: true only when overallScore is at least 70 and neither accuracy nor reasoning is below 60.
+- weakConceptIds: every concept id that needs targeted review.
+- gradingMetadata: method "ai-assisted", rubricVersion "skillforge-rubric-v2", provider/model null, retries 0. The server replaces provider metadata.
 
 Never fabricate strengths, evidence, or achievements the student didn't actually demonstrate in their answers.`;
 }
@@ -47,30 +59,45 @@ Never fabricate strengths, evidence, or achievements the student didn't actually
  * back to an honest "couldn't evaluate right now" state instead of crashing
  * or fabricating a result.
  */
-export async function evaluateSkillResponses(req: EvaluateRequest): Promise<SkillEvaluationResult | null> {
-  const client = getAnthropicClient();
-  if (!client) return null;
-
+export async function evaluateSkillResponses(req: TrustedEvaluateRequest): Promise<SkillEvaluationResult | null> {
   try {
-    const response = await client.messages.create({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 2000,
-      tools: [
-        {
-          name: TOOL_NAME,
-          description: "Return a structured, honest evaluation of the student's skill responses.",
-          input_schema: EVALUATION_TOOL_JSON_SCHEMA,
-        },
-      ],
-      tool_choice: { type: "tool", name: TOOL_NAME },
-      messages: [{ role: "user", content: buildPrompt(req) }],
+    const result = await requestStructuredAI({
+      feature: "assessment-grading",
+      schema: SkillEvaluationResultSchema,
+      toolSchema: EVALUATION_TOOL_JSON_SCHEMA,
+      toolName: TOOL_NAME,
+      toolDescription: "Return a structured, rubric-based evaluation of the student's skill responses.",
+      prompt: buildPrompt(req),
+      maxTokens: 2000,
+      timeoutMs: 20_000,
     });
+    const parsed = result.data;
 
-    const toolUse = response.content.find((block) => block.type === "tool_use");
-    if (!toolUse || toolUse.type !== "tool_use") return null;
+    const questionIds = new Set(req.questions.map((question) => question.id));
+    const conceptIds = new Set(req.concepts.map((concept) => concept.id));
+    const evaluatedIds = parsed.perQuestion.map((item) => item.questionId);
+    if (
+      evaluatedIds.length !== questionIds.size ||
+      new Set(evaluatedIds).size !== evaluatedIds.length ||
+      !evaluatedIds.every((id) => questionIds.has(id)) ||
+      parsed.perQuestion.some((item) => item.conceptId !== null && !conceptIds.has(item.conceptId)) ||
+      (parsed.weakestConceptId !== null && !conceptIds.has(parsed.weakestConceptId))
+    ) {
+      return null;
+    }
 
-    const parsed = SkillEvaluationResultSchema.safeParse(toolUse.input);
-    return parsed.success ? parsed.data : null;
+    const calculatedOverall = Math.round(
+      parsed.dimensionScores.accuracy * 0.35 +
+      parsed.dimensionScores.reasoning * 0.3 +
+      parsed.dimensionScores.application * 0.25 +
+      parsed.dimensionScores.communication * 0.1,
+    );
+    return {
+      ...parsed,
+      overallScore: calculatedOverall,
+      passed: calculatedOverall >= 70 && parsed.dimensionScores.accuracy >= 60 && parsed.dimensionScores.reasoning >= 60,
+      gradingMetadata: { method: "ai-assisted", rubricVersion: "skillforge-rubric-v2", provider: result.metadata.provider, model: result.metadata.model, retries: result.metadata.retries },
+    };
   } catch {
     return null;
   }

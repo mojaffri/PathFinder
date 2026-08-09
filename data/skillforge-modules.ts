@@ -189,8 +189,8 @@ export const SKILL_MODULES: SkillModule[] = [
       id: "diag-1",
       instructions: "Quick check — this feeds into every other data-heavy skill you're working on.",
       prompts: [
-        { id: "diag-q1", conceptId: "descriptive-statistics", prompt: "A dataset of household incomes has a mean much higher than its median. What does that tell you about the distribution, and which number should you report?" },
-        { id: "diag-q2", conceptId: "hypothesis-testing", prompt: "A study reports p = 0.03. In your own words, what does that actually mean — and what's a common misinterpretation of it?" },
+        { id: "diag-q1", conceptId: "descriptive-statistics", prompt: "When a few very high incomes pull the mean upward, which measure usually best represents a typical household?", kind: "multiple-choice", options: ["Mean", "Median", "Range", "Variance"], correctAnswer: "Median" },
+        { id: "diag-q2", conceptId: "probability-basics", prompt: "True or false: two independent events with probability 0.5 each have probability 0.25 of both occurring.", kind: "true-false", options: ["True", "False"], correctAnswer: "True" },
       ],
     },
     assessment: {

@@ -4,7 +4,7 @@ Read this after [`CLAUDE.md`](../CLAUDE.md) and before touching code. This file 
 
 ## Last Updated
 
-2026-08-09 (session 5) — Phase 4 product completeness: a compact nine-stage application pipeline, personalized saved-job requirement/evidence insights, a real-data main dashboard, longitudinal `/analytics`, expanded structured activity events, persistent per-user throttling on AI-cost routes, safe redirect handling, structured Vercel logs via Next instrumentation, Vercel page analytics, security headers, responsive/accessibility fixes, global error recovery, and Playwright + axe smoke coverage. Next.js was upgraded from 16.2.11 to 16.3.0 to clear every production `npm audit` finding. Migrations `0009`/`0010` and the new repository/service/API/UI surfaces are described below.
+2026-08-09 (session 5) — Phase 4 product completeness: a compact nine-stage application pipeline, personalized saved-job requirement/evidence insights, a real-data main dashboard, longitudinal `/analytics`, expanded structured activity events, persistent per-user throttling on AI-cost routes, safe redirect handling, structured Vercel logs via Next instrumentation, Vercel page analytics, security headers, responsive/accessibility fixes, global error recovery, and Playwright + axe smoke coverage. The release also reconciles the remote SkillForge reliability work: a structured AI provider with timeout/retry/metadata, trusted server-side assessment catalogs, deterministic grading where possible, request-size limits, and recency/consistency-aware mastery signals. Next.js was upgraded from 16.2.11 to 16.3.0 to clear every production `npm audit` finding. Migrations `0009`/`0010` and the new repository/service/API/UI surfaces are described below.
 
 2026-08-08 (session 4) — Phase 3, the adaptive, evidence-aware roadmap engine, built this session: a curated skill dependency graph with cycle detection (`data/skill-graph.ts`, `lib/roadmap/skill-graph.ts`), a deterministic priority formula (`lib/roadmap/priority.ts`), real dependency-aware task generation (`lib/roadmap/adaptive-generator.ts`), a deterministic weekly scheduler with impossible-deadline detection (`lib/roadmap/scheduler.ts`), adaptive recomputation that preserves completed-task history (`lib/roadmap/adaptation.ts`), saved-job skill-frequency aggregation (`lib/roadmap/saved-job-signals.ts`), five new append-history-aware DB tables + repository (`repositories/adaptive-roadmap-repository.ts`), three API routes, and a full `/roadmap` UI. See "Adaptive Roadmap Engine" below and `docs/skill-graph.md`/`docs/roadmap-engine.md` for the full design. This supersedes session 3's checkpoint (evidence-backed skills + GitHub integration), which is otherwise unchanged and summarized below.
 
@@ -25,7 +25,7 @@ UI (client components)
           → Postgres (Supabase), protected by FORCE ROW LEVEL SECURITY as a backstop
 ```
 
-The four deterministic domain engines (`lib/matching/engine.ts`, `lib/gap-analysis/engine.ts`, `lib/skillforge/mastery.ts`, `lib/roadmap/pacing.ts`) are **unchanged** from before this phase — this phase only replaced the persistence/auth boundary around them, per `CLAUDE.md`'s rule that they're not casually rewritten.
+The deterministic domain engines remain explainable and storage-agnostic. SkillForge mastery received one deliberate extension during remote-history reconciliation: recent graded attempts are weighted more strongly and inconsistent results reduce confidence; the scoring remains deterministic and regression-tested.
 
 `proxy.ts` (not `middleware.ts` — Next.js 16 renamed the file convention; see `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`) refreshes the Supabase session on every request and server-side redirects unauthenticated visitors away from protected routes.
 
@@ -91,7 +91,7 @@ Real Supabase Auth. See [`security.md`](./security.md) for the full model — th
 
 ## AI Integration
 
-Unchanged from before this phase — see `docs/security.md`'s secrets table and `CLAUDE.md`'s AI usage rules. Three AI-backed services (resume extraction, roadmap generation, SkillForge grading), each with a guaranteed deterministic/heuristic fallback. Not verified against a live `ANTHROPIC_API_KEY` this session (none is configured in this local environment).
+Resume extraction, roadmap generation, and open-response SkillForge grading now share the typed provider/structured-output layer in `lib/ai/`, including timeout, retry, zod validation, redacted observability metadata, and typed failures. Fixed-choice assessment questions are graded deterministically from the trusted server catalog. Resume and roadmap retain heuristic/deterministic fallbacks; open responses persist even when grading is unavailable. Live Anthropic behavior was not exercised locally because no API key is configured.
 
 ---
 
@@ -169,7 +169,7 @@ A second, separate roadmap system alongside the narrative `Roadmap` above — se
 
 ## Tests
 
-**191 tests, 26 Vitest files, all passing** (155 unit + 36 integration), plus Playwright desktop/mobile smoke and axe accessibility coverage. New regression suites cover saved-job insights, real-only readiness history, safe redirects, full application persistence/stage events/ownership, and atomic per-user throttling. The detailed historical inventory below remains useful but predates these Phase-4 additions.
+**198 tests, 29 Vitest files, all passing** (including 36 database integration tests), plus Playwright desktop/mobile smoke and axe accessibility coverage. New regression suites cover saved-job insights, real-only readiness history, safe redirects, full application persistence/stage events/ownership, atomic per-user throttling, structured-AI retry/timeout behavior, deterministic assessment grading, and recency-aware mastery. The detailed historical inventory below remains useful but predates these additions.
 
 Unit (pure functions, no DB) — `tests/unit/`:
 - `mastery.test.ts` (11), `pacing.test.ts` (8) — unchanged from Phase 1.
@@ -309,7 +309,7 @@ Run 2026-08-09 (session 5), this exact repository state before deployment:
 ```text
 npm run lint             → clean
 npm run typecheck        → clean
-npm test                 → 191 passed (26 files: 155 unit, 36 integration)
+npm test                 → 198 passed (29 files, including 36 integration)
 npm run test:e2e         → 5 passed desktop/mobile public + axe checks; 5 real-demo checks skipped locally because Supabase/demo credentials are intentionally absent
 npm run build            → clean (Next.js 16.3.0, 42 routes/pages)
 npm audit --omit=dev     → 0 vulnerabilities

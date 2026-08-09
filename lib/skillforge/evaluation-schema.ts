@@ -24,6 +24,22 @@ export const SkillEvaluationResultSchema = z.object({
   weaknesses: z.array(z.string()).max(5),
   weakestConceptId: z.string().nullable(),
   recommendedNextStep: z.string(),
+  overallScore: z.number().min(0).max(100),
+  passed: z.boolean(),
+  dimensionScores: z.object({
+    accuracy: z.number().min(0).max(100),
+    reasoning: z.number().min(0).max(100),
+    application: z.number().min(0).max(100),
+    communication: z.number().min(0).max(100),
+  }),
+  weakConceptIds: z.array(z.string()).max(10),
+  gradingMetadata: z.object({
+    method: z.enum(["deterministic", "ai-assisted", "hybrid"]),
+    rubricVersion: z.string(),
+    provider: z.string().nullable(),
+    model: z.string().nullable(),
+    retries: z.number().int().min(0),
+  }),
 });
 
 export type SkillEvaluationResultParsed = z.infer<typeof SkillEvaluationResultSchema>;
@@ -56,22 +72,38 @@ export const EVALUATION_TOOL_JSON_SCHEMA = {
       description: "The single concept id the student struggled with most, or null if no real weakness showed up.",
     },
     recommendedNextStep: { type: "string", description: "One concrete, specific sentence telling the student what to do next." },
+    overallScore: { type: "number" },
+    passed: { type: "boolean" },
+    dimensionScores: {
+      type: "object",
+      properties: {
+        accuracy: { type: "number" }, reasoning: { type: "number" }, application: { type: "number" }, communication: { type: "number" },
+      },
+      required: ["accuracy", "reasoning", "application", "communication"],
+    },
+    weakConceptIds: { type: "array", items: { type: "string" } },
+    gradingMetadata: {
+      type: "object",
+      properties: {
+        method: { type: "string", enum: ["ai-assisted"] },
+        rubricVersion: { type: "string" },
+        provider: { type: ["string", "null"] }, model: { type: ["string", "null"] }, retries: { type: "number" },
+      },
+      required: ["method", "rubricVersion", "provider", "model", "retries"],
+    },
   },
-  required: ["perQuestion", "knowledgeScore", "abilityScore", "strengths", "weaknesses", "weakestConceptId", "recommendedNextStep"],
+  required: ["perQuestion", "knowledgeScore", "abilityScore", "strengths", "weaknesses", "weakestConceptId", "recommendedNextStep", "overallScore", "passed", "dimensionScores", "weakConceptIds", "gradingMetadata"],
 };
 
-const ConceptSchema = z.object({ id: z.string(), title: z.string(), description: z.string() });
-const QuestionSchema = z.object({ id: z.string(), conceptId: z.string(), prompt: z.string() });
-const ResponseSchema = z.object({ questionId: z.string(), answer: z.string().max(4000) });
+const ResponseSchema = z.object({
+  questionId: z.string().min(1).max(100),
+  answer: z.string().trim().min(1, "An answer is required").max(4000),
+});
 
 export const EvaluateRequestSchema = z.object({
-  skillId: z.string(),
+  skillId: z.string().min(1).max(100),
   stage: z.enum(["diagnostic", "assessment"]),
-  moduleName: z.string(),
-  moduleDescription: z.string(),
-  concepts: z.array(ConceptSchema).min(1),
-  questions: z.array(QuestionSchema).min(1),
-  responses: z.array(ResponseSchema).min(1),
+  responses: z.array(ResponseSchema).min(1).max(20),
 });
 
 export type EvaluateRequest = z.infer<typeof EvaluateRequestSchema>;

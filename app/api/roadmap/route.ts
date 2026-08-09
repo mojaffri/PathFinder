@@ -10,10 +10,14 @@ import { resolveCareers, type Roadmap } from "@/types";
 import { getServerUser } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/security/rate-limit";
 import { withDbErrorHandling } from "@/lib/api/with-db-error-handling";
+import { exceedsContentLength } from "@/lib/http/request-limits";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   return withDbErrorHandling(async () => {
+  if (exceedsContentLength(request, 500_000)) {
+    return NextResponse.json({ error: "Roadmap request is too large." }, { status: 413 });
+  }
   const user = await getServerUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   const limited = await enforceRateLimit(user.id, "roadmap-generation", 10, 600);

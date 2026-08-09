@@ -55,12 +55,16 @@ async function loadProgress(tx: Tx, profileId: string, skillId: string): Promise
       id: attempt.id,
       skillId,
       stage: stage as "diagnostic" | "assessment",
+      assessmentId: attempt.assessmentId,
+      attemptNumber: 0,
       startedAt: attempt.startedAt.toISOString(),
       completedAt: (attempt.completedAt ?? attempt.startedAt).toISOString(),
       responses: attempt.responses as SkillAttemptResponse[],
       evaluation: attempt.evaluation as SkillEvaluationResult | null,
     }))
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+  const attemptCounts = { diagnostic: 0, assessment: 0 };
+  for (const attempt of attempts) attempt.attemptNumber = ++attemptCounts[attempt.stage];
 
   return {
     skillId,
@@ -188,12 +192,16 @@ export async function listSkillProgress(userId: string, skillIds: string[]): Pro
           id: attempt.id,
           skillId,
           stage: stage as "diagnostic" | "assessment",
+          assessmentId: attempt.assessmentId,
+          attemptNumber: 0,
           startedAt: attempt.startedAt.toISOString(),
           completedAt: (attempt.completedAt ?? attempt.startedAt).toISOString(),
           responses: attempt.responses as SkillAttemptResponse[],
           evaluation: attempt.evaluation as SkillEvaluationResult | null,
         }))
         .sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+      const attemptCounts = { diagnostic: 0, assessment: 0 };
+      for (const attempt of attempts) attempt.attemptNumber = ++attemptCounts[attempt.stage];
 
       result[skillId] = {
         skillId,
