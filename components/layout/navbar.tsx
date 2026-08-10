@@ -8,6 +8,7 @@ import { Compass, LayoutDashboard, Menu, Rocket, Bookmark, Hammer, Briefcase, Fo
 import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/use-profile";
 import { buttonVariants } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 const PRIMARY_NAV_LINKS = [
   { href: "/discover", label: "Discover", icon: Compass },
@@ -66,7 +67,7 @@ export function Navbar() {
   }, [workspaceOpen]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
@@ -78,7 +79,7 @@ export function Navbar() {
             alt=""
             width={32}
             height={32}
-            className="h-8 w-8 rounded-lg"
+            className="h-8 w-8 rounded-lg ring-1 ring-border"
             priority
           />
           <span>PathFinder</span>
@@ -131,7 +132,7 @@ export function Navbar() {
               <nav
                 id="workspace-navigation"
                 aria-label="Workspace navigation"
-                className="absolute left-1/2 top-[calc(100%+0.5rem)] w-64 -translate-x-1/2 rounded-lg border border-border bg-background p-2 shadow-lg"
+                className="absolute left-1/2 top-[calc(100%+0.5rem)] w-64 -translate-x-1/2 rounded-xl border border-border bg-panel p-2 shadow-xl"
               >
                 {WORKSPACE_LINKS.map(({ href, label, description, icon: Icon }) => {
                   const active = isRouteActive(pathname, href);
@@ -181,6 +182,7 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 xl:flex">
+          <ThemeToggle />
           {isAuthenticated && profile ? (
             <Link
               href="/profile"
@@ -197,20 +199,23 @@ export function Navbar() {
           )}
         </div>
 
-        <button
-          type="button"
-          aria-label="Toggle menu"
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-navigation"
-          className="flex h-9 w-9 items-center justify-center rounded-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 xl:hidden"
-          onClick={() => setMobileOpen((v) => !v)}
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2 xl:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            onClick={() => setMobileOpen((v) => !v)}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {mobileOpen && (
-        <nav id="mobile-navigation" aria-label="Mobile navigation" className="border-t border-border px-6 py-3 xl:hidden">
+        <nav id="mobile-navigation" aria-label="Mobile navigation" className="border-t border-border bg-panel px-6 py-3 shadow-lg xl:hidden">
           <div className="flex flex-col gap-1">
             {PRIMARY_NAV_LINKS.map(({ href, label, icon: Icon }) => (
               <Link

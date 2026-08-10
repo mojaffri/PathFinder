@@ -15,6 +15,27 @@ test("landing and authentication entry points render without serious accessibili
   await expect(page.getByText(/no credit card|recruiter friction/i)).toHaveCount(0);
 });
 
+test("color theme toggles and persists without changing page content", async ({ page }) => {
+  await page.goto("/");
+  const root = page.locator("html");
+  const toggle = page.getByRole("button", { name: "Toggle color theme" });
+  const initialTheme = await root.getAttribute("data-theme");
+
+  expect(["light", "dark"]).toContain(initialTheme);
+  await expect(toggle).toBeVisible();
+  await toggle.click();
+
+  const selectedTheme = initialTheme === "dark" ? "light" : "dark";
+  await expect(root).toHaveAttribute("data-theme", selectedTheme);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+  expect(results.violations.filter((violation) => violation.impact === "critical" || violation.impact === "serious")).toEqual([]);
+
+  await page.reload();
+  await expect(root).toHaveAttribute("data-theme", selectedTheme);
+});
+
 test("protected product routes redirect to sign in without exposing API errors", async ({ page }) => {
   for (const path of ["/dashboard", "/onboarding", "/accelerate", "/jobs", "/roadmap", "/skillforge", "/applications", "/analytics"]) {
     await page.goto(path);

@@ -18,7 +18,7 @@ export function PathCard({ href, icon: Icon, eyebrow, title, description, bullet
     <Link
       href={href}
       className={cn(
-        "group flex flex-col rounded-xl border border-border bg-background p-8 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
+        "group flex flex-col rounded-2xl border border-border bg-panel p-8 shadow-sm transition-all hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lg",
       )}
     >
       <div

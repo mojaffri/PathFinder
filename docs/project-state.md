@@ -112,6 +112,14 @@ See [`security.md`](security.md) for threat boundaries and privacy limitations.
 - Vercel Analytics is enabled for aggregate page usage.
 - `activity_events` records meaningful product changes for analytics and auditability; it is not a full access log.
 
+## Interface polish — 2026-08-10
+
+- The existing PathFinder logo remains the product mark across the shared navigation and authentication surfaces.
+- Light and dark themes share one semantic token system, with restrained navy/indigo dark surfaces and accessible success, warning, danger, focus, and muted-text states.
+- Theme selection is available at the top right on desktop and mobile, persists in a same-site cookie, follows the operating-system preference on first visit, and is applied before paint to avoid theme flash.
+- The landing page keeps its existing focused content hierarchy instead of adopting a denser dashboard-style hero. Editorial heading typography, calmer panels, consistent form controls, and subtle depth improve polish without adding page clutter.
+- Desktop and mobile visual checks cover the landing, Discover, and sign-in surfaces in both themes. Playwright now verifies theme persistence and serious/critical WCAG A/AA violations after a theme change.
+
 ## CI and quality gate
 
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main` with read-only repository permissions, per-ref concurrency cancellation, and a 20-minute timeout:
@@ -138,7 +146,7 @@ npm run test:unit        → 166 passed (21 files)
 npm run test:integration → 39 passed (6 files)
 npm test                 → 224 passed (32 files)
 npm run build            → clean; Next.js 16.3.0; 42 prerendered page slots
-npm run test:e2e         → 6 passed, 6 environment-specific cases skipped
+npm run test:e2e         → 8 passed, 6 environment-specific cases skipped
 production demo E2E      → 10 passed, 2 device-inapplicable cases skipped
 ```
 
