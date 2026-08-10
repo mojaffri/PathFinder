@@ -12,6 +12,8 @@ test.describe("configured demo account journeys", () => {
 
   test("authentication, onboarding state, and dashboard", async ({ page }) => {
     await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible();
+    await page.goto("/profile");
+    await expect(page.getByRole("button", { name: "Delete account" })).toBeVisible();
     await page.goto("/onboarding");
     await expect(page.locator("main")).toContainText(/profile|basics|onboarding|goal/i);
   });

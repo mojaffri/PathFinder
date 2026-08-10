@@ -304,7 +304,7 @@ export function ProfileView({
         onClick={onDelete}
         className="self-start text-sm text-danger hover:underline"
       >
-        Delete profile
+        Delete account
       </button>
     </div>
   );
