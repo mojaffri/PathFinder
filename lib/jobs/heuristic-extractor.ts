@@ -25,10 +25,10 @@ const TOOL_SET = new Set([
   "salesforce", "sap", "jira", "figma", "react", "angular", "vue", "node.js", "django", "flask", "spring",
 ]);
 
-const REQUIRED_HEADERS = ["REQUIREMENTS", "QUALIFICATIONS", "MINIMUM QUALIFICATIONS", "WHAT YOU NEED", "MUST HAVE", "MUST HAVES", "BASIC QUALIFICATIONS"];
-const PREFERRED_HEADERS = ["PREFERRED QUALIFICATIONS", "PREFERRED", "NICE TO HAVE", "NICE TO HAVES", "BONUS", "BONUS POINTS", "PLUS"];
-const RESPONSIBILITY_HEADERS = ["RESPONSIBILITIES", "WHAT YOU'LL DO", "WHAT YOULL DO", "DUTIES", "THE ROLE", "ABOUT THE ROLE", "KEY RESPONSIBILITIES"];
-const STOP_HEADERS = ["BENEFITS", "PERKS", "ABOUT US", "ABOUT THE COMPANY", "COMPENSATION", "HOW TO APPLY", "EQUAL OPPORTUNITY"];
+const REQUIRED_HEADERS = ["REQUIREMENTS", "REQUIRED SKILLS", "QUALIFICATIONS", "MINIMUM QUALIFICATIONS", "WHAT YOU NEED", "WHAT YOU BRING", "YOU BRING", "WHO YOU ARE", "MUST HAVE", "MUST HAVES", "BASIC QUALIFICATIONS", "CANDIDATE PROFILE"];
+const PREFERRED_HEADERS = ["PREFERRED QUALIFICATIONS", "PREFERRED SKILLS", "PREFERRED", "DESIRED QUALIFICATIONS", "NICE TO HAVE", "NICE TO HAVES", "BONUS", "BONUS POINTS", "PLUS"];
+const RESPONSIBILITY_HEADERS = ["RESPONSIBILITIES", "WHAT YOU'LL DO", "WHAT YOULL DO", "WHAT YOU WILL DO", "DUTIES", "YOUR IMPACT", "THE ROLE", "ABOUT THE ROLE", "KEY RESPONSIBILITIES"];
+const STOP_HEADERS = ["BENEFITS", "PERKS", "ABOUT US", "ABOUT THE COMPANY", "COMPENSATION", "SALARY", "HOW TO APPLY", "EQUAL OPPORTUNITY", "EEO STATEMENT"];
 
 function normalizeHeader(line: string): string {
   return line.toUpperCase().replace(/[^A-Z\s]/g, "").replace(/\s+/g, " ").trim();
@@ -65,14 +65,39 @@ function dedupeRequirements(items: JobRequirementExtraction[]): JobRequirementEx
   return [...byKey.values()];
 }
 
+function headingMatch(line: string): { header: string; remainder: string } {
+  const delimiter = line.match(/^(.{2,55}?)(?:\s*:\s*|\s+[–—-]\s+)(.+)$/);
+  if (!delimiter) return { header: normalizeHeader(line), remainder: "" };
+  return { header: normalizeHeader(delimiter[1]), remainder: delimiter[2].trim() };
+}
+
+function looksLikeJobTitle(line: string): boolean {
+  return /\b(?:engineer|developer|analyst|scientist|designer|manager|consultant|specialist|intern|co-?op|researcher|architect|technician|associate|director)\b/i.test(line);
+}
+
+function skillRequirements(lines: string[], category: "required" | "preferred"): JobRequirementExtraction[] {
+  return lines.flatMap((line) => SKILL_KEYWORDS.filter((skill) => {
+    const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(?<![A-Za-z0-9+#])${escaped}(?![A-Za-z0-9+#])`, "i").test(line);
+  }).map((skill) => ({
+    category,
+    kind: TOOL_SET.has(skill.toLowerCase()) ? "tool" as const : "skill" as const,
+    label: skill,
+    minYears: null,
+  })));
+}
+
 export function extractJobDataHeuristically(rawText: string): JobExtraction {
   const lines = rawText.split(/\r?\n/).map((l) => l.trim());
 
-  const firstNonEmpty = lines.find((l) => l.length > 0) ?? "";
-  const title = firstNonEmpty.length > 0 && firstNonEmpty.length < 100 ? firstNonEmpty : null;
+  const firstLines = lines.filter(Boolean).slice(0, 8);
+  const labeledTitle = rawText.match(/^\s*(?:job\s+)?title\s*:\s*(.+)$/im)?.[1]?.trim() ?? null;
+  const titleCandidate = labeledTitle ?? firstLines.find((line) => line.length < 100 && looksLikeJobTitle(line)) ?? firstLines[0] ?? "";
+  const title = titleCandidate.length > 0 && titleCandidate.length < 100 ? titleCandidate : null;
 
-  const companyMatch = rawText.match(/\bat\s+([A-Z][A-Za-z0-9&.,' -]{1,60})(?=[\s,.\n]|$)/);
-  const company = companyMatch ? companyMatch[1].trim() : null;
+  const labeledCompany = rawText.match(/^\s*(?:company|organization)\s*:\s*(.+)$/im)?.[1]?.trim() ?? null;
+  const companyMatch = rawText.match(/\bat\s+([A-Z][A-Za-z0-9&.,' -]{1,60}?)(?=\s+(?:is|seeks|for|on|to|we)|[,.\n]|$)/);
+  const company = labeledCompany ?? (companyMatch ? companyMatch[1].trim() : null);
 
   type Section = "required" | "preferred" | "responsibilities" | "skip" | null;
   let currentSection: Section = null;
@@ -80,20 +105,25 @@ export function extractJobDataHeuristically(rawText: string): JobExtraction {
   const requirementLines: string[] = [];
   const preferredLines: string[] = [];
   const responsibilityLines: string[] = [];
+  let foundRequiredHeader = false;
 
   for (const line of lines) {
-    const header = normalizeHeader(line);
+    const { header, remainder } = headingMatch(line);
     if (header.length > 0) {
       if (REQUIRED_HEADERS.includes(header)) {
         currentSection = "required";
+        foundRequiredHeader = true;
+        if (remainder) requirementLines.push(remainder);
         continue;
       }
       if (PREFERRED_HEADERS.includes(header)) {
         currentSection = "preferred";
+        if (remainder) preferredLines.push(remainder);
         continue;
       }
       if (RESPONSIBILITY_HEADERS.includes(header)) {
         currentSection = "responsibilities";
+        if (remainder) responsibilityLines.push(stripBullet(remainder));
         continue;
       }
       if (STOP_HEADERS.includes(header)) {
@@ -108,31 +138,33 @@ export function extractJobDataHeuristically(rawText: string): JobExtraction {
     else if (currentSection === "responsibilities") responsibilityLines.push(stripBullet(line));
   }
 
-  // If no explicit "Requirements" heading was found, fall back to scanning
-  // the whole document for skill keywords rather than returning nothing.
-  const requirementSearchText = requirementLines.length > 0 ? requirementLines.join(" ") : rawText;
-  const preferredSearchText = preferredLines.join(" ");
-
-  function keywordRequirements(text: string, category: "required" | "preferred"): JobRequirementExtraction[] {
-    return SKILL_KEYWORDS.filter((skill) => {
-      const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      return new RegExp(`(?<![A-Za-z0-9+#])${escaped}(?![A-Za-z0-9+#])`, "i").test(text);
-    }).map((skill) => ({
-      category,
-      kind: TOOL_SET.has(skill.toLowerCase()) ? "tool" : "skill",
-      label: skill,
-      minYears: null,
-    }));
+  // Unheaded postings often express qualifications in prose. Classify each
+  // line by its own language so "AWS is a plus" never becomes a must-have.
+  if (!foundRequiredHeader) {
+    for (const line of lines) {
+      const hasSkill = SKILL_KEYWORDS.some((skill) => line.toLowerCase().includes(skill.toLowerCase()));
+      const hasEducationOrExperience = /\b(?:bachelor|master|associate|ph\.?d|doctorate)'?s?\b|\b\d+\+?\s+years?\b/i.test(line);
+      if (!hasSkill && !hasEducationOrExperience) continue;
+      if (/\b(?:preferred|nice to have|bonus|a plus|desirable|ideally|advantage)\b/i.test(line)) preferredLines.push(line);
+      else if (!/\b(?:build|develop|design|maintain|collaborate|lead|support|deliver|responsible for)\b/i.test(line)) requirementLines.push(line);
+    }
   }
 
-  const requirements = dedupeRequirements([
-    ...keywordRequirements(requirementSearchText, "required"),
-    ...keywordRequirements(preferredSearchText, "preferred"),
-  ]);
+  const requirementSearchText = requirementLines.join(" ");
+  const preferredSearchText = preferredLines.join(" ");
 
   const minExperienceYears = findYears(requirementSearchText);
   const preferredExperienceYears = findYears(preferredSearchText);
-  const educationRequirement = extractEducationRequirement(rawText);
+  const educationRequirement = extractEducationRequirement(requirementSearchText);
+  const preferredEducationRequirement = extractEducationRequirement(preferredSearchText);
+  const requirements = dedupeRequirements([
+    ...skillRequirements(requirementLines, "required"),
+    ...skillRequirements(preferredLines, "preferred"),
+    ...(minExperienceYears === null ? [] : [{ category: "required" as const, kind: "experience" as const, label: `${minExperienceYears}+ years of experience`, minYears: minExperienceYears }]),
+    ...(preferredExperienceYears === null ? [] : [{ category: "preferred" as const, kind: "experience" as const, label: `${preferredExperienceYears}+ years of experience`, minYears: preferredExperienceYears }]),
+    ...(educationRequirement === null ? [] : [{ category: "required" as const, kind: "education" as const, label: educationRequirement, minYears: null }]),
+    ...(preferredEducationRequirement === null ? [] : [{ category: "preferred" as const, kind: "education" as const, label: preferredEducationRequirement, minYears: null }]),
+  ]);
 
   const keywordsFound = new Set(requirements.map((r) => r.label.toLowerCase()));
   const keywords = SKILL_KEYWORDS.filter((s) => !keywordsFound.has(s.toLowerCase()) && new RegExp(`\\b${s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(rawText)).slice(0, 15);

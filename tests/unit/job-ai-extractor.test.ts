@@ -35,6 +35,9 @@ describe("extractJobDataWithAI", () => {
     const result = await extractJobDataWithAI("some job text");
     expect(result?.title).toBe("Software Engineer");
     expect(createMock).toHaveBeenCalledTimes(1);
+    const request = createMock.mock.calls[0]?.[0];
+    expect(request.messages[0].content).toContain("Read qualifications at sentence level");
+    expect(request.messages[0].content).toContain("Requirements, responsibilities, benefits, and company-description text are separate concepts");
   });
 
   it("retries once on a schema-invalid response and succeeds on the retry", async () => {

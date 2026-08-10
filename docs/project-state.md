@@ -91,6 +91,17 @@ Supabase Auth owns identity. Drizzle owns 34 application tables and 11 migration
 - Explicit loading, empty, error, retry, and authentication states across major async surfaces.
 - Shared demo account with labeled, engine-generated showcase data and a one-click entry point.
 
+## Parsing reliability — 2026-08-10
+
+- Resume fallback parsing recognizes common alternate section names for work history, projects/portfolio, education, skills, credentials/licenses, and honors.
+- Date parsing supports hyphen/en-dash/em-dash/`to` ranges, seasons, and `Present`/`Current`/`Now`; stacked title, organization, location, and date layouts are reassembled into one experience record.
+- Education parsing handles institution-first and degree-first layouts, including separate major, GPA, and date lines. Certifications are now populated by the deterministic fallback instead of being silently discarded.
+- Project repository URLs found on the line below a project title are retained as project links, and a broader set of bullet markers and skill separators is normalized.
+- Job fallback parsing recognizes inline or alternate qualification/responsibility headings, separates required from preferred language sentence by sentence, keeps responsibility-only technologies out of requirements, and stores explicit experience/education requirements as typed rows.
+- A deterministic generated corpus exercises 18 varied resume layouts and 18 varied job-posting layouts, plus stacked/unheaded/ambiguous boundary cases. Structured-AI tests use mocks and never call a paid provider.
+- Extracted data still enters the editable confirmation flow and remains unverified until the user confirms it. The corpus materially reduces routine corrections but does not claim perfect parsing for every possible PDF or posting format.
+- Quality gate for this parser release: lint/typecheck/build clean; 208 unit tests, 39 integration tests, 266 total Vitest tests, and 9 local Playwright smoke checks passed (7 configured-account/device-specific cases skipped as expected).
+
 ## Security posture
 
 - Email/password, magic link, Google OAuth, and GitHub OAuth are enabled in production through Supabase Auth.
