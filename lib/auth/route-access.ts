@@ -11,6 +11,7 @@ export const PROTECTED_ROUTE_PREFIXES = [
   "/roadmap",
   "/applications",
   "/analytics",
+  "/reset-password",
 ] as const;
 
 export function isProtectedRoute(pathname: string): boolean {

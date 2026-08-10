@@ -144,6 +144,8 @@ https://path-finder-umber.vercel.app/auth/callback
 
 Enable Google and/or GitHub in Supabase Auth, configure the provider credentials there, and set the matching public feature flag. GitHub project analysis can also use a server-side public-data token and a separate encryption key; it never requires private-repository scope.
 
+Email/password accounts include confirmation, magic-link sign-in, and password recovery through the same callback route. Before production traffic, configure a custom SMTP sender under Supabase Authentication settings; Supabase's default sender is intended for testing and is rate limited. Keep the production Site URL and callback URL on Supabase's redirect allowlist.
+
 ### Production deployment
 
 Vercel needs the production values documented in [.env.example](.env.example). Use a Supabase transaction-pooler `DATABASE_URL` for serverless runtime traffic. Run migrations and reference seeding before exposing authenticated routes; seed demo data only when the shared demo is intended to be public.

@@ -8,5 +8,5 @@ import { LoginForm } from "@/components/auth/login-form";
 export function LoginRedirectReader() {
   const searchParams = useSearchParams();
   const redirectTo = safeRedirectPath(searchParams.get("redirectTo"), "/dashboard");
-  return <LoginForm redirectTo={redirectTo} />;
+  return <LoginForm redirectTo={redirectTo} passwordUpdated={searchParams.get("passwordUpdated") === "1"} />;
 }

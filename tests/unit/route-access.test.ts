@@ -8,11 +8,12 @@ describe("isProtectedRoute", () => {
     "/applications/application-1",
     "/analytics?range=month",
     "/jobs/job-1",
+    "/reset-password",
   ])("protects private product route %s", (pathname) => {
     expect(isProtectedRoute(pathname.split("?")[0])).toBe(true);
   });
 
-  it.each(["/", "/discover", "/login", "/signup", "/dashboard-preview", "/jobs-market"])(
+  it.each(["/", "/discover", "/login", "/signup", "/forgot-password", "/dashboard-preview", "/jobs-market"])(
     "does not overmatch public route %s",
     (pathname) => expect(isProtectedRoute(pathname)).toBe(false),
   );

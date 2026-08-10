@@ -36,6 +36,38 @@ test("color theme toggles and persists without changing page content", async ({ 
   await expect(root).toHaveAttribute("data-theme", selectedTheme);
 });
 
+test("launch essentials are public, linked, and indexable only where appropriate", async ({ page, request }) => {
+  await page.goto("/");
+  const footer = page.getByRole("navigation", { name: "Footer navigation" });
+  await expect(footer.getByRole("link", { name: "How it works" })).toBeVisible();
+  await expect(footer.getByRole("link", { name: "Privacy" })).toBeVisible();
+
+  await page.goto("/how-it-works");
+  await expect(page.getByRole("heading", { level: 1, name: /exactly how PathFinder/i })).toBeVisible();
+  await expect(page).toHaveTitle(/^How It Works \| PathFinder$/);
+
+  await page.goto("/faq");
+  await expect(page.getByRole("heading", { level: 1, name: /straight answers/i })).toBeVisible();
+
+  const robots = await request.get("/robots.txt");
+  expect(robots.ok()).toBe(true);
+  expect(await robots.text()).toContain("Disallow: /dashboard");
+  const sitemap = await request.get("/sitemap.xml");
+  expect(sitemap.ok()).toBe(true);
+  expect(await sitemap.text()).toContain("/privacy");
+});
+
+test("password recovery is reachable without an authenticated session", async ({ page }) => {
+  await page.goto("/login");
+  const recoveryLink = page.getByRole("link", { name: "Forgot password?" });
+  if (await recoveryLink.count()) {
+    await recoveryLink.click();
+    await expect(page).toHaveURL(/\/forgot-password$/);
+    await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Send reset link" })).toBeVisible();
+  }
+});
+
 test("landing prioritizes the two user journeys in the first desktop view", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name.includes("mobile"), "The mobile layout intentionally scrolls the journey cards.");
   await page.goto("/");

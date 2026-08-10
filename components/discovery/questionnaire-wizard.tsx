@@ -196,7 +196,7 @@ export function QuestionnaireWizard({
               <Input
                 id="age"
                 type="number"
-                min={10}
+                min={13}
                 max={100}
                 value={answers.age ?? ""}
                 onChange={(e) => update("age", e.target.value ? Number(e.target.value) : null)}

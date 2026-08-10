@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-export function LoginForm({ redirectTo }: { redirectTo: string }) {
+export function LoginForm({ redirectTo, passwordUpdated = false }: { redirectTo: string; passwordUpdated?: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,12 +60,16 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
     <div className="flex flex-col gap-6">
       <OAuthButtons redirectTo={redirectTo} />
       <form onSubmit={handlePasswordSignIn} className="flex flex-col gap-4">
+        {passwordUpdated ? <p className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm text-foreground" role="status">Your password was updated. Sign in with the new password.</p> : null}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">Email</Label>
           <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="password">Password</Label>
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="password">Password</Label>
+            <Link href="/forgot-password" className="text-xs font-medium text-primary hover:underline">Forgot password?</Link>
+          </div>
           <Input
             id="password"
             type="password"
@@ -75,7 +79,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
             autoComplete="current-password"
           />
         </div>
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <p className="text-sm text-danger" role="alert">{error}</p>}
         <Button type="submit" disabled={loading}>
           {loading ? "Signing in..." : "Sign in"}
         </Button>

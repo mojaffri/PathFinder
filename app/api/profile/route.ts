@@ -5,6 +5,10 @@ import { createProfile, deleteProfile, getProfileByUserId, updateProfile, type P
 import { logActivityEvent } from "@/repositories/activity-repository";
 import { createEmptyProfile, type StudentProfile } from "@/types";
 
+function hasValidAge(age: unknown): age is number | null {
+  return age === null || (typeof age === "number" && Number.isInteger(age) && age >= 13 && age <= 100);
+}
+
 function toWriteInput(profile: StudentProfile): ProfileWriteInput {
   return {
     name: profile.name,
@@ -69,6 +73,9 @@ export async function PATCH(request: Request) {
     if (!current) return NextResponse.json({ error: "No profile exists for this user yet." }, { status: 404 });
 
     const updates = (await request.json()) as Partial<StudentProfile>;
+    if ("age" in updates && !hasValidAge(updates.age)) {
+      return NextResponse.json({ error: "Age must be a whole number from 13 to 100." }, { status: 400 });
+    }
     const merged: StudentProfile = { ...current, ...updates };
 
     const profile = await updateProfile(user.id, toWriteInput(merged));

@@ -163,10 +163,13 @@ export function OnboardingFlow() {
                 <Input
                   id="ob-age"
                   type="number"
+                  min={13}
+                  max={100}
                   className="mt-1.5"
                   value={values.age ?? ""}
                   onChange={(e) => update("age", e.target.value ? Number(e.target.value) : null)}
                 />
+                <p className="mt-1.5 text-xs text-muted-foreground">PathFinder accounts are for people age 13 or older.</p>
               </div>
               <div>
                 <Label htmlFor="ob-stage">Where are you in your journey?</Label>

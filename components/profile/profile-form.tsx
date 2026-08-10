@@ -111,7 +111,7 @@ export function ProfileForm({
             <Input
               id="age"
               type="number"
-              min={10}
+              min={13}
               max={100}
               value={values.age ?? ""}
               onChange={(e) => update("age", e.target.value ? Number(e.target.value) : null)}

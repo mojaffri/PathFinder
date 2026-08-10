@@ -4,9 +4,10 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://path-finder-umber.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "PathFinder — Evidence-Driven Career Readiness",
     template: "%s | PathFinder",
@@ -19,13 +20,11 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: "PathFinder",
-    images: [{ url: "/pathfinder-logo.png", width: 1254, height: 1254, alt: "PathFinder logo" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "PathFinder — Evidence-Driven Career Readiness",
     description: "Explainable job fit, evidence-backed skills, and deterministic career roadmaps.",
-    images: ["/pathfinder-logo.png"],
   },
   robots: { index: true, follow: true },
 };

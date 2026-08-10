@@ -6,6 +6,7 @@
 
 - Email + password (`components/auth/login-form.tsx`, `signup-form.tsx`).
 - Magic link (email OTP) — "Email me a sign-in link instead" on the login form.
+- Password recovery (`/forgot-password` → email callback → authenticated `/reset-password`). The request response never reveals whether an email belongs to an account, and the reset session is signed out locally after the password changes.
 - Google / GitHub OAuth (`components/auth/oauth-buttons.tsx`) — requires enabling the provider in Supabase's dashboard (Authentication → Providers) and setting the provider's own OAuth app credentials there; nothing in this repo needs to change.
 
 **Session flow:**
@@ -13,6 +14,8 @@
 1. `proxy.ts` (Next.js 16's renamed `middleware.ts` — see `node_modules/next/dist/docs/.../proxy.md`) runs on every request, refreshes the Supabase session cookie via `lib/supabase/middleware.ts`, and **server-side redirects** unauthenticated requests to protected route prefixes (`/dashboard`, `/accelerate`, `/skillforge`, `/profile`, `/saved`, `/onboarding`, `/jobs`, `/projects`) to `/login`. This is enforced before any page renders — a disabled or bypassed client-side check can never expose a protected page.
 2. `lib/supabase/server.ts#getServerUser()` is the one function every API route calls to authorize a request — it re-validates the token against Supabase Auth (`auth.getUser()`, not `auth.getSession()`, which only decodes a JWT locally without verifying it hasn't been revoked).
 3. OAuth/magic-link callbacks land on `app/auth/callback/route.ts`, which exchanges the code for a session server-side.
+
+Production email authentication requires a custom SMTP sender configured in Supabase. The built-in sender is suitable only for initial testing and has strict rate limits. Signup requires confirmation that the user is at least 13 and accepts the public Terms and Privacy Notice; persisted age values are also constrained to 13–100 in both forms and the profile API.
 
 **Account deletion** (`app/api/account/route.ts`): first removes the signed-in user's private resume objects, then uses the Supabase service-role admin client to call `auth.admin.deleteUser()`. The auth deletion cascades through `profiles` and every relational child. If file cleanup fails, the account is kept and the route returns a visible error rather than orphaning a document. Requires `SUPABASE_SERVICE_ROLE_KEY`; without it, account deletion returns a clear 503. This is distinct from `deleteProfile()` (clears profile data but keeps the login).
 

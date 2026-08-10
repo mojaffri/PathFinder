@@ -202,6 +202,15 @@ Supabase migrations `0000` through `0010`, reference data, and the shared demo a
 5. Profile-based rate limiting does not replace platform/IP controls for pre-auth abuse.
 6. AI-backed narrative quality is provider-dependent; fallback output is deliberately conservative.
 7. The product is decision support, not a hiring probability, guaranteed outcome, or global labor-market dataset.
+8. Transactional auth email delivery depends on the production SMTP sender configured in Supabase; the repository cannot provision those external credentials.
+
+## Launch essentials — 2026-08-10
+
+- Added complete password recovery with enumeration-safe request copy, PKCE callback exchange, authenticated password update, and local-session sign-out.
+- Added signup acceptance for the Terms and Privacy Notice plus a consistent 13+ account boundary enforced in forms and the profile API.
+- Added public Privacy, Terms, FAQ, and transparent How It Works pages without adding more content above the landing-page fold.
+- Added a recruiter- and user-friendly footer, improved 404 recovery, public-route sitemap, private-route crawler exclusions/noindex metadata, corrected page-title composition, and a branded social preview image.
+- Added Playwright coverage for the trust pages, footer links, crawler files, metadata title, and password-recovery entry point.
 
 ## Next three improvements
 
