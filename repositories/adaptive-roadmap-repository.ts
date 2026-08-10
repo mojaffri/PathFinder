@@ -26,6 +26,50 @@ type TaskRow = typeof adaptiveRoadmapTasks.$inferSelect;
 type ChangeEventRow = typeof adaptiveRoadmapChangeEvents.$inferSelect;
 type HistoryRow = typeof adaptiveRoadmapCompletedHistory.$inferSelect;
 
+function numberOr(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+/**
+ * Roadmaps generated before the deterministic scheduler shipped stored a
+ * smaller `{ status, message, weeklyHoursRequired, weeklyHoursAvailable }`
+ * JSON object. Normalize that persisted shape at the repository boundary so
+ * old plans remain viewable and are upgraded naturally on the next recompute.
+ */
+function normalizeFeasibility(
+  value: unknown,
+  taskRows: TaskRow[],
+  configuredWeeklyHours: number | null,
+): ScheduleFeasibility {
+  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const totalRemainingHours = taskRows
+    .filter((task) => task.status !== "completed" && task.status !== "skipped")
+    .reduce((sum, task) => sum + task.estimatedHours, 0);
+  const weeklyHoursAvailable = Math.max(
+    1,
+    numberOr(record.weeklyHoursAvailable, configuredWeeklyHours ?? 5),
+  );
+  const status = typeof record.status === "string" ? record.status : null;
+  const feasible = typeof record.feasible === "boolean"
+    ? record.feasible
+    : !["at-risk", "behind", "unrealistic"].includes(status ?? "");
+
+  return {
+    feasible,
+    totalRemainingHours: numberOr(record.totalRemainingHours, totalRemainingHours),
+    requiredWeeks: numberOr(record.requiredWeeks, Math.ceil(totalRemainingHours / weeklyHoursAvailable)),
+    availableWeeks: typeof record.availableWeeks === "number" ? record.availableWeeks : null,
+    weeklyHoursAvailable,
+    isAssumedAvailability: typeof record.isAssumedAvailability === "boolean"
+      ? record.isAssumedAvailability
+      : configuredWeeklyHours === null,
+    message: typeof record.message === "string" ? record.message : "",
+    recommendations: Array.isArray(record.recommendations)
+      ? record.recommendations.filter((item): item is string => typeof item === "string")
+      : [],
+  };
+}
+
 function rowToTask(row: TaskRow, skillIdToTaskId: Map<string, string>): AdaptiveTask {
   return {
     id: row.id,
@@ -93,8 +137,10 @@ function rowToRoadmap(
     weeklyHoursAvailable: roadmapRow.weeklyHoursAvailable,
     readiness: roadmapRow.readiness,
     phases,
-    feasibility: roadmapRow.feasibility as ScheduleFeasibility,
-    savedJobSkillFrequency: roadmapRow.savedJobSkillFrequency as SavedJobSkillFrequency[],
+    feasibility: normalizeFeasibility(roadmapRow.feasibility, taskRows, roadmapRow.weeklyHoursAvailable),
+    savedJobSkillFrequency: Array.isArray(roadmapRow.savedJobSkillFrequency)
+      ? roadmapRow.savedJobSkillFrequency as SavedJobSkillFrequency[]
+      : [],
     changeEvents,
     completedHistory,
     generatedAt: roadmapRow.generatedAt.toISOString(),

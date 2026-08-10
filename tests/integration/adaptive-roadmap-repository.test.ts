@@ -65,6 +65,30 @@ describe("adaptive-roadmap-repository", () => {
     expect(loadedDependent.prerequisiteTaskIds).toEqual([loadedPrereq.id]);
   });
 
+  it("normalizes the legacy feasibility JSON shape when loading an existing roadmap", async () => {
+    const saved = await saveAdaptiveRoadmap(
+      USER_ID,
+      roadmapFixture([taskFixture({ skillId: "legacy-plan", estimatedHours: 12 })]),
+      null,
+    );
+    await testDb.client.query("select set_config('request.jwt.claim.sub', $1, false)", [USER_ID]);
+    await testDb.client.query(
+      "UPDATE adaptive_roadmaps SET feasibility = $1::jsonb WHERE id = $2",
+      [JSON.stringify({ status: "on-track", message: "Legacy plan", weeklyHoursRequired: 8, weeklyHoursAvailable: 10 }), saved.id],
+    );
+    await testDb.client.query("select set_config('request.jwt.claim.sub', '', false)", []);
+
+    const loaded = await getAdaptiveRoadmap(USER_ID);
+    expect(loaded?.feasibility).toMatchObject({
+      feasible: true,
+      totalRemainingHours: 12,
+      requiredWeeks: 2,
+      weeklyHoursAvailable: 10,
+      message: "Legacy plan",
+      recommendations: [],
+    });
+  });
+
   it("enforces one adaptive roadmap per profile — a second save overwrites phases/tasks rather than creating a second row", async () => {
     const first = await saveAdaptiveRoadmap(USER_ID, roadmapFixture([taskFixture({ skillId: "javascript" })]), null);
     const second = await saveAdaptiveRoadmap(USER_ID, roadmapFixture([taskFixture({ skillId: "typescript" })]), null);
