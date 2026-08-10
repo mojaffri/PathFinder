@@ -152,9 +152,9 @@ production demo E2E      → 10 passed, 2 device-inapplicable cases skipped
 
 The production Playwright run covered one-click demo authentication and populated dashboard, profile/onboarding, resume, job analysis, adaptive roadmap, SkillForge, application tracker, and analytics surfaces on desktop and mobile. The shared-account run is intentionally serial to avoid cross-context token rotation. The public matrix also covers protected-route behavior, responsive navigation, keyboard behavior, and serious/critical axe violations.
 
-- GitHub Actions: [run 31358199031](https://github.com/mojaffri/PathFinder/actions/runs/31358199031) passed install, lint, typecheck, unit, integration, build, and Playwright checks.
-- Vercel production deployment: [`dpl_G27dzVSb23bPqY3J7iwxEfC39nEd`](https://path-finder-9fgs4caku-mojaffris-projects.vercel.app) is Ready and aliased to the public URL.
-- Post-deploy Vercel error-log scan returned no server errors after the complete production journey.
+- GitHub Actions: [run 31369022449](https://github.com/mojaffri/PathFinder/actions/runs/31369022449) passed install, lint, typecheck, unit, integration, build, and Playwright checks for commit `0ee320a6`; the matching CodeQL run also passed.
+- Vercel production deployment: [commit deployment](https://path-finder-x4j2hwbev-mojaffris-projects.vercel.app) completed successfully and is aliased to the public URL.
+- Post-deploy desktop/mobile smoke: 8 public checks passed and 6 environment-specific cases skipped; no browser-visible server errors occurred.
 - Lighthouse on the public landing page: performance 98, accessibility 100, best practices 100, SEO 100.
 - Production dependency audit: zero high-severity production vulnerabilities.
 
