@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Button, buttonVariants, type ButtonProps } from "@/components/ui/button";
@@ -9,7 +8,6 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 /** Signs the browser in as the shared, clearly-labeled showcase account — no signup required. */
 export function TryDemoButton({ variant = "secondary", size = "md", className, ...props }: ButtonProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,8 +30,10 @@ export function TryDemoButton({ variant = "secondary", size = "md", className, .
         setLoading(false);
         return;
       }
-      router.push("/dashboard");
-      router.refresh();
+      // A hard navigation is intentional here. The header can prefetch the
+      // protected dashboard before this request sets the demo session cookie;
+      // reusing that cached RSC response would incorrectly show sign-in.
+      window.location.replace("/dashboard");
     } catch {
       setError("Couldn't reach the server.");
       setLoading(false);

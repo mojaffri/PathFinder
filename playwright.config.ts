@@ -3,6 +3,10 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: false,
+  // The deployed demo uses one intentionally shared account. Keep its
+  // authenticated journeys serial so concurrent refresh-token rotations do
+  // not invalidate another browser context mid-flow.
+  workers: process.env.E2E_DEMO === "1" ? 1 : undefined,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {

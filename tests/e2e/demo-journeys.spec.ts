@@ -5,7 +5,7 @@ test.describe("configured demo account journeys", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /try demo/i }).click();
+    await page.getByRole("button", { name: /try (the )?demo/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByText(/demo account/i).first()).toBeVisible();
   });
