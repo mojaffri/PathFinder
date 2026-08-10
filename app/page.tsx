@@ -1,6 +1,8 @@
-import { Compass, Rocket, Map, SearchCheck, Target } from "lucide-react";
+import Link from "next/link";
+import { Compass, Rocket, Map, SearchCheck, Target, GitBranch, Scale, ShieldCheck } from "lucide-react";
 import { PathCard } from "@/components/landing/path-card";
 import { TryDemoButton } from "@/components/landing/try-demo-button";
+import { buttonVariants } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 const HOW_IT_WORKS = [
@@ -24,6 +26,24 @@ const HOW_IT_WORKS = [
   },
 ];
 
+const TECHNICAL_DIFFERENTIATORS = [
+  {
+    icon: Scale,
+    title: "Scores stay explainable",
+    description: "Career and job-fit scores are deterministic. AI extracts structure from messy text, but it does not decide the ranking.",
+  },
+  {
+    icon: GitBranch,
+    title: "Claims require evidence",
+    description: "Assessments, resume entries, and GitHub signals contribute different confidence levels instead of collapsing into a skill keyword list.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Plans stay reproducible",
+    description: "Dependencies, priorities, effort, and target dates are scheduled by deterministic domain logic with a usable no-AI fallback.",
+  },
+] as const;
+
 export default function HomePage() {
   const accountAccessAvailable = isSupabaseConfigured();
 
@@ -31,7 +51,7 @@ export default function HomePage() {
     <div className="mx-auto max-w-6xl px-6">
       <section className="flex flex-col items-center py-20 text-center sm:py-28">
         <span className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted-foreground">
-          Career & Academic Roadmap Engine
+          Evidence-driven career readiness
         </span>
         <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
           Find the career that fits you.
@@ -39,12 +59,16 @@ export default function HomePage() {
           Then get unusually good at getting it.
         </h1>
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-          PathFinder helps students who don&apos;t know what career fits them discover a
-          strong match, and helps students who already know their target become genuinely
-          competitive for it, across engineering, tech, law, medicine, business, and beyond.
+          PathFinder turns a student&apos;s resume, projects, assessments, and saved jobs into
+          explainable fit scores, evidence-backed skill gaps, and a roadmap they can act on.
         </p>
-        <div className="mt-8 flex flex-col items-center gap-2">
-          <TryDemoButton size="lg" />
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
+            <TryDemoButton variant="primary" size="lg" />
+            <Link href="/login" className={buttonVariants({ variant: "secondary", size: "lg" })}>
+              Sign in
+            </Link>
+          </div>
           <p className="text-xs text-muted-foreground">
             {accountAccessAvailable
               ? "No signup — explore a fully populated profile, roadmap, and SkillForge progress."
@@ -54,6 +78,7 @@ export default function HomePage() {
       </section>
 
       <section className="grid gap-6 pb-24 sm:grid-cols-2">
+        <h2 className="sr-only">Choose where to start</h2>
         <PathCard
           href="/discover"
           icon={Compass}
@@ -62,7 +87,7 @@ export default function HomePage() {
           title="Discover Your Path"
           description="Answer a short, structured questionnaire and get transparent, data-driven career matches."
           bullets={[
-            "Weighted matching across 30+ careers, from engineering to law to business",
+            "Weighted matching across 46 careers, from engineering to law to business",
             "Honest reality checks, not hype",
             "See salary, degree track, and competitiveness",
           ]}
@@ -82,6 +107,27 @@ export default function HomePage() {
           ]}
           cta="Build my roadmap"
         />
+      </section>
+
+      <section className="border-t border-border py-20" aria-labelledby="decision-system-heading">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Not an LLM ranking engine</p>
+          <h2 id="decision-system-heading" className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+            Structured AI at the edges. Deterministic decisions at the core.
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            The system separates uncertain extraction and feedback from the scoring, evidence, dependency, and scheduling logic a user should be able to inspect.
+          </p>
+        </div>
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {TECHNICAL_DIFFERENTIATORS.map(({ icon: Icon, title, description }) => (
+            <article key={title} className="rounded-xl border border-border bg-background p-6">
+              <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+              <h3 className="mt-4 font-semibold text-foreground">{title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="border-t border-border py-20">

@@ -3,6 +3,7 @@ import { createTestDb, insertAuthUser, closeTestDb, type TestDb } from "./db";
 import {
   deleteResume,
   getResumeById,
+  listResumeStoragePaths,
   listResumes,
   saveResume,
   setActiveResume,
@@ -95,5 +96,12 @@ describe("resume-repository", () => {
     const deleted = await deleteResume(USER_ID, resume.id);
     expect(deleted?.storagePath).toBe(`${resume.profileId}/${resume.id}.pdf`);
     expect(await getResumeById(USER_ID, resume.id)).toBeNull();
+  });
+
+  it("lists only persisted original-file paths for account cleanup", async () => {
+    await upload({ fileName: "stored.pdf", storagePath: "profile/stored.pdf" });
+    await upload({ fileName: "text-only.pdf", storagePath: null });
+    expect(await listResumeStoragePaths(USER_ID)).toContain("profile/stored.pdf");
+    expect(await listResumeStoragePaths(USER_ID)).not.toContain(null);
   });
 });

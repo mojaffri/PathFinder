@@ -228,7 +228,7 @@ async function main() {
     }
   }
   if ((await listApplications(userId)).length === 0 && savedJobs[0]) {
-    await createApplication(userId, { jobDescriptionId: savedJobs[0].id, company: savedJobs[0].company ?? "Northstar Labs", title: savedJobs[0].title ?? "Software Engineering Intern", jobDescription: savedJobs[0].rawText, sourceUrl: "https://example.com/demo-job", fitScore: null, applicationDate: null, currentStage: "preparing", interviewDates: [], notes: "Demo data: tailor the project section and request a referral.", gapsAtApplication: [] });
+    await createApplication(userId, { jobDescriptionId: savedJobs[0].id, company: savedJobs[0].company ?? "Northstar Labs", title: savedJobs[0].title ?? "Software Engineering Intern", jobDescription: savedJobs[0].rawText, sourceUrl: null, fitScore: null, applicationDate: null, currentStage: "preparing", interviewDates: [], notes: "Demo data: tailor the project section and request a referral.", gapsAtApplication: [] });
   }
 
   console.log("Computing the demo adaptive roadmap from real profile and saved-job signals...");

@@ -1,5 +1,6 @@
 import "server-only";
 import { getSupabaseAdminClient } from "./admin";
+import { logServerEvent } from "@/lib/observability/logger";
 
 /**
  * Resume file storage — Supabase Storage, private bucket. Every call here
@@ -55,12 +56,12 @@ export async function uploadResumeFile(
       upsert: true,
     });
     if (error) {
-      console.error("uploadResumeFile failed:", error);
+      logServerEvent("error", "resume_storage_upload_failed", { profileId, resumeId, fileType }, error);
       return null;
     }
     return path;
   } catch (error) {
-    console.error("uploadResumeFile failed:", error);
+    logServerEvent("error", "resume_storage_upload_failed", { profileId, resumeId, fileType }, error);
     return null;
   }
 }
@@ -78,5 +79,19 @@ export async function getResumeDownloadUrl(storagePath: string): Promise<string 
 export async function deleteResumeFile(storagePath: string): Promise<void> {
   const client = getSupabaseAdminClient();
   if (!client) return;
-  await client.storage.from(RESUME_BUCKET).remove([storagePath]);
+  const { error } = await client.storage.from(RESUME_BUCKET).remove([storagePath]);
+  if (error) logServerEvent("error", "resume_storage_delete_failed", {}, error);
+}
+
+/** Removes private files before account deletion so Storage objects cannot outlive their owner. */
+export async function deleteResumeFiles(storagePaths: string[]): Promise<boolean> {
+  if (storagePaths.length === 0) return true;
+  const client = getSupabaseAdminClient();
+  if (!client) return false;
+  const { error } = await client.storage.from(RESUME_BUCKET).remove(storagePaths);
+  if (error) {
+    logServerEvent("error", "resume_storage_bulk_delete_failed", { fileCount: storagePaths.length }, error);
+    return false;
+  }
+  return true;
 }

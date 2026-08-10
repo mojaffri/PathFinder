@@ -15,7 +15,7 @@ Career matching, gap analysis, roadmap pacing, deterministic assessment items, a
 
 Every call has a feature name, bounded output size, AbortSignal timeout, structured tool schema, Zod response schema, and parse retry. Failures are represented by `AIServiceError` codes. Observability records provider, model, latency, success, retries, parse failures, and token usage when supplied. Prompts, resumes, student answers, and generated content are never logged.
 
-API keys are read only inside the server-side Anthropic adapter. AI-heavy routes have in-process rate limits and request-size guards. These controls are suitable for the current single-instance portfolio deployment, not a distributed production system; production should use authenticated users, durable quotas, and a shared rate-limit store.
+API keys are read only inside the server-side Anthropic adapter. AI-heavy routes require a verified user, enforce request-size guards, and consume atomic per-profile limits stored in Postgres before calling the provider. This protects authenticated usage across serverless instances; pre-auth/IP abuse still belongs at the platform firewall layer.
 
 ## Adding or replacing a provider
 

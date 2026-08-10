@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerUser } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { logServerEvent } from "@/lib/observability/logger";
+import { deleteResumeFiles } from "@/lib/supabase/storage";
+import { listResumeStoragePaths } from "@/repositories/resume-repository";
 
 /**
- * Permanently deletes the signed-in user's Supabase Auth account. This
- * cascades through `profiles` (FK `ON DELETE CASCADE` on `user_id`) and from
- * there through every child table — one delete removes everything the
- * student ever entered. Requires `SUPABASE_SERVICE_ROLE_KEY`; without it,
- * account deletion isn't possible (a user can still stop using the app, but
- * can't self-serve delete their data — flagged clearly in docs/security.md).
+ * Permanently deletes the signed-in user's private resume objects and then
+ * their Supabase Auth account. The auth deletion cascades through `profiles`
+ * and every relational child. File cleanup runs first because Storage does
+ * not participate in Postgres foreign-key cascades.
  */
 export async function DELETE() {
   const user = await getServerUser();
@@ -20,6 +20,14 @@ export async function DELETE() {
     return NextResponse.json(
       { error: "Account deletion requires SUPABASE_SERVICE_ROLE_KEY to be configured on the server." },
       { status: 503 },
+    );
+  }
+
+  const storagePaths = await listResumeStoragePaths(user.id);
+  if (!(await deleteResumeFiles(storagePaths))) {
+    return NextResponse.json(
+      { error: "Could not remove your stored resume files. Your account was not deleted; please try again." },
+      { status: 500 },
     );
   }
 

@@ -18,6 +18,8 @@ import type { GithubRepoRecord } from "@/types";
 export function ProjectsDashboard() {
   const { profile, isAuthenticated, isLoading: profileLoading, updateProfile } = useProfile();
   const [repos, setRepos] = useState<GithubRepoRecord[] | null>(null);
+  const [activeRepoId, setActiveRepoId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   function refreshRepos() {
     listAnalyzedRepos().then(setRepos);
@@ -36,9 +38,19 @@ export function ProjectsDashboard() {
       summary: repo.description ?? repo.summary,
       githubUrl: repo.htmlUrl,
     };
-    await updateProfile({ projects: [...profile.projects, project] });
-    await linkRepoToProject(repo.id, project.id);
-    refreshRepos();
+    setActiveRepoId(repo.id);
+    setActionError(null);
+    try {
+      const updatedProfile = await updateProfile({ projects: [...profile.projects, project] });
+      const persistedProject = updatedProfile?.projects.find((candidate) => candidate.githubUrl === repo.htmlUrl);
+      if (!persistedProject) throw new Error("The project was saved, but its GitHub analysis could not be linked.");
+      await linkRepoToProject(repo.id, persistedProject.id);
+      refreshRepos();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Couldn't add this repository as a project.");
+    } finally {
+      setActiveRepoId(null);
+    }
   }
 
   if (profileLoading) {
@@ -115,6 +127,7 @@ export function ProjectsDashboard() {
       {unlinkedRepos.length > 0 && (
         <div className="mb-10">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Analyzed repositories</h2>
+          {actionError && <p className="mb-3 text-sm text-danger" role="alert">{actionError}</p>}
           <div className="flex flex-col gap-3">
             {unlinkedRepos.map((repo) => (
               <Card key={repo.id}>
@@ -127,9 +140,9 @@ export function ProjectsDashboard() {
                       {repo.description && <p className="mt-0.5 text-sm text-muted-foreground">{repo.description}</p>}
                     </div>
                     <div className="flex shrink-0 gap-2">
-                      <Button size="sm" variant="secondary" onClick={() => addRepoAsProject(repo)}>
+                      <Button size="sm" variant="secondary" onClick={() => addRepoAsProject(repo)} disabled={activeRepoId !== null}>
                         <Plus className="mr-1.5 h-3.5 w-3.5" />
-                        Add as project
+                        {activeRepoId === repo.id ? "Adding..." : "Add as project"}
                       </Button>
                       <Button
                         size="sm"

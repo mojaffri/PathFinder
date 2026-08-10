@@ -11,7 +11,7 @@ export interface ProfileContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   createProfile: (name: string) => Promise<StudentProfile>;
-  updateProfile: (updates: Partial<Omit<StudentProfile, "id" | "createdAt">>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<StudentProfile, "id" | "createdAt">>) => Promise<StudentProfile | null>;
   completeOnboarding: () => Promise<void>;
   signOut: () => Promise<void>;
   /** Deletes the profile row and everything under it, but keeps the account signed in (they can go through onboarding again). */
@@ -74,6 +74,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = useCallback(async (updates: Partial<Omit<StudentProfile, "id" | "createdAt">>) => {
     const updated = await profileService.updateProfile(updates);
     if (updated) setProfile(updated);
+    return updated;
   }, []);
 
   const completeOnboarding = useCallback(async () => {

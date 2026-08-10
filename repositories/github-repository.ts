@@ -1,7 +1,7 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { ensureProfileId } from "@/repositories/profile-repository";
 import { withUserContext } from "@/lib/db/with-user-context";
-import { githubConnections, githubRepos } from "@/lib/db/schema";
+import { githubConnections, githubRepos, projects } from "@/lib/db/schema";
 import { decryptToken, encryptToken } from "@/lib/github/token-crypto";
 import type { DetectedSignal, GithubConnectionStatus, GithubRepoRecord, RepoAnalysis, RepoLanguageBreakdown } from "@/types";
 
@@ -163,6 +163,15 @@ export async function deleteRepo(userId: string, id: string): Promise<void> {
 
 export async function linkRepoToProject(userId: string, repoId: string, projectId: string | null): Promise<GithubRepoRecord | null> {
   return withUserContext(userId, async (tx) => {
+    if (projectId) {
+      const profileId = await ensureProfileId(tx, userId);
+      const [ownedProject] = await tx
+        .select({ id: projects.id })
+        .from(projects)
+        .where(and(eq(projects.id, projectId), eq(projects.profileId, profileId)))
+        .limit(1);
+      if (!ownedProject) return null;
+    }
     const [row] = await tx.update(githubRepos).set({ linkedProjectId: projectId }).where(eq(githubRepos.id, repoId)).returning();
     return row ? toRecord(row) : null;
   });

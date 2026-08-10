@@ -1,4 +1,5 @@
 import { ResumeExtractionSchema, type ResumeExtraction } from "./schema";
+import { logServerEvent } from "@/lib/observability/logger";
 
 const SAFE_FALLBACK: ResumeExtraction = {
   educationStage: null,
@@ -28,6 +29,6 @@ const SAFE_FALLBACK: ResumeExtraction = {
 export function validateExtraction(extraction: ResumeExtraction): ResumeExtraction {
   const parsed = ResumeExtractionSchema.safeParse(extraction);
   if (parsed.success) return parsed.data;
-  console.error("Resume extraction failed schema validation:", parsed.error.message);
+  logServerEvent("error", "resume_extraction_schema_invalid", { issueCount: parsed.error.issues.length });
   return SAFE_FALLBACK;
 }

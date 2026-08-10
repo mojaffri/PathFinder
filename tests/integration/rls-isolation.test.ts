@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestDb, insertAuthUser, closeTestDb, type TestDb } from "./db";
-import { createProfile, getProfileByUserId, type ProfileWriteInput } from "@/repositories/profile-repository";
+import { createProfile, getProfileByUserId, updateProfile, type ProfileWriteInput } from "@/repositories/profile-repository";
 import { deleteRoadmap, getRoadmap, saveRoadmap } from "@/repositories/roadmap-repository";
 import { getSkillProgress } from "@/repositories/skillforge-repository";
 import { deleteResume, getResumeById, saveResume, setActiveResume } from "@/repositories/resume-repository";
 import { deleteJobDescription, getJobDescription, createJobDescription } from "@/repositories/job-repository";
-import { deleteRepo, getRepo, saveRepoAnalysis } from "@/repositories/github-repository";
+import { deleteRepo, getRepo, linkRepoToProject, saveRepoAnalysis } from "@/repositories/github-repository";
 import { addManualEvidence, listManualEvidence } from "@/repositories/evidence-repository";
 import { getAdaptiveRoadmap, saveAdaptiveRoadmap, updateTaskStatus } from "@/repositories/adaptive-roadmap-repository";
 import { skillModules, skillProgress } from "@/lib/db/schema";
@@ -300,6 +300,27 @@ describe("RLS user isolation", () => {
     const stillThere = await getRepo(USER_A, saved.id);
     expect(stillThere?.id).toBe(saved.id);
     expect(stillThere?.skillEvidence[0]?.skill).toBe("Python");
+  });
+
+  it("links GitHub evidence only to a project owned by the same user", async () => {
+    const ownProfile = profileInput("User A");
+    ownProfile.projects = [{
+      id: crypto.randomUUID(),
+      title: "Titrate",
+      technologies: ["Python"],
+      date: null,
+      summary: null,
+      bullets: [],
+      githubUrl: "https://github.com/student/titrate",
+    }];
+    const updated = await updateProfile(USER_A, ownProfile);
+    const projectId = updated.projects[0]?.id;
+    if (!projectId) throw new Error("expected a persisted project");
+
+    const repo = await saveRepoAnalysis(USER_A, minimalRepoAnalysis(), null);
+    expect((await linkRepoToProject(USER_A, repo.id, projectId))?.linkedProjectId).toBe(projectId);
+    expect(await linkRepoToProject(USER_B, repo.id, projectId)).toBeNull();
+    expect(await linkRepoToProject(USER_A, repo.id, crypto.randomUUID())).toBeNull();
   });
 
   it("prevents one user's manually-added skill evidence from appearing in another user's list", async () => {

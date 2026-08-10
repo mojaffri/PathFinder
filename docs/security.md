@@ -14,7 +14,7 @@
 2. `lib/supabase/server.ts#getServerUser()` is the one function every API route calls to authorize a request — it re-validates the token against Supabase Auth (`auth.getUser()`, not `auth.getSession()`, which only decodes a JWT locally without verifying it hasn't been revoked).
 3. OAuth/magic-link callbacks land on `app/auth/callback/route.ts`, which exchanges the code for a session server-side.
 
-**Account deletion** (`app/api/account/route.ts`): uses the Supabase service-role admin client (`lib/supabase/admin.ts`) to call `auth.admin.deleteUser()`, which cascades through `profiles` (`ON DELETE CASCADE` on `user_id`) and from there through every child table via FK — one delete removes everything a student ever entered. Requires `SUPABASE_SERVICE_ROLE_KEY`; without it, account deletion returns a clear 503 rather than silently failing. Note this is distinct from `deleteProfile()` (clears profile data, keeps the account signed in — useful for "start over" without losing the login).
+**Account deletion** (`app/api/account/route.ts`): first removes the signed-in user's private resume objects, then uses the Supabase service-role admin client to call `auth.admin.deleteUser()`. The auth deletion cascades through `profiles` and every relational child. If file cleanup fails, the account is kept and the route returns a visible error rather than orphaning a document. Requires `SUPABASE_SERVICE_ROLE_KEY`; without it, account deletion returns a clear 503. This is distinct from `deleteProfile()` (clears profile data but keeps the login).
 
 ## Authorization: application layer + Row Level Security
 
@@ -84,3 +84,10 @@ The "Try Demo" button (`components/landing/try-demo-button.tsx`) signs the brows
 See `project-state.md` → Known Issues for the full, current list. The security-relevant ones as of this phase:
 - Profile-based throttling is not a replacement for Vercel Firewall/IP controls against pre-auth traffic.
 - `activity_events` records meaningful product changes for analytics/auditability, not every read as a full access log.
+
+## Privacy limitations
+
+- When AI is enabled and invoked, the minimum required resume text, job text, or assessment response is sent to the configured Anthropic API. PathFinder does not include those bodies in its logs.
+- GitHub analysis reads public repository metadata, file paths, language totals, and selected manifests. It does not clone or execute code and never requests private-repository scope.
+- Vercel Analytics records aggregate usage. PathFinder's `activity_events` records meaningful account changes, not document contents or a full access history.
+- The recruiter demo is a shared account. Visitors should not enter personal information because other demo visitors may see shared changes until the next seed reset.

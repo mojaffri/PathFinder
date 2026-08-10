@@ -51,6 +51,18 @@ export async function listResumes(userId: string): Promise<ResumeVersion[]> {
   });
 }
 
+/** Account-deletion helper: returns only owned private-storage paths, never resume text. */
+export async function listResumeStoragePaths(userId: string): Promise<string[]> {
+  return withUserContext(userId, async (tx) => {
+    const profileId = await ensureProfileId(tx, userId);
+    const rows = await tx
+      .select({ storagePath: resumes.storagePath })
+      .from(resumes)
+      .where(eq(resumes.profileId, profileId));
+    return rows.flatMap((row) => (row.storagePath ? [row.storagePath] : []));
+  });
+}
+
 /**
  * Filters ONLY by `id`, mirroring `roadmap-repository.ts#getRoadmap` — RLS
  * (`resumes_owner` in drizzle/migrations/0001_rls_policies.sql) is what

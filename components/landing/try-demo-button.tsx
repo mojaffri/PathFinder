@@ -46,7 +46,7 @@ export function TryDemoButton({ variant = "secondary", size = "md", className, .
         <Sparkles className="h-4 w-4" />
         {loading ? "Loading demo..." : "Try the demo"}
       </Button>
-      {error && <p className="text-xs text-danger">{error}</p>}
+      {error && <p className="text-xs text-danger" role="alert">{error}</p>}
     </div>
   );
 }

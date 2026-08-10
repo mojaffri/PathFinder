@@ -1,166 +1,94 @@
-# PathFinder — Architecture
+# Architecture
 
-This file holds the diagrams and schema design referenced from [`CLAUDE.md`](../CLAUDE.md) and [`project-state.md`](./project-state.md). It is a durable reference (updated when the architecture actually changes), not a changelog — for "what's true right now, what's broken, what's next," see `project-state.md`. For the full schema and migration workflow, see [`database.md`](./database.md); for the auth/RLS model, see [`security.md`](./security.md).
+PathFinder is a Next.js 16 application organized around a strict boundary: unstructured interpretation may use AI, while ranking, evidence, readiness, dependencies, and scheduling remain deterministic.
 
----
-
-## 1. Current architecture (Phase 1 complete)
-
-Real persistence and auth exist now — this diagram supersedes the pre-Phase-1 "everything in localStorage" version.
+## System diagram
 
 ```mermaid
 flowchart TB
-    subgraph Browser["Browser (client components)"]
-        Pages["Pages: / /discover /accelerate /onboarding\n/dashboard /profile /saved /skillforge /login /signup"]
-        Ctx["ProfileContext + useProfile()\n(now backed by a real Supabase session)"]
-        Pages --> Ctx
-    end
+  subgraph Browser["Browser"]
+    UI["App Router pages\nserver + focused client components"]
+    Services["Browser-safe service wrappers"]
+    UI --> Services
+  end
 
-    subgraph Services["services/* (fetch wrappers, browser-safe)"]
-        ProfileSvc["profile-service.ts"]
-        RoadmapSvc["roadmap-service.ts"]
-        SkillSvc["skillforge-service.ts"]
-    end
+  subgraph Next["Next.js server"]
+    Proxy["proxy.ts\nsession refresh + protected-route redirects"]
+    Routes["app/api route handlers\nauth + Zod/input limits + error mapping"]
+    Domain["Deterministic domain engines\nmatching · fit · evidence · mastery · roadmap"]
+    Repositories["repositories/*\nexclusive database boundary"]
+    Context["withUserContext()\nverified subject + transaction"]
+    AI["AIProvider boundary\ntimeout · structured output · Zod · fallback"]
+    GitHub["GitHub client\npublic metadata/tree/manifests"]
+    Storage["Resume storage adapter\nprivate bucket + signed URLs"]
+  end
 
-    Ctx --> ProfileSvc
-    Pages --> RoadmapSvc
-    Pages --> SkillSvc
+  Services --> Routes
+  Proxy --> UI
+  Routes --> Domain
+  Routes --> Repositories
+  Repositories --> Context
+  Routes --> AI
+  Routes --> GitHub
+  Routes --> Storage
 
-    subgraph Proxy["proxy.ts (Next 16's renamed middleware)"]
-        Session["Refreshes the session cookie on every request;\nserver-redirects protected routes to /login"]
-    end
-    Pages -.-> Proxy
+  Context --> PG[("Supabase Postgres\nDrizzle schema + forced RLS")]
+  Proxy --> Auth["Supabase Auth"]
+  Routes --> Auth
+  AI --> Claude["Anthropic API"]
+  GitHub --> GH["GitHub REST API"]
+  Storage --> SupaStorage["Private Supabase Storage"]
 
-    subgraph API["app/api/* route handlers"]
-        ProfileAPI["/api/profile, /complete-onboarding"]
-        RoadmapAPI2["/api/roadmaps, /api/roadmap"]
-        SkillAPI["/api/skillforge/progress/*, /evaluate"]
-        AccountAPI["/api/account, /api/demo/login"]
-        ResumeAPI["/api/resume"]
-    end
-
-    ProfileSvc -- fetch --> ProfileAPI
-    RoadmapSvc -- fetch --> RoadmapAPI2
-    SkillSvc -- fetch --> SkillAPI
-
-    subgraph AuthLayer["lib/supabase/*"]
-        ServerClient["server.ts — getServerUser()\n(the one function every route authorizes with)"]
-        Admin["admin.ts — service-role client\n(account deletion, seeding)"]
-    end
-    API --> ServerClient
-
-    subgraph RepoLayer["repositories/* (own Drizzle; enforce user scoping)"]
-        ProfileRepo["profile-repository.ts"]
-        RoadmapRepo["roadmap-repository.ts"]
-        SkillRepo["skillforge-repository.ts"]
-    end
-    API --> RepoLayer
-
-    subgraph DbLayer["lib/db/*"]
-        WithUser["with-user-context.ts\nsets request.jwt.claim.sub, opens tx"]
-        Client["client.ts — lazy Drizzle+postgres.js client"]
-    end
-    RepoLayer --> WithUser --> Client
-
-    subgraph Domain["Deterministic domain engines — UNCHANGED since Phase 0"]
-        Matching["lib/matching/engine.ts"]
-        GapEngine["lib/gap-analysis/engine.ts"]
-        Pacing["lib/roadmap/pacing.ts"]
-        Fallback["lib/roadmap/fallback.ts"]
-        Mastery["lib/skillforge/mastery.ts\nreadiness.ts / diagnosis.ts / next-action.ts"]
-    end
-    RoadmapAPI2 --> GapEngine
-    RepoLayer -. "recomputeMastery, freshProgress" .-> Mastery
-    Pages -. "client-side, no API call" .-> Matching
-
-    subgraph AIPaths["Optional AI paths (never required)"]
-        AIClient["lib/ai/anthropic-client.ts (server-only)"]
-    end
-    ResumeAPI --> AIClient
-    RoadmapAPI2 --> AIClient
-    SkillAPI --> AIClient
-    AIClient -->|"ANTHROPIC_API_KEY"| Claude["Anthropic API"]
-
-    subgraph Infra["Supabase project"]
-        PG[("Postgres")]
-        SupaAuth["Supabase Auth\n(auth.users, session verification)"]
-    end
-    Client -->|"DATABASE_URL, direct connection"| PG
-    ServerClient --> SupaAuth
-    Admin --> SupaAuth
-    SupaAuth -. "auth.users, FK target" .-> PG
+  Domain --> Scoring["Career/job scoring + evidence confidence"]
+  Scoring --> SkillGraph["Skill prerequisites + mastery"]
+  SkillGraph --> Roadmap["Priority + feasibility + scheduling"]
 ```
 
-**Key characteristics:**
-- **Real auth, real persistence.** Supabase Auth (email/password, magic link, Google/GitHub OAuth) + Postgres via Drizzle, replacing the old single-browser `localStorage` + mock-session design entirely.
-- **Two-layer authorization**, not one: application-layer scoping (repositories take a server-verified `userId`) plus `FORCE ROW LEVEL SECURITY` as a backstop — see `security.md` for exactly why both are needed given the app connects directly to Postgres rather than through Supabase's PostgREST layer.
-- **The domain engines did not change.** Career matching, gap analysis, mastery scoring, and pacing math are the same pure functions as before this phase — only the persistence and auth boundary around them changed. This was a deliberate constraint, not an accident: `CLAUDE.md` explicitly protects these from casual rewrites.
-- **Graceful degradation extends to the database now.** `getDb()` never throws at import time; a missing `DATABASE_URL` produces a clear 503 from API routes (`DatabaseNotConfiguredError`) rather than crashing the build or the server — the same convention `getAnthropicClient()` established for the optional AI key.
-- **`proxy.ts`, not `middleware.ts`.** Next.js 16 renamed the file convention (see `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`) — this repo already uses the new name; don't reintroduce a `middleware.ts`.
+## Request and trust boundaries
 
----
+1. `proxy.ts` refreshes Supabase cookies and redirects protected page requests before rendering.
+2. Every protected route verifies the session through `getServerUser()`; client-supplied user IDs are never authorization inputs.
+3. Routes validate user or external data, call deterministic domain services, and delegate persistence to repositories.
+4. Repositories run inside `withUserContext()`, which places the verified Supabase subject in a transaction-local Postgres claim.
+5. Forced Row Level Security blocks cross-user access even if a repository query omits an ownership predicate.
+6. External providers receive the minimum necessary data. Sensitive document bodies and tokens are excluded from logs.
 
-## 2. Phase 2 architecture (implemented — job analysis, resume upgrade, evidence-backed skills, GitHub integration)
+## Domain boundaries
 
-Everything in this diagram is real now, built across two sessions (see `docs/project-state.md`'s "Last Updated" history for the session-by-session breakdown). Resume Storage is wired (session 2); job analysis is wired (session 2); evidence/confidence and GitHub integration are wired (session 3).
+| Boundary | Responsibility | Representative code |
+|---|---|---|
+| Career matching | Weighted, explainable matching over curated careers | `lib/matching/` |
+| Gap analysis | Stage-aware, hour-costed readiness gaps | `lib/gap-analysis/` |
+| Job analysis | Validated extraction followed by deterministic requirement scoring | `lib/jobs/` |
+| Evidence | Normalize claimed, assessed, demonstrated, and professional evidence | `lib/evidence/` |
+| GitHub | Reproducible file-tree/manifest detectors and skill mapping | `lib/github/` |
+| SkillForge | Mastery dimensions, recency/confidence, prerequisite diagnosis | `lib/skillforge/` |
+| Adaptive roadmap | Task generation, priority, dependencies, feasibility, scheduling | `lib/roadmap/` |
+| Analytics | Aggregate only persisted snapshots and structured events | `repositories/analytics-repository.ts` |
 
-```mermaid
-flowchart TB
-    UI["UI — React Server/Client Components"]
+## Data architecture
 
-    subgraph ServiceLayer["services/*"]
-        ProfileSvc2["profile-service.ts"]
-        RoadmapSvc2["roadmap-service.ts"]
-        SkillSvc2["skillforge-service.ts"]
-        JobSvc["job-service.ts"]
-        GithubSvc["github-service.ts"]
-        EvidenceSvc["evidence-service.ts"]
-    end
+Supabase owns identity (`auth.users`) and sessions. Drizzle owns 34 application tables and all migrations. Postgres is accessed directly rather than through PostgREST, so `withUserContext()` and `FORCE ROW LEVEL SECURITY` are both essential.
 
-    subgraph DomainLayer["Domain logic — deterministic, same discipline throughout"]
-        Matching2["career matching + career-fit"]
-        GapEngine2["gap analysis"]
-        Mastery2["mastery / readiness / diagnosis"]
-        Pacing2["pacing"]
-        JobFit["job-fit scoring (deterministic; AI only parses the JD text first)"]
-        Confidence["skill confidence (lib/evidence/confidence.ts — deterministic,\nquality-weighted across claimed/assessed/demonstrated/professional)"]
-        Detectors["GitHub signal detectors (lib/github/detectors.ts — deterministic;\nAI only writes the one-sentence summary, never a signal)"]
-    end
+See [database.md](database.md#er-diagram) for the ER diagram, table groups, migrations, and index strategy.
 
-    subgraph RepoLayer2["repositories/* (Drizzle)"]
-        Repos["profile / roadmap / skillforge / job / github / evidence repositories"]
-    end
+## AI architecture
 
-    subgraph Infra2["Infrastructure"]
-        PG2[("Postgres — Supabase")]
-        Auth2["Supabase Auth (also used for GitHub OAuth-connect via linkIdentity —\nno separate GitHub OAuth app)"]
-        Storage2["Supabase Storage (resume PDFs/DOCX — wired)"]
-        Claude2["Anthropic API"]
-        GH["GitHub REST API (public data only, read:user scope)"]
-    end
+`lib/ai/` exposes a provider-neutral interface. The Anthropic adapter is server-only. Structured calls use bounded output, timeouts, a schema/tool contract, Zod validation, and one malformed-output retry.
 
-    UI --> ServiceLayer
-    ServiceLayer --> DomainLayer
-    ServiceLayer --> Repos
-    GithubSvc --> GH
-    JobFit --> Confidence
-    Confidence --> Detectors
-    Repos --> PG2
-    Auth2 --> PG2
-    Auth2 --> GH
-    ProfileSvc2 --> Storage2
-```
+AI is used for resume and job extraction, selected narrative generation, GitHub summary text, and subjective assessment grading. It is not used for career ranking, fit weights, evidence confidence, mastery calculation, roadmap priority, or scheduling. See [ai-system.md](ai-system.md) and [scoring.md](scoring.md).
 
-**What Phase 2 added, following the pattern Phase 1 established:** `job_descriptions`/`job_requirements`/`job_matches` (job analysis, session 2); `github_connections`/`github_repos`/`skill_evidence_records` (evidence + GitHub, session 3) — all schema + RLS + repository/service/API-route layers, fully implemented. AI is used only to parse unstructured text (a job posting, a repo's description) or write a narrative sentence over already-computed facts — every score (job fit, career fit, skill confidence) is a deterministic function, never an LLM call in the scoring path itself. Full detail: `docs/evidence-model.md`, `docs/github-integration.md`.
+## Reliability and observability
 
----
+- Expected failures become typed API responses and actionable UI states.
+- Database, route, storage, GitHub, and AI failures produce structured server logs without document bodies or tokens.
+- Vercel Analytics measures aggregate page usage.
+- Activity events support product analytics and auditability; they are not a full access log.
+- CI verifies lint, types, unit logic, repository/RLS behavior, production compilation, and desktop/mobile smoke journeys.
 
-## 3. ER diagram and schema
+## Intentional constraints
 
-Moved to [`database.md`](./database.md) — that file is now the single source of truth for the schema (30 tables as of session 3), design rationale, and the ER diagram, since it needs to stay tightly coupled to `lib/db/schema/*.ts` and the migration files. Keeping it in one place avoids this file and `database.md` silently drifting apart, which is exactly the kind of staleness this project's audits have caught before (see `project-state.md`'s history).
-
----
-
-## 4. Database & auth decision (implemented)
-
-**Supabase (Postgres + Auth) + Drizzle ORM** — see [`database.md`](./database.md#why-supabase--drizzle) for the comparison against Neon+Prisma and the reasoning, and [`security.md`](./security.md) for how auth/RLS is actually wired. This was a recommendation in the previous version of this document; it is now implemented, not proposed.
+- The demo is a shared, seeded account—not a per-visitor sandbox.
+- GitHub detectors inspect public repository structure and manifests; they do not execute or deeply parse source code.
+- The platform is decision support, not a guarantee of hiring outcomes or a substitute for official licensing/program requirements.
+- AI fallback quality is intentionally more conservative than provider-backed narrative quality.

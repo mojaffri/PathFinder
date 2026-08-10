@@ -6,9 +6,28 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-  title: "PathFinder — Career & Academic Roadmap Engine",
+  metadataBase: new URL("https://path-finder-umber.vercel.app"),
+  title: {
+    default: "PathFinder — Evidence-Driven Career Readiness",
+    template: "%s | PathFinder",
+  },
   description:
-    "Discover the career that fits you, or build a detailed roadmap to become unusually competitive for the one you already want.",
+    "Turn resumes, job requirements, projects, and assessments into explainable fit scores, skill evidence, and an adaptive career roadmap.",
+  openGraph: {
+    title: "PathFinder — Evidence-Driven Career Readiness",
+    description: "Explainable job fit, evidence-backed skills, and deterministic career roadmaps in one full-stack platform.",
+    type: "website",
+    url: "/",
+    siteName: "PathFinder",
+    images: [{ url: "/pathfinder-logo.png", width: 1254, height: 1254, alt: "PathFinder logo" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "PathFinder — Evidence-Driven Career Readiness",
+    description: "Explainable job fit, evidence-backed skills, and deterministic career roadmaps.",
+    images: ["/pathfinder-logo.png"],
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

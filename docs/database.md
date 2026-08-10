@@ -48,7 +48,7 @@ npm run db:migrate    # applies every unapplied migration in filename order
 
 ## Schema overview
 
-36 tables. Full definitions live in `lib/db/schema/*.ts`; migrations now run through `0010`, adding the Phase-4 application expansion, indexes, and persistent API throttling.
+34 application tables. Full definitions live in `lib/db/schema/*.ts`; migrations now run through `0010`, adding the Phase-4 application expansion, indexes, and persistent API throttling. Supabase's managed `auth.users` and the migration runner's `_migrations` bookkeeping table are not included in that count.
 
 | Group | Tables |
 |---|---|
