@@ -128,19 +128,26 @@ npm ci
 
 CI never calls a paid AI provider and does not need production Supabase credentials. Integration tests apply the real migrations to PGlite. Configured demo journeys are opt-in through `E2E_DEMO=1` and `PLAYWRIGHT_BASE_URL`.
 
-## Release-candidate verification — 2026-08-09
+## Production verification — 2026-08-09
 
 ```text
 npm run lint             → clean
 npm run typecheck        → clean
 npm run test:unit        → 166 passed (21 files)
-npm run test:integration → 38 passed (6 files)
-npm test                 → 221 passed (32 files)
+npm run test:integration → 39 passed (6 files)
+npm test                 → 222 passed (32 files)
 npm run build            → clean; Next.js 16.3.0; 42 prerendered page slots
 npm run test:e2e         → 6 passed, 6 environment-specific cases skipped
+production demo E2E      → 10 passed, 2 device-inapplicable cases skipped
 ```
 
-The local Playwright matrix covers desktop/mobile public rendering, protected-route behavior, responsive navigation, keyboard behavior, and serious/critical axe violations. The production demo journey must be rerun after this release deploys.
+The production Playwright run covered one-click demo authentication and populated dashboard, profile/onboarding, resume, job analysis, adaptive roadmap, SkillForge, application tracker, and analytics surfaces on desktop and mobile. The shared-account run is intentionally serial to avoid cross-context token rotation. The public matrix also covers protected-route behavior, responsive navigation, keyboard behavior, and serious/critical axe violations.
+
+- GitHub Actions: [run 31356238614](https://github.com/mojaffri/PathFinder/actions/runs/31356238614) passed install, lint, typecheck, unit, integration, build, and Playwright checks.
+- Vercel production deployment: [`dpl_G27dzVSb23bPqY3J7iwxEfC39nEd`](https://path-finder-9fgs4caku-mojaffris-projects.vercel.app) is Ready and aliased to the public URL.
+- Post-deploy Vercel error-log scan returned no server errors after the complete production journey.
+- Lighthouse on the public landing page: performance 98, accessibility 100, best practices 100, SEO 100.
+- Production dependency audit: zero high-severity production vulnerabilities.
 
 ## Production configuration
 
