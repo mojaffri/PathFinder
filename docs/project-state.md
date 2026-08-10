@@ -325,6 +325,8 @@ npm run build            → clean (Next.js 16.3.0, 42 routes/pages)
 npm run test:e2e         → 6 passed; 6 authenticated/demo matrix cases skipped locally because production credentials are not stored in the repository
 Google Cloud audience    → In production; external access available to any Google Account
 Supabase Google provider → Enabled with the hosted /auth/v1/callback URL
+live Google OAuth smoke  → login button → Google account chooser/consent → Supabase callback → authenticated /dashboard passed
+production deployment    → Ready for commit a3011c83; live login page advertises Google and GitHub
 ```
 
 Run 2026-08-09 (session 8), production Supabase activation:
