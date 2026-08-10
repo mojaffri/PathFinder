@@ -129,7 +129,7 @@ npm ci
 
 CI never calls a paid AI provider and does not need production Supabase credentials. Integration tests apply the real migrations to PGlite. Configured demo journeys are opt-in through `E2E_DEMO=1` and `PLAYWRIGHT_BASE_URL`.
 
-## Production verification — 2026-08-09
+## Production verification — 2026-08-10
 
 ```text
 npm run lint             → clean
@@ -144,11 +144,19 @@ production demo E2E      → 10 passed, 2 device-inapplicable cases skipped
 
 The production Playwright run covered one-click demo authentication and populated dashboard, profile/onboarding, resume, job analysis, adaptive roadmap, SkillForge, application tracker, and analytics surfaces on desktop and mobile. The shared-account run is intentionally serial to avoid cross-context token rotation. The public matrix also covers protected-route behavior, responsive navigation, keyboard behavior, and serious/critical axe violations.
 
-- GitHub Actions: [run 31356238614](https://github.com/mojaffri/PathFinder/actions/runs/31356238614) passed install, lint, typecheck, unit, integration, build, and Playwright checks.
+- GitHub Actions: [run 31358199031](https://github.com/mojaffri/PathFinder/actions/runs/31358199031) passed install, lint, typecheck, unit, integration, build, and Playwright checks.
 - Vercel production deployment: [`dpl_G27dzVSb23bPqY3J7iwxEfC39nEd`](https://path-finder-9fgs4caku-mojaffris-projects.vercel.app) is Ready and aliased to the public URL.
 - Post-deploy Vercel error-log scan returned no server errors after the complete production journey.
 - Lighthouse on the public landing page: performance 98, accessibility 100, best practices 100, SEO 100.
 - Production dependency audit: zero high-severity production vulnerabilities.
+
+## Repository hygiene and GitHub security — 2026-08-10
+
+- Reachable Git history contains no high-confidence credential patterns or sensitive-looking tracked filenames.
+- Generated output, local environment files, test reports, coverage, and Vercel state are ignored and absent from the repository.
+- All relative Markdown links resolve; README feature counts match the implementation (46 careers, 9 categories, 34 application tables).
+- GitHub Dependabot alerts/security updates, secret scanning, push protection, private vulnerability reporting, and CodeQL default setup are enabled; the initial CodeQL and secret scans reported zero alerts.
+- CI setup actions are pinned to immutable reviewed release commits; the workflow retains read-only repository permissions.
 
 ## Production configuration
 
