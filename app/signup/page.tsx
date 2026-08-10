@@ -5,7 +5,7 @@ import { SignupRedirectReader } from "./redirect-reader";
 
 export default function SignupPage() {
   return (
-    <AuthPageShell title="Create your account" description="Free — no credit card, no recruiter friction. Just your email.">
+    <AuthPageShell title="Create your account">
       <Suspense fallback={<SignupForm redirectTo="/onboarding" />}>
         <SignupRedirectReader />
       </Suspense>

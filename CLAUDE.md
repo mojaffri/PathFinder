@@ -166,7 +166,7 @@ Real database: Supabase Postgres, schema owned by Drizzle. Full ER design and ra
 
 ## Authentication conventions
 
-Real Supabase Auth: email/password, magic link, Google/GitHub OAuth (the latter two work once enabled in the Supabase dashboard, no code changes needed). `proxy.ts` (Next.js 16's renamed `middleware.ts`) refreshes the session and server-side redirects unauthenticated requests away from protected routes — this is enforced before any page renders, not just hidden client-side.
+Real Supabase Auth: email/password, magic link, Google/GitHub OAuth. OAuth buttons are advertised only when the corresponding `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH` / `NEXT_PUBLIC_ENABLE_GITHUB_AUTH` flag is `true` and the provider is already active in Supabase; never expose a provider button that leads to a disabled-provider error. `proxy.ts` (Next.js 16's renamed `middleware.ts`) refreshes the session and server-side redirects unauthenticated requests away from protected routes — this is enforced before any page renders, not just hidden client-side.
 
 `useProfile()`'s public shape is `profile`, `isAuthenticated`, `isLoading`, `createProfile`, `updateProfile`, `completeOnboarding`, `signOut`, `deleteProfile` (clears data, keeps the account), `deleteAccount` (irreversible — deletes the Supabase user itself), `refreshProfile`.
 

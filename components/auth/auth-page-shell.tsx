@@ -10,7 +10,7 @@ export function AuthPageShell({
   children,
 }: {
   title: string;
-  description: string;
+  description?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -19,7 +19,7 @@ export function AuthPageShell({
         <CardHeader>
           <Image src="/pathfinder-logo.png" alt="" width={48} height={48} className="mb-2 h-12 w-12 rounded-xl" priority />
           <h1 className="text-lg font-semibold tracking-tight text-foreground">{title}</h1>
-          <CardDescription>{description}</CardDescription>
+          {description ? <CardDescription>{description}</CardDescription> : null}
         </CardHeader>
         <CardContent>
           {isSupabaseConfigured() ? (

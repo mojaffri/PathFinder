@@ -59,11 +59,6 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
   return (
     <div className="flex flex-col gap-6">
       <OAuthButtons redirectTo={redirectTo} />
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <div className="h-px flex-1 bg-border" />
-        or
-        <div className="h-px flex-1 bg-border" />
-      </div>
       <form onSubmit={handlePasswordSignIn} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">Email</Label>

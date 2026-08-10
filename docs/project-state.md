@@ -4,6 +4,8 @@ Read this after [`CLAUDE.md`](../CLAUDE.md) and before touching code. This file 
 
 ## Last Updated
 
+2026-08-09 (session 9) — Production authentication completed beyond the email-only baseline. The Supabase Site URL now points at the live Vercel domain; a dedicated GitHub OAuth app is registered and enabled through Supabase; GitHub provider tokens have a production AES-256-GCM encryption key; and the UI now advertises OAuth providers only behind explicit availability flags, with an accessible inline fallback instead of an alert or a broken provider button. The supplied signup marketing sentence was removed. `SUPABASE_SERVICE_ROLE_KEY` is installed for production, enabling original resume-file storage and complete account deletion. A confirmed, clearly labeled demo account was created and seeded with persisted profile, skills, saved jobs, fit snapshots, an application, adaptive-roadmap tasks, and honest demo activity/readiness history. Google OAuth remains hidden because the connected Texas A&M Google Workspace account reports that Google Cloud Platform is disabled by its administrator; no Google client can be created until that external policy changes.
+
 2026-08-09 (session 8) — Production Supabase authentication is live. The existing Supabase project now has migrations `0000` through `0010`, a dedicated least-privilege `pathfinder_app` runtime role, and the reference catalog seeded with 46 careers, 10 SkillForge modules, and 20 assessment definitions. Vercel Production and Preview now receive the Supabase project URL, publishable key, and pooled Postgres connection through sensitive environment variables. A clean production redeploy completed successfully, and a temporary smoke user proved the real flow end to end: sign up → confirm → password sign in → authenticated dashboard → onboarding. The smoke user was deleted after verification. Email confirmation remains enabled; Google/GitHub buttons still require those providers to be enabled separately in Supabase.
 
 2026-08-09 (session 7) — Approved navigation consolidation: the wide-desktop header now keeps Discover, Accelerate, SkillForge, Plan, Dashboard, and Progress visible while Projects, Job Fit, Applications, and Saved live in one descriptive Workspace disclosure. The disclosure has explicit expanded state, current-route highlighting, outside-click/focus dismissal, Escape-to-close with focus restoration, and four direct links. Tablet and mobile widths now use the fully labeled navigation panel instead of an ambiguous icon-only header, with Workspace presented as a distinct section. Playwright covers the desktop disclosure, Escape behavior, navigation, and mobile Workspace visibility.
@@ -209,7 +211,7 @@ Integration (real repository/RLS behavior against pglite) — `tests/integration
 
 ## Deployment
 
-Live at https://path-finder-umber.vercel.app/. No Supabase project is currently provisioned for production, so account-backed features remain unavailable by infrastructure, not by an application defect. The app now handles that state deliberately: public discovery stays available, protected routes go to a product-safe availability message, and no deployment instructions or raw authentication errors are shown to visitors. Once a Supabase project exists and its env vars are set in Vercel, run `npm run db:migrate` and `npm run db:seed:reference` against it before the first real user signs up. If GitHub OAuth-connect is wanted in production, also enable GitHub as a Supabase Auth provider and set `GITHUB_TOKEN_ENCRYPTION_KEY` (public username/repo analysis needs neither). `.github/workflows/ci.yml` runs lint/typecheck/tests/build on every PR.
+Live at https://path-finder-umber.vercel.app/. Production is connected to Supabase Auth/Postgres with migrations `0000`–`0010`, reference catalogs, Site URL, server-only admin key, GitHub OAuth, encrypted connected-GitHub tokens, and a seeded demo account. Email/password, magic-link, and GitHub sign-in are production capabilities; Google stays unadvertised while the connected Google Workspace organization blocks Google Cloud project creation. `.github/workflows/ci.yml` runs lint/typecheck/tests/build on every PR.
 
 ---
 
@@ -223,11 +225,11 @@ Live at https://path-finder-umber.vercel.app/. No Supabase project is currently 
 3. No unit tests for `lib/gap-analysis/engine.ts` — top test-debt priority the next session that touches it.
 4. Anthropic-cost paths now have persistent per-user limits. GitHub's outbound paths still rely on GitHub's own rate-limit responses; host-level IP/WAF controls remain a production-operations improvement.
 5. Demo mode is a single shared account with no per-visitor isolation or auto-reset. Documented as an accepted limitation in `docs/security.md`.
-6. Production Vercel deployment has not been reconnected to a real Supabase project — see "Deployment" above.
+6. Google OAuth cannot be configured from the connected `tamu.edu` account because its Google Workspace administrator has disabled Google Cloud Platform. The availability flag remains off, so users do not see a broken Google button.
 7. `lib/jobs/fit-scoring.ts#estimateYearsOfExperience` is a best-effort estimate from free-text resume dates — genuinely approximate by design.
 8. `/jobs` has no URL-import option (paste-only) — a deliberate scope decision, not an oversight.
 9. `lib/jobs/heuristic-extractor.ts`'s required-vs-preferred classification depends entirely on section-heading detection.
-10. GitHub OAuth-connect (`supabase.auth.linkIdentity` + `app/auth/callback/route.ts`'s token capture) is real code, typechecked and built, but **not live-verified** — no Supabase project with GitHub enabled is configured in this local environment. Public username/repo analysis (the primary path) doesn't share this gap — it needs no auth infrastructure at all.
+10. GitHub OAuth is configured in Supabase with a dedicated production OAuth app and encrypted provider-token storage. Public username/repo analysis remains available without authentication. Repository importing still requires the user to explicitly connect/import GitHub; signing in with GitHub alone does not silently analyze projects.
 11. No revocation call to GitHub's own token-revocation endpoint on "Disconnect" — only the local encrypted copy is deleted. Documented as acceptable for a `read:user`-only, non-`repo`-scoped token in `docs/github-integration.md`, but worth adding for defense-in-depth later.
 12. The GitHub file-tree fetch (`git/trees/{branch}?recursive=1`) is capped at whatever GitHub returns before truncating (~100k entries) — an enormous monorepo gets a partial (not wrong, just incomplete) signal picture.
 13. `lib/evidence/confidence.ts`'s "claimed" dimension treats a skill as binary present/absent — the current `StudentProfile.currentSkills` shape has no per-skill self-rated proficiency level (the task's own worked example implies one, e.g. "Claimed: Advanced"), so "claimed" evidence is presence-only rather than a graded claim. Extending `currentSkills` to carry an optional level would be a real (if small) profile-schema change, deliberately not done this session to avoid scope creep into the resume/profile UI.
@@ -293,18 +295,17 @@ Both verified by a full `npm run lint` + `npm run typecheck` + `npm test` + `npm
 
 ## Current Phase
 
-Phase 4 — Product Completeness, **complete in the repository and connected to production Supabase**. All repository migrations through `0010` are applied, reference data is seeded, Vercel has live Auth/Postgres configuration, and the email/password signup and sign-in journey has been proven against production. The optional demo account, Supabase service-role-only features (original resume-file storage and full auth-user deletion), and third-party OAuth providers still require their own production secrets/provider setup.
+Phase 4 — Product Completeness, **complete in the repository and connected to production Supabase**. All repository migrations through `0010` are applied; reference and demo data are seeded; Vercel has live Auth/Postgres/admin configuration; email/password and GitHub authentication are enabled; and service-role-only storage/account-deletion paths now have production credentials. Google OAuth is the sole provider exception because of an external Workspace policy and is intentionally hidden.
 
 ## Next Recommended Phase
 
 Recommended next steps, in priority order:
 
-1. Configure `SUPABASE_SERVICE_ROLE_KEY` and seed the optional demo account so original resume-file storage, full account deletion, and the deterministic demo journey are available in production.
-2. Configure the production Supabase Site URL/redirect allowlist and enable Google/GitHub providers before advertising OAuth; email/password authentication is already live and verified.
-3. Close the remaining direct-test gap in `lib/gap-analysis/engine.ts` before changing that engine.
-4. Add contextual `new-evidence`/`new-github-project`/`new-resume` adaptive-roadmap refresh links; those triggers remain backend-supported but not surfaced everywhere.
+1. Close the remaining direct-test gap in `lib/gap-analysis/engine.ts` before changing that engine.
+2. Add contextual `new-evidence`/`new-github-project`/`new-resume` adaptive-roadmap refresh links; those triggers remain backend-supported but not surfaced everywhere.
+3. If Google login is still desired, use a Google account/organization with Google Cloud enabled (or have the `tamu.edu` administrator enable it), then create the web OAuth client and turn on `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH` only after the Supabase provider is live.
 
-The prior Supabase-provisioning blocker is closed. The GitHub OAuth-connect path and the adaptive roadmap's complete generate/complete/recompute journey remain the main live-verification gaps.
+The prior Supabase-provisioning, service-role, demo, and GitHub-provider blockers are closed. Google Workspace policy and the adaptive roadmap's complete generate/complete/recompute journey remain the main live-verification gaps.
 
 ## Important Files
 

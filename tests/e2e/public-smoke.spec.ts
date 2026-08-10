@@ -12,6 +12,7 @@ test("landing and authentication entry points render without serious accessibili
   await page.goto("/signup");
   await expect(page.getByRole("heading", { name: /create your account/i })).toBeVisible();
   await expect(page.getByText(/NEXT_PUBLIC_SUPABASE/i)).toHaveCount(0);
+  await expect(page.getByText(/no credit card|recruiter friction/i)).toHaveCount(0);
 });
 
 test("protected product routes redirect to sign in without exposing API errors", async ({ page }) => {
