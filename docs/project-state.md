@@ -4,6 +4,8 @@ Read this after [`CLAUDE.md`](../CLAUDE.md) and before touching code. This file 
 
 ## Last Updated
 
+2026-08-09 (session 8) — Production Supabase authentication is live. The existing Supabase project now has migrations `0000` through `0010`, a dedicated least-privilege `pathfinder_app` runtime role, and the reference catalog seeded with 46 careers, 10 SkillForge modules, and 20 assessment definitions. Vercel Production and Preview now receive the Supabase project URL, publishable key, and pooled Postgres connection through sensitive environment variables. A clean production redeploy completed successfully, and a temporary smoke user proved the real flow end to end: sign up → confirm → password sign in → authenticated dashboard → onboarding. The smoke user was deleted after verification. Email confirmation remains enabled; Google/GitHub buttons still require those providers to be enabled separately in Supabase.
+
 2026-08-09 (session 7) — Approved navigation consolidation: the wide-desktop header now keeps Discover, Accelerate, SkillForge, Plan, Dashboard, and Progress visible while Projects, Job Fit, Applications, and Saved live in one descriptive Workspace disclosure. The disclosure has explicit expanded state, current-route highlighting, outside-click/focus dismissal, Escape-to-close with focus restoration, and four direct links. Tablet and mobile widths now use the fully labeled navigation panel instead of an ambiguous icon-only header, with Workspace presented as a distinct section. Playwright covers the desktop disclosure, Escape behavior, navigation, and mobile Workspace visibility.
 
 2026-08-09 (session 6) — Production auth-degradation and brand polish: the supplied PathFinder logo is now the persistent product mark in the responsive navbar and authentication surfaces; public pages remain useful when Supabase is unavailable; protected routes redirect to a calm, actionable sign-in-unavailable screen instead of rendering raw `401 Not authenticated` API failures; login/signup no longer expose environment-variable or repository instructions; and the landing-page demo CTA no longer invites users into a demo that cannot work without Supabase. Protected-route matching was extracted and regression-tested with exact path-boundary checks. The top-level navigation inventory is intentionally unchanged pending explicit product-owner approval for consolidation.
@@ -291,23 +293,38 @@ Both verified by a full `npm run lint` + `npm run typecheck` + `npm test` + `npm
 
 ## Current Phase
 
-Phase 4 — Product Completeness, **complete in the repository**. Production still requires migrations `0009` and `0010`, a demo reseed, deployment verification, and the authenticated live Playwright journey before this exact state is considered fully proven online.
+Phase 4 — Product Completeness, **complete in the repository and connected to production Supabase**. All repository migrations through `0010` are applied, reference data is seeded, Vercel has live Auth/Postgres configuration, and the email/password signup and sign-in journey has been proven against production. The optional demo account, Supabase service-role-only features (original resume-file storage and full auth-user deletion), and third-party OAuth providers still require their own production secrets/provider setup.
 
 ## Next Recommended Phase
 
-Two reasonable next steps, in priority order:
+Recommended next steps, in priority order:
 
-1. Apply migrations `0009`/`0010`, reseed the demo, and run the authenticated live Playwright journeys after deployment.
-2. Close the remaining direct-test gap in `lib/gap-analysis/engine.ts` before changing that engine.
-3. Add contextual `new-evidence`/`new-github-project`/`new-resume` adaptive-roadmap refresh links; those triggers remain backend-supported but not surfaced everywhere.
+1. Configure `SUPABASE_SERVICE_ROLE_KEY` and seed the optional demo account so original resume-file storage, full account deletion, and the deterministic demo journey are available in production.
+2. Configure the production Supabase Site URL/redirect allowlist and enable Google/GitHub providers before advertising OAuth; email/password authentication is already live and verified.
+3. Close the remaining direct-test gap in `lib/gap-analysis/engine.ts` before changing that engine.
+4. Add contextual `new-evidence`/`new-github-project`/`new-resume` adaptive-roadmap refresh links; those triggers remain backend-supported but not surfaced everywhere.
 
-Before any of these: provision a real Supabase project for the Vercel deployment (still not done — see "Deployment"), live-verify the GitHub OAuth-connect path (carried over from session 3), and live-verify the adaptive roadmap's full authenticated flow (carried over from this session — see Known Issue #17).
+The prior Supabase-provisioning blocker is closed. The GitHub OAuth-connect path and the adaptive roadmap's complete generate/complete/recompute journey remain the main live-verification gaps.
 
 ## Important Files
 
 Read these first in a fresh session, in this order: `CLAUDE.md` → this file → `docs/database.md` → `docs/security.md` → `docs/evidence-model.md` → `docs/github-integration.md` → `docs/skill-graph.md` → `docs/roadmap-engine.md` → `docs/architecture.md` → `docs/implementation-plan.md` → `types/profile.ts` + `types/roadmap.ts` + `types/adaptive-roadmap.ts` + `types/skill-graph.ts` + `types/skillforge.ts` + `types/job.ts` + `types/evidence.ts` + `types/github.ts` → `lib/gap-analysis/engine.ts` → `lib/roadmap/adaptation.ts` (the newest orchestration point, same deterministic discipline) → `lib/evidence/confidence.ts` → `repositories/profile-repository.ts` (the template every other repository follows) → `lib/db/with-user-context.ts` (the RLS-enforcement seam — read this before adding any new repository function).
 
 ## Verification Status
+
+Run 2026-08-09 (session 8), production Supabase activation:
+
+```text
+npm run lint             → clean
+npm run typecheck        → clean
+npm test                 → 219 passed (32 files)
+npm run build            → clean (Next.js 16.3.0, 42 routes/pages)
+npm run test:e2e         → 6 passed; 6 authenticated/demo matrix cases skipped locally because demo credentials are not stored in the repository
+production deployment    → Ready in 58s after final credential rotation
+live auth smoke          → sign up, confirmation, password sign in, dashboard redirect, and onboarding load all passed
+```
+
+The temporary production smoke account was deleted after the test. Supabase Auth and Postgres logs showed successful requests with no route, database, or auth error during the journey.
 
 Run 2026-08-09 (session 7), this exact repository state before deployment:
 
