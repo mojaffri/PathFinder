@@ -69,7 +69,7 @@ Demo records are labeled. The account is shared and may be reset; do not enter p
 - Implemented a validated AI boundary for resume/job extraction, roadmap narrative, and written assessment feedback using Zod schemas, timeouts, retry handling, and deterministic fallbacks.
 - Developed an evidence-confidence model spanning claimed, assessed, demonstrated, and professional signals, including seven reproducible GitHub file-tree/manifest detectors that exclude popularity metrics from scoring.
 - Built a dependency-aware adaptive roadmap scheduler that combines skill gaps, saved-job frequency, evidence confidence, weekly capacity, and target dates while preserving completion history.
-- Established CI with strict lint/type checks, 222 passing tests (including 39 embedded-Postgres integration tests), production builds, and desktop/mobile Playwright accessibility and demo-journey coverage.
+- Established CI with strict lint/type checks, 224 passing tests (including 39 embedded-Postgres integration tests), production builds, and desktop/mobile Playwright accessibility and demo-journey coverage.
 
 ## Honest limitations
 

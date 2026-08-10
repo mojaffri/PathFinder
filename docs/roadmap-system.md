@@ -13,7 +13,7 @@ This prevents common bad advice: high-school users are not sent into college-sty
 Roadmaps do two jobs in order:
 
 1. Get on track by closing real academic, skill, experience, evidence, and credential gaps.
-2. Get ahead by producing a hard-to-copy selection signal: work on a real constraint, use field-relevant methods, obtain practitioner or user criticism, revise the work, and publish or present defensible evidence.
+2. Stand out by completing a concrete piece of work that others can review: solve a realistic problem, use field-relevant methods, get feedback from a practitioner or user, revise the work, and publish or present the result.
 
 Passive consumption, generic certificates, tutorial clones, and high-volume applications without fit do not count as strong outcomes. Each substantial action should create demonstrated skill, credible evidence, access to an opportunity, or required readiness.
 

@@ -148,8 +148,8 @@ export function generateFallbackRoadmap(
 
   return {
     executiveSummary: isVersatile
-      ? `As a ${stage.label}, your plan for ${title} should prioritize ${stage.immediateFocus}. The focus is on evidence that counts toward more than one path, followed by the few career-specific requirements that cannot be shared. This sequence is based on what each field rewards and what is realistic at your current stage.`
-      : `As a ${stage.label}, your plan for ${title} should prioritize ${stage.immediateFocus}. First get on track with the real entry requirements, then build ${stage.competitiveEdge}.`,
+      ? `At your current stage, prioritize ${stage.immediateFocus}. Focus first on evidence that counts toward more than one path, then address the few career-specific requirements that cannot be shared. This sequence reflects what each field rewards and what is realistic right now.`
+      : `At your current stage, prioritize ${stage.immediateFocus}. First meet the real entry requirements, then ${stage.competitiveEdge}.`,
     currentProfileAssessment: `${gapAnalysis.currentStateSummary.join(". ")}. ${stage.positionSummary}`,
     competitiveAdvantages: strengths.slice(0, 5),
     mistakesToAvoid,
@@ -157,7 +157,7 @@ export function generateFallbackRoadmap(
       {
         key: "academic-technical-edge",
         title: "Phase A - Immediate Resume Builders",
-        objective: `Build the concrete proof that makes you credible for ${title} now. At your stage, that means ${stage.immediateFocus}.`,
+        objective: `Build concrete evidence that supports your target ${isVersatile ? "careers" : "career"}. At your stage, that means ${stage.immediateFocus}.`,
         timeline: PLACEHOLDER_TIMELINE,
         whyItMattersForTarget: withCareer.length > 0
           ? withCareer.slice(0, 3).map((rc) => `${rc.title} candidates are evaluated first on ${rc.career.competitivenessFactors.slice(0, 2).map((f) => f.factor).join(" and ")}.`).join(" ")
@@ -180,7 +180,7 @@ export function generateFallbackRoadmap(
       {
         key: "experience-portfolio",
         title: "Phase B - Interview Prep & Momentum",
-        objective: `Turn Phase A into ${stage.experienceGoal}, then practice the selection process before it becomes high stakes.`,
+        objective: `Turn Phase A into ${stage.experienceGoal}, then practice the interview and application process before it becomes high stakes.`,
         timeline: PLACEHOLDER_TIMELINE,
         whyItMattersForTarget: withCareer.length === 1
           ? withCareer[0].career.internshipExpectations
@@ -314,7 +314,7 @@ export function generateFallbackRoadmap(
     realityCheck: withCareer.length > 0
       ? withCareer.length === 1
         ? withCareer[0].career.realityCheck
-        : withCareer.map((rc) => `For ${rc.title}, ${rc.career.realityCheck}`).join(" ")
+        : withCareer.map((rc) => `${rc.title}: ${rc.career.realityCheck}`).join(" ")
       : `"${title}" isn't in our structured career database yet, so treat this roadmap as a starting point rather than a fully researched analysis. Validate it against people actually working in the field.`,
   };
 }

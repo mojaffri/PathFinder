@@ -80,6 +80,7 @@ Supabase Auth owns identity. Drizzle owns 34 application tables and 11 migration
 - Capacity-aware scheduling from effort, weekly availability, prerequisites, and target date.
 - Impossible-deadline messaging, completed-history preservation, and change events.
 - Narrative roadmap retains a deterministic fallback when AI is unavailable.
+- Reader-first roadmap templates use concrete actions and treat career names as labels instead of inserting role titles into generic sentence frames. Quality coverage checks all 598 career/stage combinations plus every career's reviewable-work goal for banned jargon and known grammar failures.
 
 ### Product layer
 
@@ -135,7 +136,7 @@ npm run lint             → clean
 npm run typecheck        → clean
 npm run test:unit        → 166 passed (21 files)
 npm run test:integration → 39 passed (6 files)
-npm test                 → 222 passed (32 files)
+npm test                 → 224 passed (32 files)
 npm run build            → clean; Next.js 16.3.0; 42 prerendered page slots
 npm run test:e2e         → 6 passed, 6 environment-specific cases skipped
 production demo E2E      → 10 passed, 2 device-inapplicable cases skipped

@@ -16,12 +16,6 @@ const CATEGORY_LABELS: Record<GapCategory, string> = {
   professional: "Professional",
 };
 
-function formatCareerList(titles: string[]): string {
-  if (titles.length <= 1) return titles[0] ?? "";
-  if (titles.length === 2) return `${titles[0]} and ${titles[1]}`;
-  return `${titles.slice(0, -1).join(", ")}, and ${titles[titles.length - 1]}`;
-}
-
 export function GapAnalysisSection({
   gapAnalysis,
   demonstratedGapIds,
@@ -32,14 +26,12 @@ export function GapAnalysisSection({
 }) {
   const categories: GapCategory[] = ["academic", "technical", "experience", "professional"];
   const isVersatile = gapAnalysis.targetCareers.length > 1;
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>Gap analysis</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Where you stand today vs. what {formatCareerList(gapAnalysis.targetCareers)} actually reward
-          {isVersatile ? "" : "s"}.
+          Where you stand today compared with your target roles.
         </p>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">

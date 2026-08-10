@@ -210,7 +210,7 @@ export const CAREERS: Career[] = [
       "Assuming remote work is common — most roles are on-site at plants or labs",
     ],
     differentiationStrategies: [
-      "Get comfortable with Aspen Plus/HYSYS through a class project or self-study before applying",
+      "Build a small Aspen Plus or HYSYS process model and explain its assumptions, results, and tradeoffs",
       "Target a specific sector early (energy, pharma, specialty chemicals) rather than applying broadly",
       "Highlight any lab safety or process-safety coursework explicitly on your resume",
     ],
@@ -578,7 +578,7 @@ export const CAREERS: Career[] = [
       "Applying broadly with a generic resume instead of tailoring to the role",
     ],
     differentiationStrategies: [
-      "Pick one project you can discuss in real depth rather than several shallow ones",
+      "Deepen one software project until you can explain its design decisions, tradeoffs, tests, and results",
       "Practice DS&A consistently over months, not in a last-minute cram",
       "Contribute to an open-source project or maintain a public, active GitHub",
     ],

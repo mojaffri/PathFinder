@@ -39,6 +39,14 @@ function joinNatural(items: string[]): string {
   return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
 }
 
+function withoutTerminalPunctuation(text: string): string {
+  return text.trim().replace(/[.!?]+$/, "");
+}
+
+function lowercaseFirst(text: string): string {
+  return text.length === 0 ? text : `${text[0].toLowerCase()}${text.slice(1)}`;
+}
+
 /** Avoids "FE Exam exam" when a credential's own name already ends in "Exam"/"Test". */
 function withExamSuffix(credentialName: string): string {
   return /exam|test$/i.test(credentialName) ? credentialName : `${credentialName} exam`;
@@ -159,7 +167,7 @@ function academicGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]
           evidenceOfCompletion: isSecondary
             ? "Counselor meeting notes plus a proposed course list"
             : needsBridgeRoute
-              ? "A comparison table covering prerequisites, cost, duration, and proof produced by each route"
+              ? "A comparison table covering prerequisites, cost, duration, and the evidence produced by each route"
               : "A confirmed advising appointment on your calendar, or notes from the meeting",
         },
         {
@@ -177,15 +185,15 @@ function academicGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]
       gaps.push({
         id: nextId("academic"),
         category: "academic",
-        title: "Build proof of fit through electives, projects, and internships",
-        description: `Common majors for ${unaligned.map((rc) => rc.title).join(", ")} ${unaligned.length > 1 ? "are" : "is"} ${majorsSample.join(", ")}. That doesn't rule you out, but it means electives, projects, and internships need to work harder to demonstrate fit.`,
+        title: "Show how your coursework and experience connect to the field",
+        description: `People entering ${unaligned.length > 1 ? "these fields" : "this field"} often study ${joinNatural(majorsSample)}. Your current major does not rule you out; use electives, projects, and internships to show the connection.`,
         priority: "medium",
         impact: 3,
         effort: 3,
         timeHorizon: "immediate",
         estimatedHours: 15,
         relevantCareers: unaligned.map((rc) => rc.title),
-        evidenceOfCompletion: `A transcript line, project, or internship you can point to that ties directly to ${joinNatural(unaligned.map((rc) => rc.title))}`,
+        evidenceOfCompletion: `A course, project, or internship that clearly demonstrates a skill needed in ${unaligned.length > 1 ? "your target fields" : "your target field"}`,
         tacticalActions: [
           {
             title: `Pick one elective next term from ${majorsSample.length > 0 ? joinNatural(majorsSample.slice(0, 3)) : "your target field's core coursework"}`,
@@ -194,7 +202,7 @@ function academicGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]
             evidenceOfCompletion: "The elective showing on your registered course schedule",
           },
           {
-            title: `Start a small project that uses a core skill from ${joinNatural(unaligned.map((rc) => rc.title))}`,
+            title: `Start a small project that uses a core skill needed in ${unaligned.length > 1 ? "your target fields" : "your target field"}`,
             detail: "A project is the fastest way to prove capability that your major doesn't already signal.",
             estimatedHours: 10,
             evidenceOfCompletion: "A GitHub repo or write-up you can link from your resume",
@@ -384,7 +392,7 @@ function technicalGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[
         : `Learn ${joinNatural(topSkillNames)}`,
       description: overlapping.length > 0
         ? `${joinNatural(overlapping.slice(0, 3).map((s) => s.skill))} ${overlapping.length === 1 ? "is" : "are"} valued by more than one of your target careers, so building ${overlapping.length === 1 ? "it" : "these"} once pays off across your whole versatility strategy, not just one path.`
-        : `${top[0].careers.size > 1 ? "These" : `${top[0].skill} and similar skills`} are expected for ${joinNatural([...new Set(top.flatMap((s) => [...s.careers]))])}.`,
+        : `${top[0].careers.size > 1 ? "These skills are" : `${top[0].skill} and similar skills are`} commonly expected in ${relevantCareers.length > 1 ? "your target fields" : "your target field"}.`,
       priority: overlapping.length > 0 ? "high" : missingSkills.length >= 3 ? "high" : "medium",
       impact: overlapping.length > 0 ? 5 : 4,
       effort: 4,
@@ -419,7 +427,7 @@ function technicalGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[
     gaps.push({
       id: nextId("technical"),
       category: "technical",
-      title: `Clear ${cert.name}`,
+      title: `Pass ${cert.name}`,
       description: cert.careers.size > 1
         ? `${cert.name} is valued across ${cert.careers.size} of your target careers (${[...cert.careers].join(", ")}). ${cert.reasoning}`
         : cert.reasoning,
@@ -465,7 +473,7 @@ function experienceCampaignForStage(
   const stage = getStageStrategy(request.educationStage);
   const titles = resolvedCareers.map((career) => career.title);
   const playbooks = resolvePlaybooksForCareers(resolvedCareers);
-  const proofTarget = playbooks[0]?.immediateResumeBuilders[0] ?? `a concrete work sample for ${joinNatural(titles)}`;
+  const proofTarget = lowercaseFirst(playbooks[0]?.immediateResumeBuilders[0] ?? "a concrete work sample for your target field");
 
   const campaign = (() => {
     switch (stage.group) {
@@ -475,7 +483,7 @@ function experienceCampaignForStage(
           hours: [4, 4, 12, 4],
           actions: [
             "Identify 8 local, school-based, virtual, or summer opportunities that accept high-school students",
-            `Prepare a one-page interest summary and a small proof sample based on ${proofTarget}`,
+            `Prepare a one-page interest summary and a small work sample based on ${proofTarget}`,
             "Contact the opportunities and complete one bounded shadowing, club, service, research, or community contribution",
             "Write a short reflection naming what the work actually involved and what you need to learn next",
           ],
@@ -487,9 +495,9 @@ function experienceCampaignForStage(
           hours: [5, 8, 24, 8],
           actions: [
             "Build a focused list of 15 internships, labs, campus teams, clinics, or community projects that accept early undergraduates",
-            `Create one proof sample or resume section based on ${proofTarget}`,
+            `Create one work sample or resume section based on ${proofTarget}`,
             "Pursue opportunities through faculty, campus organizations, alumni, smaller employers, and targeted applications",
-            "Practice the actual selection format twice and track responses weekly",
+            "Practice the interview or screening format twice and track responses weekly",
           ],
           evidence: "An offer, faculty or supervisor confirmation, team roster, client agreement, or completed target-aligned contribution",
         };
@@ -503,7 +511,7 @@ function experienceCampaignForStage(
             "Submit targeted applications in weekly batches and ask informed contacts for role-specific feedback or referrals",
             "Complete three realistic mock interviews, cases, technical screens, auditions, or admissions conversations",
           ],
-          evidence: "A relevant offer or placement, or an active campaign tracker with practitioner feedback and completed selection practice",
+          evidence: "A relevant offer or placement, or an active campaign tracker with practitioner feedback and completed interview practice",
         };
       case "graduate-school":
         return {
@@ -547,9 +555,9 @@ function experienceCampaignForStage(
           hours: [5, 10, 30, 15],
           actions: [
             "Build a list of 20 high-fit roles plus five bounded bridge opportunities that produce real work",
-            `Create a current proof artifact based on ${proofTarget}`,
+            `Create a current work sample based on ${proofTarget}`,
             "Pursue warm introductions and targeted applications while completing a contract, research, volunteer, fellowship, or client contribution",
-            "Run three realistic selection practices and improve your materials from the feedback",
+            "Run three realistic interview or screening practices and improve your materials from the feedback",
           ],
           evidence: "A current target-aligned artifact or bridge engagement plus an active, reviewed application pipeline",
         };
@@ -559,7 +567,7 @@ function experienceCampaignForStage(
           hours: [4, 6, 12, 8],
           actions: [
             "Clarify your current stage and identify 10 opportunities you are actually eligible for",
-            `Prepare a small proof sample based on ${proofTarget}`,
+            `Prepare a small work sample based on ${proofTarget}`,
             "Pursue the most accessible internship, project, research, shadowing, volunteer, or client route",
             "Get feedback from one practitioner and document the result",
           ],
@@ -573,7 +581,7 @@ function experienceCampaignForStage(
     id: nextId("experience"),
     category: "experience",
     title: campaign.title,
-    description: `${careerExpectation} For a ${stage.label}, the right next target is ${stage.experienceGoal}.`,
+    description: `${careerExpectation} At your current stage, the right next target is ${stage.experienceGoal}.`,
     priority,
     impact: 5,
     effort: 4,
@@ -596,7 +604,7 @@ function experienceGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer
   const withCareer = resolvedCareers.filter((rc): rc is { title: string; career: NonNullable<ResolvedCareer["career"]> } => rc.career !== null);
   const stage = getStageStrategy(request.educationStage);
   const playbooks = resolvePlaybooksForCareers(resolvedCareers);
-  const proofTarget = playbooks[0]?.immediateResumeBuilders[0] ?? `a complete work sample for ${joinNatural(titles)}`;
+  const proofTarget = lowercaseFirst(playbooks[0]?.immediateResumeBuilders[0] ?? "a complete work sample for your target field");
 
   const strongExpectation = (text: string) =>
     containsKeyword(text, ["essential", "mandatory", "close to", "strongly", "extremely important"]);
@@ -607,7 +615,7 @@ function experienceGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer
     const description = withCareer.length === 1
       ? withCareer[0].career.internshipExpectations
       : withCareer.length > 1
-        ? `Internships (or equivalent hands-on experience) are expected across your target careers, especially ${(criticalCareers.length > 0 ? criticalCareers : withCareer).map((rc) => rc.title).join(", ")}.`
+        ? "Internships or equivalent hands-on experience are expected across your target careers."
         : "Internships (or equivalent hands-on experience) are one of the strongest signals employers look for.";
 
     gaps.push(experienceCampaignForStage(request, resolvedCareers, priority, description));
@@ -626,8 +634,8 @@ function experienceGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer
       gaps.push({
         id: nextId("experience"),
         category: "experience",
-        title: `Build a target-specific proof project for ${joinNatural(titles)}`,
-        description: `${description} A strong starting brief is ${proofTarget}.`,
+        title: `Build one focused project for ${titles.length > 1 ? "your target fields" : "your target field"}`,
+        description: `${description} Start with ${proofTarget}.`,
         priority: portfolioHeavyCareers.length > 0 ? "high" : "medium",
         impact: 4,
         effort: 3,
@@ -666,8 +674,8 @@ function experienceGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer
       gaps.push({
         id: nextId("experience"),
         category: "experience",
-        title: `Produce a polished ${joinNatural(titles)} work sample`,
-        description: `${description} A strong starting brief is ${proofTarget}.`,
+        title: `Produce a polished work sample for ${titles.length > 1 ? "your target fields" : "your target field"}`,
+        description: `${description} Start with ${proofTarget}.`,
         priority: "high",
         impact: 4,
         effort: 3,
@@ -761,10 +769,20 @@ function experienceGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer
 function advancementGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]): GapItem[] {
   if (request.projects.length === 0 && request.experience.length === 0) return [];
 
-  const stage = getStageStrategy(request.educationStage);
   const withCareer = resolvedCareers.filter((rc): rc is { title: string; career: NonNullable<ResolvedCareer["career"]> } => rc.career !== null);
   return withCareer.slice(0, 3).map(({ title, career }) => {
-    const strategy = career.differentiationStrategies[0] ?? `Create unusually strong, reviewable evidence for ${title}`;
+    const evidenceStrategy = career.differentiationStrategies.find((strategy) =>
+      /\b(project|prototype|model|analysis|portfolio|memo|article|case study|pipeline|app|product|feature|dataset|press release|pitch email|work sample|technical work)\b/i.test(strategy),
+    );
+    const strategy = withoutTerminalPunctuation(evidenceStrategy ?? (
+      career.codingIntensity >= 4
+        ? "Build one focused project you can demonstrate and explain in depth"
+        : career.handsOnIntensity >= 4 || career.researchIntensity >= 4
+          ? "Complete one focused technical project and document the decisions, results, and lessons"
+          : career.communicationIntensity >= 4 || career.category === "law" || career.category === "humanities-social-sciences"
+            ? "Create one polished work sample that shows how you research, reason, and communicate"
+            : "Complete one focused analysis or project that solves a realistic problem"
+    ));
     const artifact = career.codingIntensity >= 4
       ? "a public repository, working demo, benchmark, and concise technical write-up"
       : career.handsOnIntensity >= 4 || career.researchIntensity >= 4
@@ -776,8 +794,8 @@ function advancementGaps(request: RoadmapRequest, resolvedCareers: ResolvedCaree
     return {
       id: nextId("experience"),
       category: "experience" as const,
-      title: `Create a hard-to-copy selection signal for ${title}`,
-      description: `${strategy}. This is the get-ahead move for a ${stage.label}: it should create evidence most applicants at the same stage cannot show, not another completion certificate.`,
+      title: strategy,
+      description: `At your current stage, finish something concrete that another person can review. The result should show how you think and what you can do—not just that you completed a course or earned a certificate.`,
       priority: "medium" as const,
       impact: 4 as RatingScale,
       effort: 3 as RatingScale,
@@ -787,25 +805,25 @@ function advancementGaps(request: RoadmapRequest, resolvedCareers: ResolvedCaree
       evidenceOfCompletion: `${artifact}, linked from your resume or application materials`,
       tacticalActions: [
         {
-          title: `Turn this differentiator into a one-page brief: ${strategy}`,
-          detail: "Define the audience, hard constraint, proof standard, and finish line before doing the work.",
+          title: `Write a short plan to ${lowercaseFirst(strategy)}`,
+          detail: "State what you will build or complete, who should care about it, the main constraint, and what evidence will count as finished.",
           estimatedHours: 2,
-          evidenceOfCompletion: "A one-page brief with a named audience, scope, proof standard, and deadline",
+          evidenceOfCompletion: "A one-page action plan with the audience, scope, main constraint, success criteria, and deadline",
         },
         {
-          title: "Build the smallest complete version that demonstrates real judgment",
-          detail: "The point is not size. Show a decision, tradeoff, test, iteration, or result that a practitioner can evaluate.",
+          title: "Complete a focused version and document your decisions",
+          detail: "Keep the scope manageable, but include a decision, tradeoff, test, revision, or result that someone in the field can evaluate.",
           estimatedHours: 11,
           evidenceOfCompletion: artifact,
         },
         {
-          title: `Get specific criticism from two people familiar with ${title}`,
-          detail: "Ask what would make the work credible in an actual selection process, then revise the artifact rather than merely collecting praise.",
+          title: "Get practical feedback from two people who know the field",
+          detail: "Ask which parts are convincing, which parts are unclear, and what would make the work more credible. Then make at least one revision.",
           estimatedHours: 4,
           evidenceOfCompletion: "Two sets of feedback notes and at least one documented revision",
         },
         {
-          title: "Publish the evidence and write three defensible interview bullets",
+          title: "Share the work and prepare three interview talking points",
           detail: "Make the work easy to inspect and prepare to explain your decisions without exaggerating impact.",
           estimatedHours: 3,
           evidenceOfCompletion: "A shareable link plus three accurate situation-action-result bullets",
@@ -817,27 +835,12 @@ function advancementGaps(request: RoadmapRequest, resolvedCareers: ResolvedCaree
 
 function professionalGaps(request: RoadmapRequest, resolvedCareers: ResolvedCareer[]): GapItem[] {
   const titles = resolvedCareers.map((rc) => rc.title);
-  const playbooks = resolvePlaybooksForCareers(resolvedCareers);
-  // Concrete role/focus phrasing beats generic "network with X" filler —
-  // e.g. "reach out to firm associates... focusing on litigation practices"
-  // instead of "network with lawyers".
-  const roles = playbooks.length > 0 ? joinNatural(playbooks.map((p) => p.networkingTemplate.roles)) : null;
-  const focusAreas = playbooks.length > 0 ? joinNatural(playbooks.map((p) => p.networkingTemplate.focusAreas)) : null;
-
   const gaps: GapItem[] = [
     {
       id: nextId("professional"),
       category: "professional",
-      title: roles
-        ? `Line up 2 to 3 informational interviews with ${roles}, focusing on ${focusAreas}`
-        : titles.length > 0
-          ? `Line up 2 to 3 informational chats with people working as a ${titles.join(" or a ")}`
-          : "Line up 2 to 3 informational chats with people in your target field",
-      description: roles
-        ? `Talking directly to ${roles} about ${focusAreas} is one of the highest-leverage, lowest-cost moves available.`
-        : titles.length > 0
-          ? `Talking directly to people working as a ${titles.join(" or a ")} is one of the highest-leverage, lowest-cost moves available.`
-          : "Talking directly to people in your target field is one of the highest-leverage, lowest-cost moves available.",
+      title: `Schedule 2 to 3 conversations with people in ${titles.length > 1 ? "your target fields" : "your target field"}`,
+      description: "Ask people doing the work about their day-to-day responsibilities, hiring expectations, and the experiences that helped them become credible candidates.",
       priority: "medium",
       impact: 3,
       effort: 2,
@@ -847,7 +850,7 @@ function professionalGaps(request: RoadmapRequest, resolvedCareers: ResolvedCare
       evidenceOfCompletion: "A LinkedIn connection accepted, a calendar invite that happened, or notes from the conversation you can reference in an interview",
       tacticalActions: [
         {
-          title: roles ? `Find 5-8 ${roles} on LinkedIn, prioritizing ${focusAreas}` : titles.length > 0 ? `Find 5-8 people on LinkedIn currently working as a ${titles.join(" or a ")}` : "Find 5-8 people on LinkedIn currently working in your target field",
+          title: `Find 5-8 people whose work matches ${titles.length > 1 ? "your target fields" : "your target field"}`,
           detail: "Search alumni from your school first; they're the most likely to respond.",
           estimatedHours: 1,
           evidenceOfCompletion: "A saved list of 5-8 names with LinkedIn profile links",

@@ -22,6 +22,7 @@ For what's actually built right now vs. planned, always read **`docs/project-sta
 - **Strict TypeScript, no suppressions.** Never weaken `tsconfig.json`'s `strict: true`, add `@ts-ignore`/`eslint-disable` to hide a real error, or delete a failing check to make a build pass. Fix the root cause.
 - **No unnecessary rewrites.** The deterministic engines and the AI-fallback pattern in this codebase have been read line-by-line and audited for correctness (see `docs/project-state.md`) — they are not a prototype to be redesigned, they are the app's core differentiator. Extend them; don't replace them because a different pattern is more familiar or fashionable.
 - **Roadmap sequencing is education-stage-aware.** Route guidance through `lib/roadmap/stage-strategy.ts`; program-variable admissions tests require verification, retired credentials must not appear, and substantial actions should create demonstrated skill, credible evidence, real opportunity access, or required readiness.
+- **Roadmap language is reader-first.** Generated titles and descriptions must use clear professional language that a student can act on without knowing internal product or recruiting jargon. Treat career names as labels, not noun phrases to splice into generic sentences; prefer “your target field” or a concrete action when a role title would make the grammar awkward. Quality tests cover every career/stage combination and every career's reviewable-work goal.
 
 ## Technology stack
 

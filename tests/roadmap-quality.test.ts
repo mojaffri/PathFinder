@@ -86,6 +86,11 @@ test("every career and stage produces actionable, paced fallback guidance", () =
 
       const text = JSON.stringify({ analysis, fallback });
       assert.doesNotMatch(text, /PCAT/i, `${career.id}/${stage} references a retired exam`);
+      assert.doesNotMatch(
+        text,
+        /hard-to-copy|selection signal|turn this differentiator|selection process|proof standard|defensible interview bullets|a early undergraduate|common majors for .* is/i,
+        `${career.id}/${stage} contains unclear or ungrammatical roadmap language`,
+      );
       if (stage.startsWith("high-school-") || stage === "recent-hs-grad-gap-year") {
         assert.doesNotMatch(text, /register for and study for the (LSAT|MCAT|DAT|GRE|FE)/i, `${career.id}/${stage} schedules premature test prep`);
         assert.doesNotMatch(text, /20\+ employers/i, `${career.id}/${stage} receives a college-style application campaign`);
@@ -109,14 +114,48 @@ test("program-dependent exams trigger requirement verification instead of automa
   }
 });
 
-test("users with baseline evidence receive a get-ahead selection signal", () => {
+test("users with baseline evidence receive a clear, reviewable work goal", () => {
   const career = CAREERS.find((candidate) => candidate.id === "software-engineer");
   assert.ok(career);
   const request = requestFor(career.title, "college-sophomore", career.commonMajors[0]);
   request.projects = [{ id: "p", title: "Course project", technologies: ["JavaScript"], date: null, summary: null, bullets: ["Built a class assignment"], githubUrl: null }];
   const analysis = analyzeGaps(request, resolveCareers(CAREERS, [career.title]));
-  const edge = analysis.gaps.find((gap) => gap.title.includes("hard-to-copy selection signal"));
+  const edge = analysis.gaps.find((gap) => gap.title.includes("Deepen one software project"));
   assert.ok(edge);
-  assert.match(edge.description, /not another completion certificate/i);
+  assert.match(edge.description, /show how you think and what you can do/i);
+  assert.equal(edge.tacticalActions[0].title, "Write a short plan to deepen one software project until you can explain its design decisions, tradeoffs, tests, and results");
   assert.equal(edge.tacticalActions.reduce((sum, action) => sum + action.estimatedHours, 0), edge.estimatedHours);
+});
+
+test("reviewable-work goals remain clear for every supported career", () => {
+  for (const career of CAREERS) {
+    const request = requestFor(career.title, "college-sophomore", career.commonMajors[0] ?? "");
+    request.projects = [{ id: "p", title: "Existing project", technologies: [], date: null, summary: null, bullets: ["Completed a bounded project"], githubUrl: null }];
+    const analysis = analyzeGaps(request, resolveCareers(CAREERS, [career.title]));
+    const workGoal = analysis.gaps.find((gap) =>
+      gap.category === "experience" && gap.description.includes("finish something concrete"),
+    );
+
+    assert.ok(workGoal, `${career.id} did not produce a reviewable-work goal`);
+    const text = JSON.stringify(workGoal);
+    assert.doesNotMatch(text, /hard-to-copy|selection signal|turn this differentiator|proof standard|real judgment|specific criticism|defensible interview/i, career.id);
+    assert.match(workGoal.tacticalActions[0].title, /^Write a short plan to [a-z]/, career.id);
+    assert.equal(workGoal.tacticalActions.reduce((sum, action) => sum + action.estimatedHours, 0), workGoal.estimatedHours, career.id);
+  }
+});
+
+test("multi-career roadmaps use natural grammar and explain concrete work in plain language", () => {
+  const request = requestFor("Chemical Engineer", "college-sophomore", "Chemical Engineering");
+  request.targetCareers = ["Chemical Engineer", "Software Engineer"];
+  request.projects = [{ id: "p", title: "Titrate", technologies: ["Python"], date: null, summary: null, bullets: ["Modeled a chemical process"], githubUrl: null }];
+  const resolved = resolveCareers(CAREERS, request.targetCareers);
+  const analysis = analyzeGaps(request, resolved);
+  const fallback = generateFallbackRoadmap(request, resolved, analysis);
+  const text = JSON.stringify({ analysis, fallback });
+
+  assert.match(text, /Build a small Aspen Plus or HYSYS process model and explain its assumptions, results, and tradeoffs/);
+  assert.match(text, /Deepen one software project until you can explain its design decisions, tradeoffs, tests, and results/);
+  assert.match(text, /People entering this field often study/);
+  assert.match(text, /Schedule 2 to 3 conversations with people in your target fields/);
+  assert.doesNotMatch(text, /hard-to-copy|selection signal|turn this differentiator|selection process|a early|Common majors for Software Engineer is/i);
 });
