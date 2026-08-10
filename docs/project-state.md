@@ -4,6 +4,8 @@ Read this after [`CLAUDE.md`](../CLAUDE.md) and before touching code. This file 
 
 ## Last Updated
 
+2026-08-09 (session 6) — Production auth-degradation and brand polish: the supplied PathFinder logo is now the persistent product mark in the responsive navbar and authentication surfaces; public pages remain useful when Supabase is unavailable; protected routes redirect to a calm, actionable sign-in-unavailable screen instead of rendering raw `401 Not authenticated` API failures; login/signup no longer expose environment-variable or repository instructions; and the landing-page demo CTA no longer invites users into a demo that cannot work without Supabase. Protected-route matching was extracted and regression-tested with exact path-boundary checks. The top-level navigation inventory is intentionally unchanged pending explicit product-owner approval for consolidation.
+
 2026-08-09 (session 5) — Phase 4 product completeness: a compact nine-stage application pipeline, personalized saved-job requirement/evidence insights, a real-data main dashboard, longitudinal `/analytics`, expanded structured activity events, persistent per-user throttling on AI-cost routes, safe redirect handling, structured Vercel logs via Next instrumentation, Vercel page analytics, security headers, responsive/accessibility fixes, global error recovery, and Playwright + axe smoke coverage. The release also reconciles the remote SkillForge reliability work: a structured AI provider with timeout/retry/metadata, trusted server-side assessment catalogs, deterministic grading where possible, request-size limits, and recency/consistency-aware mastery signals. Next.js was upgraded from 16.2.11 to 16.3.0 to clear every production `npm audit` finding. Migrations `0009`/`0010` and the new repository/service/API/UI surfaces are described below.
 
 2026-08-08 (session 4) — Phase 3, the adaptive, evidence-aware roadmap engine, built this session: a curated skill dependency graph with cycle detection (`data/skill-graph.ts`, `lib/roadmap/skill-graph.ts`), a deterministic priority formula (`lib/roadmap/priority.ts`), real dependency-aware task generation (`lib/roadmap/adaptive-generator.ts`), a deterministic weekly scheduler with impossible-deadline detection (`lib/roadmap/scheduler.ts`), adaptive recomputation that preserves completed-task history (`lib/roadmap/adaptation.ts`), saved-job skill-frequency aggregation (`lib/roadmap/saved-job-signals.ts`), five new append-history-aware DB tables + repository (`repositories/adaptive-roadmap-repository.ts`), three API routes, and a full `/roadmap` UI. See "Adaptive Roadmap Engine" below and `docs/skill-graph.md`/`docs/roadmap-engine.md` for the full design. This supersedes session 3's checkpoint (evidence-backed skills + GitHub integration), which is otherwise unchanged and summarized below.
@@ -27,7 +29,7 @@ UI (client components)
 
 The deterministic domain engines remain explainable and storage-agnostic. SkillForge mastery received one deliberate extension during remote-history reconciliation: recent graded attempts are weighted more strongly and inconsistent results reduce confidence; the scoring remains deterministic and regression-tested.
 
-`proxy.ts` (not `middleware.ts` — Next.js 16 renamed the file convention; see `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`) refreshes the Supabase session on every request and server-side redirects unauthenticated visitors away from protected routes.
+`proxy.ts` (not `middleware.ts` — Next.js 16 renamed the file convention; see `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`) refreshes the Supabase session on every request and server-side redirects unauthenticated visitors away from protected routes. When Supabase is not configured, the same guard keeps public pages available and redirects protected pages to a user-facing service-unavailable state; private pages never fall through to raw API errors.
 
 ---
 
@@ -203,7 +205,7 @@ Integration (real repository/RLS behavior against pglite) — `tests/integration
 
 ## Deployment
 
-Live at https://path-finder-umber.vercel.app/ — **not yet redeployed with this phase's changes** (no Supabase project has been provisioned for the production deployment as part of this session; that's a manual step requiring real credentials, which this session couldn't do). Once a Supabase project exists and its env vars are set in Vercel, run `npm run db:migrate` and `npm run db:seed:reference` against it before the first real user signs up. If GitHub OAuth-connect is wanted in production, also enable GitHub as a Supabase Auth provider and set `GITHUB_TOKEN_ENCRYPTION_KEY` (public username/repo analysis needs neither). `.github/workflows/ci.yml` runs lint/typecheck/tests/build on every PR.
+Live at https://path-finder-umber.vercel.app/. No Supabase project is currently provisioned for production, so account-backed features remain unavailable by infrastructure, not by an application defect. The app now handles that state deliberately: public discovery stays available, protected routes go to a product-safe availability message, and no deployment instructions or raw authentication errors are shown to visitors. Once a Supabase project exists and its env vars are set in Vercel, run `npm run db:migrate` and `npm run db:seed:reference` against it before the first real user signs up. If GitHub OAuth-connect is wanted in production, also enable GitHub as a Supabase Auth provider and set `GITHUB_TOKEN_ENCRYPTION_KEY` (public username/repo analysis needs neither). `.github/workflows/ci.yml` runs lint/typecheck/tests/build on every PR.
 
 ---
 
@@ -304,6 +306,18 @@ Before any of these: provision a real Supabase project for the Vercel deployment
 Read these first in a fresh session, in this order: `CLAUDE.md` → this file → `docs/database.md` → `docs/security.md` → `docs/evidence-model.md` → `docs/github-integration.md` → `docs/skill-graph.md` → `docs/roadmap-engine.md` → `docs/architecture.md` → `docs/implementation-plan.md` → `types/profile.ts` + `types/roadmap.ts` + `types/adaptive-roadmap.ts` + `types/skill-graph.ts` + `types/skillforge.ts` + `types/job.ts` + `types/evidence.ts` + `types/github.ts` → `lib/gap-analysis/engine.ts` → `lib/roadmap/adaptation.ts` (the newest orchestration point, same deterministic discipline) → `lib/evidence/confidence.ts` → `repositories/profile-repository.ts` (the template every other repository follows) → `lib/db/with-user-context.ts` (the RLS-enforcement seam — read this before adding any new repository function).
 
 ## Verification Status
+
+Run 2026-08-09 (session 6), this exact repository state before deployment:
+
+```text
+npm run lint             → clean
+npm run typecheck        → clean
+npm test                 → 219 passed (32 files, including 36 integration)
+npm run test:e2e         → 5 passed desktop/mobile public + axe checks; 5 authenticated demo checks skipped because production auth credentials are absent locally
+npm run build            → clean (Next.js 16.3.0, 42 routes/pages)
+```
+
+Manual responsive screenshots additionally verified the branded navbar and landing page at 1440×900 and 390×844, plus the authentication-unavailable state at 900×900. Requests to `/applications` and the other protected product routes now receive a server-side `307` to `/login?redirectTo=…`; the browser regression test asserts that no `Not authenticated.` API error or Supabase environment-variable name reaches the page.
 
 Run 2026-08-09 (session 5), this exact repository state before deployment:
 

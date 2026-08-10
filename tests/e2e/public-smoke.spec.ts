@@ -8,15 +8,19 @@ test("landing and authentication entry points render without serious accessibili
   expect(results.violations.filter((violation) => violation.impact === "critical" || violation.impact === "serious")).toEqual([]);
   await page.goto("/login");
   await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
+  await expect(page.getByText(/NEXT_PUBLIC_SUPABASE/i)).toHaveCount(0);
   await page.goto("/signup");
   await expect(page.getByRole("heading", { name: /create your account/i })).toBeVisible();
+  await expect(page.getByText(/NEXT_PUBLIC_SUPABASE/i)).toHaveCount(0);
 });
 
-test("protected product routes never expose a blank screen", async ({ page }) => {
+test("protected product routes redirect to sign in without exposing API errors", async ({ page }) => {
   for (const path of ["/dashboard", "/onboarding", "/accelerate", "/jobs", "/roadmap", "/skillforge", "/applications", "/analytics"]) {
     await page.goto(path);
-    await expect(page.locator("body")).not.toBeEmpty();
+    await expect(page).toHaveURL(/\/login\?redirectTo=/);
     await expect(page.locator("main")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
+    await expect(page.getByText("Not authenticated.")).toHaveCount(0);
   }
 });
 

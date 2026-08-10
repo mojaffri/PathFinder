@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Compass, LayoutDashboard, Menu, Rocket, Bookmark, Hammer, Briefcase, FolderGit2, User, X, Map, ListChecks, ChartNoAxesCombined } from "lucide-react";
@@ -29,8 +30,20 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="text-base font-semibold tracking-tight text-foreground">
-          PathFinder
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2 text-base font-semibold tracking-tight text-foreground focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          aria-label="PathFinder home"
+        >
+          <Image
+            src="/pathfinder-logo.png"
+            alt=""
+            width={32}
+            height={32}
+            className="h-8 w-8 rounded-lg"
+            priority
+          />
+          <span>PathFinder</span>
         </Link>
 
         <nav aria-label="Primary navigation" className="hidden items-center gap-0.5 md:flex">

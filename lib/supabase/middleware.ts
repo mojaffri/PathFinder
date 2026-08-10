@@ -1,24 +1,34 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isProtectedRoute } from "@/lib/auth/route-access";
 
-/** Routes that require a signed-in session. Server-enforced here, not just hidden client-side. */
-const PROTECTED_PREFIXES = ["/dashboard", "/accelerate", "/skillforge", "/profile", "/saved", "/onboarding", "/jobs", "/projects", "/roadmap", "/applications", "/analytics"];
+function redirectToLogin(request: NextRequest) {
+  const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set(
+    "redirectTo",
+    `${request.nextUrl.pathname}${request.nextUrl.search}`,
+  );
+  return NextResponse.redirect(loginUrl);
+}
 
 /**
  * Refreshes the Supabase session cookie on every request and enforces route
  * protection server-side (redirecting to /login), so a disabled/absent
  * client-side guard can never expose a protected page. If Supabase isn't
- * configured, this is a no-op that lets every request through unauthenticated
- * — consistent with the rest of the app's graceful-degradation convention,
- * though in practice the protected pages themselves will show a
- * "sign in to continue" state rather than real data in that case.
+ * configured, public pages remain available while private pages redirect to
+ * the user-facing sign-in-unavailable state instead of rendering failed API
+ * requests or leaking deployment instructions.
  */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnonKey) return response;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return isProtectedRoute(request.nextUrl.pathname)
+      ? redirectToLogin(request)
+      : response;
+  }
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -43,11 +53,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isProtected = PROTECTED_PREFIXES.some((prefix) => request.nextUrl.pathname.startsWith(prefix));
-  if (isProtected && !user) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
+  if (isProtectedRoute(request.nextUrl.pathname) && !user) {
+    return redirectToLogin(request);
   }
 
   return response;

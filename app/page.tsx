@@ -1,6 +1,7 @@
 import { Compass, Rocket, Map, SearchCheck, Target } from "lucide-react";
 import { PathCard } from "@/components/landing/path-card";
 import { TryDemoButton } from "@/components/landing/try-demo-button";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 const HOW_IT_WORKS = [
   {
@@ -24,6 +25,8 @@ const HOW_IT_WORKS = [
 ];
 
 export default function HomePage() {
+  const accountAccessAvailable = isSupabaseConfigured();
+
   return (
     <div className="mx-auto max-w-6xl px-6">
       <section className="flex flex-col items-center py-20 text-center sm:py-28">
@@ -43,7 +46,9 @@ export default function HomePage() {
         <div className="mt-8 flex flex-col items-center gap-2">
           <TryDemoButton size="lg" />
           <p className="text-xs text-muted-foreground">
-            No signup — explore a fully populated profile, roadmap, and SkillForge progress.
+            {accountAccessAvailable
+              ? "No signup — explore a fully populated profile, roadmap, and SkillForge progress."
+              : "Career discovery is available now; account features are temporarily unavailable."}
           </p>
         </div>
       </section>

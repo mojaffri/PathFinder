@@ -1,4 +1,7 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
+import Link from "next/link";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export function AuthPageShell({
@@ -14,18 +17,24 @@ export function AuthPageShell({
     <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-md items-center px-4 py-12">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>{title}</CardTitle>
+          <Image src="/pathfinder-logo.png" alt="" width={48} height={48} className="mb-2 h-12 w-12 rounded-xl" priority />
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">{title}</h1>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
           {isSupabaseConfigured() ? (
             children
           ) : (
-            <p className="rounded-md border border-border bg-surface p-4 text-sm text-muted-foreground">
-              Authentication isn&apos;t configured in this environment yet. Set <code className="font-mono">NEXT_PUBLIC_SUPABASE_URL</code>{" "}
-              and <code className="font-mono">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> — see{" "}
-              <code className="font-mono">.env.example</code> and <code className="font-mono">docs/database.md</code>.
-            </p>
+            <div className="rounded-lg border border-border bg-surface p-5" role="status">
+              <h2 className="font-semibold text-foreground">Sign-in is temporarily unavailable</h2>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                We&apos;re finishing account access. You can still explore PathFinder&apos;s public career guides in the meantime.
+              </p>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <Link href="/discover" className={buttonVariants({ size: "sm" })}>Explore careers</Link>
+                <Link href="/" className={buttonVariants({ variant: "outline", size: "sm" })}>Back to home</Link>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
