@@ -4,6 +4,8 @@ Read this after [`CLAUDE.md`](../CLAUDE.md) and before touching code. This file 
 
 ## Last Updated
 
+2026-08-09 (session 10) — Google authentication is now production-ready. A dedicated `PathFinder` Google Cloud project and web OAuth client were created under a personal Google account with Cloud access; the client uses Supabase's exact hosted callback URL; Google is enabled in Supabase Auth; and the external consent screen is published for any Google Account rather than limited to manually listed test users. Vercel Production now has `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH=true`, so the existing guarded UI can advertise Google sign-in after the production redeploy. No Google client secret is stored in the repository or exposed through a `NEXT_PUBLIC_` variable.
+
 2026-08-09 (session 9) — Production authentication completed beyond the email-only baseline. The Supabase Site URL now points at the live Vercel domain; a dedicated GitHub OAuth app is registered and enabled through Supabase; GitHub provider tokens have a production AES-256-GCM encryption key; and the UI now advertises OAuth providers only behind explicit availability flags, with an accessible inline fallback instead of an alert or a broken provider button. The supplied signup marketing sentence was removed. `SUPABASE_SERVICE_ROLE_KEY` is installed for production, enabling original resume-file storage and complete account deletion. A confirmed, clearly labeled demo account was created and seeded with persisted profile, skills, saved jobs, fit snapshots, an application, adaptive-roadmap tasks, and honest demo activity/readiness history. Google OAuth remains hidden because the connected Texas A&M Google Workspace account reports that Google Cloud Platform is disabled by its administrator; no Google client can be created until that external policy changes.
 
 2026-08-09 (session 8) — Production Supabase authentication is live. The existing Supabase project now has migrations `0000` through `0010`, a dedicated least-privilege `pathfinder_app` runtime role, and the reference catalog seeded with 46 careers, 10 SkillForge modules, and 20 assessment definitions. Vercel Production and Preview now receive the Supabase project URL, publishable key, and pooled Postgres connection through sensitive environment variables. A clean production redeploy completed successfully, and a temporary smoke user proved the real flow end to end: sign up → confirm → password sign in → authenticated dashboard → onboarding. The smoke user was deleted after verification. Email confirmation remains enabled; Google/GitHub buttons still require those providers to be enabled separately in Supabase.
@@ -295,7 +297,7 @@ Both verified by a full `npm run lint` + `npm run typecheck` + `npm test` + `npm
 
 ## Current Phase
 
-Phase 4 — Product Completeness, **complete in the repository and connected to production Supabase**. All repository migrations through `0010` are applied; reference and demo data are seeded; Vercel has live Auth/Postgres/admin configuration; email/password and GitHub authentication are enabled; and service-role-only storage/account-deletion paths now have production credentials. Google OAuth is the sole provider exception because of an external Workspace policy and is intentionally hidden.
+Phase 4 — Product Completeness, **complete in the repository and connected to production Supabase**. All repository migrations through `0010` are applied; reference and demo data are seeded; Vercel has live Auth/Postgres/admin configuration; email/password, magic-link, Google, and GitHub authentication are enabled; and service-role-only storage/account-deletion paths have production credentials. Google uses its own published external consent screen and Supabase's hosted OAuth callback; GitHub uses its dedicated OAuth app.
 
 ## Next Recommended Phase
 
@@ -303,15 +305,27 @@ Recommended next steps, in priority order:
 
 1. Close the remaining direct-test gap in `lib/gap-analysis/engine.ts` before changing that engine.
 2. Add contextual `new-evidence`/`new-github-project`/`new-resume` adaptive-roadmap refresh links; those triggers remain backend-supported but not surfaced everywhere.
-3. If Google login is still desired, use a Google account/organization with Google Cloud enabled (or have the `tamu.edu` administrator enable it), then create the web OAuth client and turn on `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH` only after the Supabase provider is live.
+3. Add automated provider-redirect smoke coverage that can safely assert the Google and GitHub authorization endpoints without completing third-party login in CI.
 
-The prior Supabase-provisioning, service-role, demo, and GitHub-provider blockers are closed. Google Workspace policy and the adaptive roadmap's complete generate/complete/recompute journey remain the main live-verification gaps.
+The prior Supabase-provisioning, service-role, demo, GitHub-provider, and Google-provider blockers are closed. The adaptive roadmap's complete generate/complete/recompute journey remains the main live-verification gap.
 
 ## Important Files
 
 Read these first in a fresh session, in this order: `CLAUDE.md` → this file → `docs/database.md` → `docs/security.md` → `docs/evidence-model.md` → `docs/github-integration.md` → `docs/skill-graph.md` → `docs/roadmap-engine.md` → `docs/architecture.md` → `docs/implementation-plan.md` → `types/profile.ts` + `types/roadmap.ts` + `types/adaptive-roadmap.ts` + `types/skill-graph.ts` + `types/skillforge.ts` + `types/job.ts` + `types/evidence.ts` + `types/github.ts` → `lib/gap-analysis/engine.ts` → `lib/roadmap/adaptation.ts` (the newest orchestration point, same deterministic discipline) → `lib/evidence/confidence.ts` → `repositories/profile-repository.ts` (the template every other repository follows) → `lib/db/with-user-context.ts` (the RLS-enforcement seam — read this before adding any new repository function).
 
 ## Verification Status
+
+Run 2026-08-09 (session 10), Google OAuth production activation:
+
+```text
+npm run lint             → clean
+npm run typecheck        → clean
+npm test                 → 219 passed (32 files)
+npm run build            → clean (Next.js 16.3.0, 42 routes/pages)
+npm run test:e2e         → 6 passed; 6 authenticated/demo matrix cases skipped locally because production credentials are not stored in the repository
+Google Cloud audience    → In production; external access available to any Google Account
+Supabase Google provider → Enabled with the hosted /auth/v1/callback URL
+```
 
 Run 2026-08-09 (session 8), production Supabase activation:
 
