@@ -42,12 +42,16 @@ test("landing prioritizes the two user journeys in the first desktop view", asyn
 
   const discover = page.getByRole("link", { name: /Discover Your Path/i });
   const accelerate = page.getByRole("link", { name: /Accelerate Your Path/i });
+  const discoverHeading = page.getByRole("heading", { name: "Discover Your Path" });
+  const accelerateHeading = page.getByRole("heading", { name: "Accelerate Your Path" });
   await expect(discover).toBeVisible();
   await expect(accelerate).toBeVisible();
+  await expect(discoverHeading).toBeVisible();
+  await expect(accelerateHeading).toBeVisible();
 
   const viewportHeight = page.viewportSize()?.height ?? 0;
-  const discoverBox = await discover.boundingBox();
-  const accelerateBox = await accelerate.boundingBox();
+  const discoverBox = await discoverHeading.boundingBox();
+  const accelerateBox = await accelerateHeading.boundingBox();
   expect(discoverBox).not.toBeNull();
   expect(accelerateBox).not.toBeNull();
   expect((discoverBox?.y ?? viewportHeight) + (discoverBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);

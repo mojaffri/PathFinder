@@ -155,7 +155,7 @@ The production Playwright run covered one-click demo authentication and populate
 
 - GitHub Actions: [run 31369022449](https://github.com/mojaffri/PathFinder/actions/runs/31369022449) passed install, lint, typecheck, unit, integration, build, and Playwright checks for commit `0ee320a6`; the matching CodeQL run also passed.
 - Vercel production deployment: [commit deployment](https://path-finder-x4j2hwbev-mojaffris-projects.vercel.app) completed successfully and is aliased to the public URL.
-- Post-deploy desktop/mobile smoke: 8 public checks passed and 6 environment-specific cases skipped; no browser-visible server errors occurred.
+- Post-deploy desktop/mobile smoke: 9 public checks passed and 7 environment/device-specific cases skipped; no browser-visible server errors occurred.
 - Lighthouse on the public landing page: performance 98, accessibility 100, best practices 100, SEO 100.
 - Production dependency audit: zero high-severity production vulnerabilities.
 
