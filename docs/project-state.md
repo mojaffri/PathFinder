@@ -4,6 +4,8 @@ Read this after [`CLAUDE.md`](../CLAUDE.md) and before touching code. This file 
 
 ## Last Updated
 
+2026-08-09 (session 7) — Approved navigation consolidation: the wide-desktop header now keeps Discover, Accelerate, SkillForge, Plan, Dashboard, and Progress visible while Projects, Job Fit, Applications, and Saved live in one descriptive Workspace disclosure. The disclosure has explicit expanded state, current-route highlighting, outside-click/focus dismissal, Escape-to-close with focus restoration, and four direct links. Tablet and mobile widths now use the fully labeled navigation panel instead of an ambiguous icon-only header, with Workspace presented as a distinct section. Playwright covers the desktop disclosure, Escape behavior, navigation, and mobile Workspace visibility.
+
 2026-08-09 (session 6) — Production auth-degradation and brand polish: the supplied PathFinder logo is now the persistent product mark in the responsive navbar and authentication surfaces; public pages remain useful when Supabase is unavailable; protected routes redirect to a calm, actionable sign-in-unavailable screen instead of rendering raw `401 Not authenticated` API failures; login/signup no longer expose environment-variable or repository instructions; and the landing-page demo CTA no longer invites users into a demo that cannot work without Supabase. Protected-route matching was extracted and regression-tested with exact path-boundary checks. The top-level navigation inventory is intentionally unchanged pending explicit product-owner approval for consolidation.
 
 2026-08-09 (session 5) — Phase 4 product completeness: a compact nine-stage application pipeline, personalized saved-job requirement/evidence insights, a real-data main dashboard, longitudinal `/analytics`, expanded structured activity events, persistent per-user throttling on AI-cost routes, safe redirect handling, structured Vercel logs via Next instrumentation, Vercel page analytics, security headers, responsive/accessibility fixes, global error recovery, and Playwright + axe smoke coverage. The release also reconciles the remote SkillForge reliability work: a structured AI provider with timeout/retry/metadata, trusted server-side assessment catalogs, deterministic grading where possible, request-size limits, and recency/consistency-aware mastery signals. Next.js was upgraded from 16.2.11 to 16.3.0 to clear every production `npm audit` finding. Migrations `0009`/`0010` and the new repository/service/API/UI surfaces are described below.
@@ -306,6 +308,18 @@ Before any of these: provision a real Supabase project for the Vercel deployment
 Read these first in a fresh session, in this order: `CLAUDE.md` → this file → `docs/database.md` → `docs/security.md` → `docs/evidence-model.md` → `docs/github-integration.md` → `docs/skill-graph.md` → `docs/roadmap-engine.md` → `docs/architecture.md` → `docs/implementation-plan.md` → `types/profile.ts` + `types/roadmap.ts` + `types/adaptive-roadmap.ts` + `types/skill-graph.ts` + `types/skillforge.ts` + `types/job.ts` + `types/evidence.ts` + `types/github.ts` → `lib/gap-analysis/engine.ts` → `lib/roadmap/adaptation.ts` (the newest orchestration point, same deterministic discipline) → `lib/evidence/confidence.ts` → `repositories/profile-repository.ts` (the template every other repository follows) → `lib/db/with-user-context.ts` (the RLS-enforcement seam — read this before adding any new repository function).
 
 ## Verification Status
+
+Run 2026-08-09 (session 7), this exact repository state before deployment:
+
+```text
+npm run lint             → clean
+npm run typecheck        → clean
+npm test                 → 219 passed (32 files, including 36 integration)
+npm run build            → clean (Next.js 16.3.0, 42 routes/pages)
+npm run test:e2e         → 6 passed desktop/mobile public, accessibility, and navigation checks; 6 authenticated/demo checks skipped because Supabase credentials are absent locally
+```
+
+Manual browser checks covered the open Workspace disclosure at 1440×900 and the labeled navigation panel at 1024×768. Both layouts had zero horizontal overflow; the tablet menu exposed every primary and Workspace destination with accessible names.
 
 Run 2026-08-09 (session 6), this exact repository state before deployment:
 

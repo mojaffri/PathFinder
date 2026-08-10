@@ -31,5 +31,30 @@ test("mobile navigation is keyboard and screen-reader discoverable", async ({ pa
   await expect(menu).toHaveAttribute("aria-expanded", "false");
   await menu.click();
   await expect(menu).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByRole("navigation", { name: "Mobile navigation" })).toBeVisible();
+  const mobileNavigation = page.getByRole("navigation", { name: "Mobile navigation" });
+  await expect(mobileNavigation).toBeVisible();
+  await expect(mobileNavigation.getByText("Workspace", { exact: true })).toBeVisible();
+  await expect(mobileNavigation.getByRole("link", { name: "Applications" })).toBeVisible();
+});
+
+test("desktop workspace navigation supports disclosure, escape, and navigation", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes("mobile"), "Desktop workspace disclosure is replaced by the mobile menu.");
+  await page.goto("/");
+
+  const trigger = page.getByRole("button", { name: "Workspace" });
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await trigger.click();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+
+  const workspaceNavigation = page.getByRole("navigation", { name: "Workspace navigation" });
+  await expect(workspaceNavigation).toBeVisible();
+  await expect(workspaceNavigation.getByRole("link")).toHaveCount(4);
+
+  await page.keyboard.press("Escape");
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  await workspaceNavigation.getByRole("link", { name: /Applications/ }).click();
+  await expect(page).toHaveURL(/\/login\?redirectTo=%2Fapplications/);
 });

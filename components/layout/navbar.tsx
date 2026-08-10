@@ -3,29 +3,67 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Compass, LayoutDashboard, Menu, Rocket, Bookmark, Hammer, Briefcase, FolderGit2, User, X, Map, ListChecks, ChartNoAxesCombined } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Compass, LayoutDashboard, Menu, Rocket, Bookmark, Hammer, Briefcase, FolderGit2, User, X, Map, ListChecks, ChartNoAxesCombined, ChevronDown, PanelsTopLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/use-profile";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
-const NAV_LINKS = [
+const PRIMARY_NAV_LINKS = [
   { href: "/discover", label: "Discover", icon: Compass },
   { href: "/accelerate", label: "Accelerate", icon: Rocket },
   { href: "/skillforge", label: "SkillForge", icon: Hammer },
   { href: "/roadmap", label: "Plan", icon: Map },
-  { href: "/projects", label: "Projects", icon: FolderGit2 },
-  { href: "/jobs", label: "Job Fit", icon: Briefcase },
-  { href: "/applications", label: "Applications", icon: ListChecks },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/analytics", label: "Progress", icon: ChartNoAxesCombined },
-  { href: "/saved", label: "Saved", icon: Bookmark },
-];
+] as const;
+
+const WORKSPACE_LINKS = [
+  { href: "/projects", label: "Projects", description: "Build and review evidence", icon: FolderGit2 },
+  { href: "/jobs", label: "Job Fit", description: "Analyze saved opportunities", icon: Briefcase },
+  { href: "/applications", label: "Applications", description: "Track your pipeline", icon: ListChecks },
+  { href: "/saved", label: "Saved", description: "Review saved career guides", icon: Bookmark },
+] as const;
+
+function isRouteActive(pathname: string | null, href: string) {
+  return pathname === href || pathname?.startsWith(`${href}/`);
+}
 
 export function Navbar() {
   const pathname = usePathname();
   const { profile, isAuthenticated } = useProfile();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const workspaceButtonRef = useRef<HTMLButtonElement>(null);
+  const workspaceActive = WORKSPACE_LINKS.some(({ href }) => isRouteActive(pathname, href));
+
+  useEffect(() => {
+    if (!workspaceOpen) return;
+
+    function closeOnOutsideClick(event: PointerEvent) {
+      if (!workspaceRef.current?.contains(event.target as Node)) setWorkspaceOpen(false);
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setWorkspaceOpen(false);
+      workspaceButtonRef.current?.focus();
+    }
+
+    function closeOnFocusOutside(event: FocusEvent) {
+      if (!workspaceRef.current?.contains(event.target as Node)) setWorkspaceOpen(false);
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("focusin", closeOnFocusOutside);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("focusin", closeOnFocusOutside);
+    };
+  }, [workspaceOpen]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
@@ -46,9 +84,82 @@ export function Navbar() {
           <span>PathFinder</span>
         </Link>
 
-        <nav aria-label="Primary navigation" className="hidden items-center gap-0.5 md:flex">
-          {NAV_LINKS.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href || pathname?.startsWith(`${href}/`);
+        <nav aria-label="Primary navigation" className="hidden items-center gap-0.5 xl:flex">
+          {PRIMARY_NAV_LINKS.slice(0, 4).map(({ href, label, icon: Icon }) => {
+            const active = isRouteActive(pathname, href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium transition-colors xl:px-3",
+                  active
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-surface hover:text-foreground",
+                )}
+                aria-current={active ? "page" : undefined}
+                title={label}
+              >
+                <Icon className="h-4 w-4" />
+                <span className="hidden xl:inline">{label}</span>
+              </Link>
+            );
+          })}
+
+          <div ref={workspaceRef} className="relative">
+            <button
+              ref={workspaceButtonRef}
+              type="button"
+              aria-label="Workspace"
+              aria-expanded={workspaceOpen}
+              aria-controls="workspace-navigation"
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 xl:px-3",
+                workspaceActive || workspaceOpen
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:bg-surface hover:text-foreground",
+              )}
+              title="Workspace"
+              onClick={() => setWorkspaceOpen((open) => !open)}
+            >
+              <PanelsTopLeft className="h-4 w-4" />
+              <span className="hidden xl:inline">Workspace</span>
+              <ChevronDown className={cn("hidden h-3.5 w-3.5 transition-transform xl:block", workspaceOpen && "rotate-180")} aria-hidden="true" />
+            </button>
+
+            {workspaceOpen && (
+              <nav
+                id="workspace-navigation"
+                aria-label="Workspace navigation"
+                className="absolute left-1/2 top-[calc(100%+0.5rem)] w-64 -translate-x-1/2 rounded-lg border border-border bg-background p-2 shadow-lg"
+              >
+                {WORKSPACE_LINKS.map(({ href, label, description, icon: Icon }) => {
+                  const active = isRouteActive(pathname, href);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setWorkspaceOpen(false)}
+                      className={cn(
+                        "flex items-start gap-3 rounded-md px-3 py-2.5 transition-colors",
+                        active ? "bg-accent text-accent-foreground" : "hover:bg-surface",
+                      )}
+                      aria-current={active ? "page" : undefined}
+                    >
+                      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span>
+                        <span className="block text-sm font-medium">{label}</span>
+                        <span className="block text-xs text-muted-foreground">{description}</span>
+                      </span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            )}
+          </div>
+
+          {PRIMARY_NAV_LINKS.slice(4).map(({ href, label, icon: Icon }) => {
+            const active = isRouteActive(pathname, href);
             return (
               <Link
                 key={href}
@@ -69,7 +180,7 @@ export function Navbar() {
           })}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 xl:flex">
           {isAuthenticated && profile ? (
             <Link
               href="/profile"
@@ -82,9 +193,7 @@ export function Navbar() {
               )}
             </Link>
           ) : (
-            <Link href="/profile">
-              <Button size="sm">Get Started</Button>
-            </Link>
+            <Link href="/profile" className={buttonVariants({ size: "sm" })}>Get Started</Link>
           )}
         </div>
 
@@ -93,7 +202,7 @@ export function Navbar() {
           aria-label="Toggle menu"
           aria-expanded={mobileOpen}
           aria-controls="mobile-navigation"
-          className="flex h-9 w-9 items-center justify-center rounded-md text-foreground md:hidden"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 xl:hidden"
           onClick={() => setMobileOpen((v) => !v)}
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -101,20 +210,38 @@ export function Navbar() {
       </div>
 
       {mobileOpen && (
-        <nav id="mobile-navigation" aria-label="Mobile navigation" className="border-t border-border px-6 py-3 md:hidden">
+        <nav id="mobile-navigation" aria-label="Mobile navigation" className="border-t border-border px-6 py-3 xl:hidden">
           <div className="flex flex-col gap-1">
-            {NAV_LINKS.map(({ href, label, icon: Icon }) => (
+            {PRIMARY_NAV_LINKS.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-surface"
-                aria-current={pathname === href || pathname?.startsWith(`${href}/`) ? "page" : undefined}
+                aria-current={isRouteActive(pathname, href) ? "page" : undefined}
               >
                 <Icon className="h-4 w-4" />
                 {label}
               </Link>
             ))}
+            <div className="mt-2 border-t border-border pt-3" aria-labelledby="mobile-workspace-title">
+              <p id="mobile-workspace-title" className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Workspace</p>
+              {WORKSPACE_LINKS.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-surface",
+                    isRouteActive(pathname, href) && "bg-accent text-accent-foreground",
+                  )}
+                  aria-current={isRouteActive(pathname, href) ? "page" : undefined}
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+              ))}
+            </div>
             <Link
               href="/profile"
               onClick={() => setMobileOpen(false)}
