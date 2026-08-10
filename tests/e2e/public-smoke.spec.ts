@@ -36,6 +36,24 @@ test("color theme toggles and persists without changing page content", async ({ 
   await expect(root).toHaveAttribute("data-theme", selectedTheme);
 });
 
+test("landing prioritizes the two user journeys in the first desktop view", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes("mobile"), "The mobile layout intentionally scrolls the journey cards.");
+  await page.goto("/");
+
+  const discover = page.getByRole("link", { name: /Discover Your Path/i });
+  const accelerate = page.getByRole("link", { name: /Accelerate Your Path/i });
+  await expect(discover).toBeVisible();
+  await expect(accelerate).toBeVisible();
+
+  const viewportHeight = page.viewportSize()?.height ?? 0;
+  const discoverBox = await discover.boundingBox();
+  const accelerateBox = await accelerate.boundingBox();
+  expect(discoverBox).not.toBeNull();
+  expect(accelerateBox).not.toBeNull();
+  expect((discoverBox?.y ?? viewportHeight) + (discoverBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
+  expect((accelerateBox?.y ?? viewportHeight) + (accelerateBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
+});
+
 test("protected product routes redirect to sign in without exposing API errors", async ({ page }) => {
   for (const path of ["/dashboard", "/onboarding", "/accelerate", "/jobs", "/roadmap", "/skillforge", "/applications", "/analytics"]) {
     await page.goto(path);

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Compass, Rocket, Map, SearchCheck, Target, GitBranch, Scale, ShieldCheck } from "lucide-react";
 import { PathCard } from "@/components/landing/path-card";
 import { TryDemoButton } from "@/components/landing/try-demo-button";
-import { buttonVariants } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 const HOW_IT_WORKS = [
@@ -49,35 +48,28 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6">
-      <section className="relative flex flex-col items-center overflow-hidden py-20 text-center sm:py-28">
+      <section className="relative flex flex-col items-center overflow-hidden pb-7 pt-8 text-center sm:pb-8 sm:pt-10">
         <span className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted-foreground">
           Evidence-driven career readiness
         </span>
-        <h1 className="mt-6 max-w-3xl font-serif text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+        <h1 className="mt-4 max-w-4xl font-serif text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
           Find the career that fits you.
           <br />
           Then get unusually good at getting it.
         </h1>
-        <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
           PathFinder turns a student&apos;s resume, projects, assessments, and saved jobs into
           explainable fit scores, evidence-backed skill gaps, and a roadmap they can act on.
         </p>
-        <div className="mt-8 flex flex-col items-center gap-3">
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
-            <TryDemoButton variant="primary" size="lg" />
-            <Link href="/login" className={buttonVariants({ variant: "secondary", size: "lg" })}>
-              Sign in
-            </Link>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {accountAccessAvailable
-              ? "No signup — explore a fully populated profile, roadmap, and SkillForge progress."
-              : "Career discovery is available now; account features are temporarily unavailable."}
-          </p>
-        </div>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link href="/login" className="font-medium text-foreground underline decoration-border-strong underline-offset-4 hover:text-primary">
+            Sign in
+          </Link>
+        </p>
       </section>
 
-      <section className="grid gap-6 pb-24 sm:grid-cols-2">
+      <section className="grid gap-4 sm:grid-cols-2">
         <h2 className="sr-only">Choose where to start</h2>
         <PathCard
           href="/discover"
@@ -108,6 +100,17 @@ export default function HomePage() {
           cta="Build my roadmap"
         />
       </section>
+
+      {accountAccessAvailable && (
+        <aside className="flex items-center justify-center gap-1.5 pb-16 pt-3 text-xs text-muted-foreground" aria-label="Product demonstration">
+          <span>Want to review a populated example?</span>
+          <TryDemoButton
+            variant="ghost"
+            size="sm"
+            className="h-auto px-1 py-1 text-xs font-normal text-muted-foreground underline decoration-border-strong underline-offset-4 hover:bg-transparent hover:text-foreground"
+          />
+        </aside>
+      )}
 
       <section className="border-t border-border py-20" aria-labelledby="decision-system-heading">
         <div className="mx-auto max-w-2xl text-center">
