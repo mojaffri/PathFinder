@@ -160,11 +160,13 @@ export function ProfileView({
   onEdit,
   onSignOut,
   onDelete,
+  readOnly = false,
 }: {
   profile: StudentProfile;
   onEdit: () => void;
   onSignOut: () => void;
   onDelete: () => void;
+  readOnly?: boolean;
 }) {
   const hasAnyRecords =
     profile.education.length > 0 ||
@@ -184,9 +186,7 @@ export function ProfileView({
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={onEdit}>
-            Edit profile
-          </Button>
+          {!readOnly ? <Button variant="secondary" onClick={onEdit}>Edit profile</Button> : null}
           <Button variant="ghost" onClick={onSignOut}>
             Sign out
           </Button>
@@ -299,13 +299,11 @@ export function ProfileView({
         </CardContent>
       </Card>
 
-      <button
-        type="button"
-        onClick={onDelete}
-        className="self-start text-sm text-danger hover:underline"
-      >
-        Delete account
-      </button>
+      {!readOnly ? (
+        <button type="button" onClick={onDelete} className="self-start text-sm text-danger hover:underline">
+          Delete account
+        </button>
+      ) : null}
     </div>
   );
 }

@@ -110,8 +110,14 @@ export function ProfilePageClient() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
+      {profile.isDemo ? (
+        <p className="mb-6 rounded-md border border-accent bg-accent/30 px-4 py-3 text-sm text-accent-foreground">
+          This is a read-only fictional profile. Create your own account to upload a resume or change profile details.
+        </p>
+      ) : null}
       <ProfileView
         profile={profile}
+        readOnly={profile.isDemo}
         onEdit={() => setEditing(true)}
         onSignOut={signOut}
         onDelete={() => {
@@ -120,12 +126,14 @@ export function ProfilePageClient() {
           }
         }}
       />
-      <div className="mt-8">
-        <ResumeHistory
-          profileValues={profile}
-          onExtracted={(resumeData, initialValues) => setResumeReview({ resumeData, initialValues })}
-        />
-      </div>
+      {!profile.isDemo ? (
+        <div className="mt-8">
+          <ResumeHistory
+            profileValues={profile}
+            onExtracted={(resumeData, initialValues) => setResumeReview({ resumeData, initialValues })}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -134,6 +134,25 @@ export function AccelerateFlow({ initialCareer }: { initialCareer?: string }) {
     );
   }
 
+  if (profile?.isDemo) {
+    return (
+      <div className="mx-auto max-w-xl px-6 py-16">
+        <Card>
+          <CardHeader>
+            <CardTitle>Explore the fictional demo plan</CardTitle>
+            <CardDescription>
+              The public demo is read-only and already has a fictional profile, skill gaps, and scheduled roadmap tasks. Create your own account when you want to build and automatically save a personal roadmap.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3">
+            <Link href="/roadmap" className={buttonVariants()}>View seeded roadmap</Link>
+            <Link href="/profile" className={buttonVariants({ variant: "secondary" })}>View fictional profile</Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (step.kind === "choice") {
     return (
       <div className="mx-auto max-w-3xl px-6 py-16">
