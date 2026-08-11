@@ -1,4 +1,6 @@
-export const SITE_URL = "https://path-finder-umber.vercel.app";
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+  "https://getpathfinder.app";
 
 export const PRIVATE_PAGE_ROBOTS = {
   index: false,

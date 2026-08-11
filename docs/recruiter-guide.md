@@ -4,7 +4,7 @@ This guide is a compact map of what to inspect and what engineering decisions to
 
 ## Five-minute demo
 
-1. Open the [live site](https://path-finder-umber.vercel.app/) and choose **Try the demo**.
+1. Open the [live site](https://getpathfinder.app/) and choose **Try the demo**.
 2. On **Dashboard**, note the target role, 62% seeded readiness, scheduled tasks, saved-job-only gaps, evidence-backed skills, and recorded activity.
 3. Open **Workspace → Job Fit** and inspect one saved job's required/preferred requirements and evidence-backed match details.
 4. Open **Workspace → Projects** to see deterministic GitHub signals and the evidence ledger behind skills.

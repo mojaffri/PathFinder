@@ -54,7 +54,9 @@ test("launch essentials are public, linked, and indexable only where appropriate
   expect(await robots.text()).toContain("Disallow: /dashboard");
   const sitemap = await request.get("/sitemap.xml");
   expect(sitemap.ok()).toBe(true);
-  expect(await sitemap.text()).toContain("/privacy");
+  const sitemapText = await sitemap.text();
+  expect(sitemapText).toContain("https://getpathfinder.app/privacy");
+  expect(sitemapText).not.toContain("path-finder-umber.vercel.app");
 });
 
 test("password recovery is reachable without an authenticated session", async ({ page }) => {

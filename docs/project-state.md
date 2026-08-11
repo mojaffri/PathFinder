@@ -6,7 +6,7 @@ Read this after [`CLAUDE.md`](../CLAUDE.md). This document is the current operat
 
 PathFinder is in final portfolio/recruiter polish. The core product, persistence, authentication, deterministic scoring, AI boundaries, demo data, CI, and production deployment exist. The current release candidate focuses on accurate technical storytelling, demo reliability, security cleanup, and evidence-backed claims.
 
-Production: [https://path-finder-umber.vercel.app/](https://path-finder-umber.vercel.app/)
+Production: [https://getpathfinder.app/](https://getpathfinder.app/)
 
 Repository: [https://github.com/mojaffri/PathFinder](https://github.com/mojaffri/PathFinder)
 
@@ -192,6 +192,14 @@ Production Vercel currently has:
 `ANTHROPIC_API_KEY` and a server-wide `GITHUB_TOKEN` are optional. Structured AI requests use Vercel AI Gateway's automatic short-lived OIDC token in production; deterministic fallbacks/public unauthenticated GitHub limits remain supported.
 
 Supabase migrations `0000` through `0010`, reference data, and the shared demo account are seeded in production.
+
+## Custom production domain — 2026-08-11
+
+- `getpathfinder.app` is the canonical production domain and is connected to the Vercel production environment through Namecheap DNS.
+- `www.getpathfinder.app` and the legacy `path-finder-umber.vercel.app` project URL return permanent `308` redirects to the canonical apex domain.
+- Vercel production defines `NEXT_PUBLIC_SITE_URL=https://getpathfinder.app`; metadata, sitemap, robots, and social URLs use that canonical origin.
+- Supabase Auth uses `https://getpathfinder.app` as its Site URL and permits the production, localhost, and legacy Vercel callback URLs. Google OAuth continues to use Supabase's provider callback, then returns users to the permitted app callback.
+- Domain-release quality gate: lint and typecheck clean; 365 unit tests, 39 integration tests, and all 427 Vitest tests passed; the production build generated 53 page slots; Playwright passed 13 public desktop/mobile checks with 7 intentional environment/device skips.
 
 ## Known limitations and risks
 

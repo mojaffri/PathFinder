@@ -4,7 +4,7 @@
 
 **Evidence-driven career readiness: explainable job fit, validated skills, and adaptive roadmaps.**
 
-[Live demo](https://path-finder-umber.vercel.app/) · [Architecture](docs/architecture.md) · [Run locally](#local-setup)
+[Live demo](https://getpathfinder.app/) · [Architecture](docs/architecture.md) · [Run locally](#local-setup)
 
 [![CI](https://github.com/mojaffri/PathFinder/actions/workflows/ci.yml/badge.svg)](https://github.com/mojaffri/PathFinder/actions/workflows/ci.yml)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
@@ -38,7 +38,7 @@ Profile → Resume → Saved job → Requirement-level fit → Evidence-backed g
         → Adaptive roadmap → Assessments → Application and progress history
 ```
 
-For a zero-setup product tour, open the [live site](https://path-finder-umber.vercel.app/) and choose **Try the demo**. Seeded data is visibly labeled as demo data.
+For a zero-setup product tour, open the [live site](https://getpathfinder.app/) and choose **Try the demo**. Seeded data is visibly labeled as demo data.
 
 ## What makes it technically interesting
 
@@ -139,7 +139,7 @@ Add these Supabase Auth redirect URLs:
 
 ```text
 http://localhost:3000/auth/callback
-https://path-finder-umber.vercel.app/auth/callback
+https://getpathfinder.app/auth/callback
 ```
 
 Enable Google and/or GitHub in Supabase Auth, configure the provider credentials there, and set the matching public feature flag. GitHub project analysis can also use a server-side public-data token and a separate encryption key; it never requires private-repository scope.
