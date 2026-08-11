@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useProfile } from "@/hooks/use-profile";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { createEmptyProfile } from "@/types";
@@ -14,6 +14,10 @@ import { ResumeUpload } from "@/components/accelerate/resume-upload";
 import { ExtractedDataReview } from "@/components/accelerate/extracted-data-review";
 import { ProfileForm, type ProfileFormValues } from "@/components/profile/profile-form";
 import { RoadmapGenerator } from "@/components/roadmap/roadmap-generator";
+import { RoadmapView } from "@/components/roadmap/roadmap-view";
+import { getRoadmaps } from "@/services/roadmap-service";
+import { selectCurrentAccelerateRoadmap } from "@/lib/roadmap/current-roadmap";
+import type { SavedRoadmap } from "@/types";
 
 type Step =
   | { kind: "choice" }
@@ -26,6 +30,25 @@ type Step =
 export function AccelerateFlow({ initialCareer }: { initialCareer?: string }) {
   const { profile, isAuthenticated, isLoading, createProfile, updateProfile, completeOnboarding } = useProfile();
   const [step, setStep] = useState<Step>({ kind: "choice" });
+  const [currentRoadmap, setCurrentRoadmap] = useState<SavedRoadmap | null>(null);
+  const [checkingRoadmap, setCheckingRoadmap] = useState(true);
+  const [confirmAnother, setConfirmAnother] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    getRoadmaps()
+      .then((roadmaps) => {
+        if (!cancelled) setCurrentRoadmap(selectCurrentAccelerateRoadmap(roadmaps));
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingRoadmap(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, isLoading]);
 
   function baseValues(): ProfileFormValues {
     const base: ProfileFormValues = profile ?? createEmptyProfile("");
@@ -44,7 +67,7 @@ export function AccelerateFlow({ initialCareer }: { initialCareer?: string }) {
     setStep({ kind: "ready", values });
   }
 
-  if (isLoading) {
+  if (isLoading || (isAuthenticated && checkingRoadmap)) {
     return (
       <div className="flex justify-center py-24">
         <Spinner className="h-6 w-6 text-muted-foreground" />
@@ -69,6 +92,44 @@ export function AccelerateFlow({ initialCareer }: { initialCareer?: string }) {
             </Link>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (currentRoadmap) {
+    return (
+      <div className="mx-auto max-w-3xl px-6 py-16">
+        {confirmAnother ? (
+          <Card className="mb-6 border-primary/30">
+            <CardHeader>
+              <CardTitle>Build another roadmap?</CardTitle>
+              <CardDescription>
+                Your current roadmap is already saved in Saved guides. Starting again will keep this copy available there.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3">
+              <Button
+                onClick={() => {
+                  setCurrentRoadmap(null);
+                  setConfirmAnother(false);
+                  setStep({ kind: "choice" });
+                }}
+              >
+                Continue
+              </Button>
+              <Button variant="secondary" onClick={() => setConfirmAnother(false)}>Keep current roadmap</Button>
+            </CardContent>
+          </Card>
+        ) : null}
+        <RoadmapView
+          roadmap={currentRoadmap.roadmap}
+          actions={
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={() => setConfirmAnother(true)}>Build another roadmap</Button>
+              <Link href="/saved" className={buttonVariants({ variant: "ghost" })}>View saved guides</Link>
+            </div>
+          }
+        />
       </div>
     );
   }

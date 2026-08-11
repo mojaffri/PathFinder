@@ -87,13 +87,13 @@ export function SavedRoadmapsView() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       <h1 className="text-2xl font-semibold tracking-tight text-foreground">Saved guides</h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">Roadmaps you&apos;ve saved from Discover or Accelerate.</p>
+      <p className="mt-1.5 text-sm text-muted-foreground">Roadmaps are saved automatically when they are generated.</p>
 
       {roadmaps.length === 0 ? (
         <EmptyState
           icon={Bookmark}
           title="No saved guides yet"
-          description="Generate a roadmap from Discover or Accelerate, then save it to see it here."
+          description="Generate a roadmap from Discover or Accelerate and it will appear here automatically."
           className="mt-10"
         />
       ) : (

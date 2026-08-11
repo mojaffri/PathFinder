@@ -206,6 +206,8 @@ Supabase migrations `0000` through `0010`, reference data, and the shared demo a
 
 ## Launch essentials — 2026-08-10
 
+- Made the shared public demo read-only and changed reseeding to delete the existing demo profile and all cascading child records before recreating a wholly fictional showcase dataset, including removal of any stored resume files.
+- Roadmaps generated through Accelerate now save automatically, the newest Accelerate roadmap is restored on return, and starting another roadmap explicitly preserves the current copy in Saved guides.
 - Replaced the default Vercel favicon with generated PathFinder browser and Apple touch icons sourced from the canonical product logo.
 - Added complete password recovery with enumeration-safe request copy, PKCE callback exchange, authenticated password update, and local-session sign-out.
 - Added signup acceptance for the Terms and Privacy Notice plus a consistent 13+ account boundary enforced in forms and the profile API.

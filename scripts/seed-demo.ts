@@ -8,7 +8,9 @@ import { computePhaseTimelines, totalEstimatedHours } from "@/lib/roadmap/pacing
 import { buildTargetResumeBenchmark } from "@/lib/roadmap/target-resume";
 import type { RoadmapRequest } from "@/lib/roadmap/schema";
 import { getSkillModulesForCareers } from "@/lib/skillforge/catalog";
-import { createProfile, getProfileByUserId, markAsDemo, updateProfile, type ProfileWriteInput } from "@/repositories/profile-repository";
+import { createProfile, deleteProfile, getProfileByUserId, markAsDemo, type ProfileWriteInput } from "@/repositories/profile-repository";
+import { listResumeStoragePaths } from "@/repositories/resume-repository";
+import { deleteResumeFiles } from "@/lib/supabase/storage";
 import { saveRoadmap } from "@/repositories/roadmap-repository";
 import { saveCareerMatches } from "@/repositories/career-match-repository";
 import { markExerciseCompleted, markResourceCompleted } from "@/repositories/skillforge-repository";
@@ -151,9 +153,20 @@ async function main() {
   const request = buildDemoRequest();
   const writeInput = toWriteInput(request);
 
-  console.log("Seeding demo profile...");
+  console.log("Resetting the demo account to fictional seeded data...");
   const existing = await getProfileByUserId(userId);
-  await (existing ? updateProfile(userId, writeInput) : createProfile(userId, writeInput));
+  if (existing) {
+    const storagePaths = await listResumeStoragePaths(userId);
+    if (!(await deleteResumeFiles(storagePaths))) {
+      throw new Error("Could not remove the demo account's stored resume files.");
+    }
+    // The profile owns every demo-domain record through cascading foreign
+    // keys. Deleting it first guarantees stale resumes, repositories,
+    // projects, jobs, applications, evidence, and activity cannot survive a
+    // reseed and accidentally appear in the public showcase account.
+    await deleteProfile(userId);
+  }
+  await createProfile(userId, writeInput);
   await markAsDemo(userId);
 
   console.log("Computing and saving a real roadmap for the demo profile...");

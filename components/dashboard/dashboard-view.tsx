@@ -38,7 +38,7 @@ export function DashboardView() {
   const activeApplications = Object.entries(overview.applicationsByStage).filter(([stage]) => !["rejected", "withdrawn"].includes(stage)).reduce((sum, [, count]) => sum + count, 0);
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-      {overview.isDemoData && <p className="mb-6 rounded-md border border-accent bg-accent/30 px-4 py-3 text-sm text-accent-foreground">Demo account: the activity history on this page is seeded showcase data and resets periodically.</p>}
+      {overview.isDemoData && <p className="mb-6 rounded-md border border-accent bg-accent/30 px-4 py-3 text-sm text-accent-foreground">Read-only demo: every profile, project, job, and activity shown here is fictional seeded showcase data. Create an account to save your own work.</p>}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-medium text-primary">Your career command center</p><h1 className="mt-1 text-3xl font-semibold tracking-tight">Welcome back, {profile.name}</h1><p className="mt-2 text-sm text-muted-foreground">Focus on the next evidence-building move, not another checklist.</p></div><Link href="/analytics"><Button variant="outline"><ChartNoAxesCombined className="h-4 w-4" />View progress</Button></Link></div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

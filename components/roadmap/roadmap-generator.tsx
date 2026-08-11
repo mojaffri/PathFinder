@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { BookmarkCheck, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { RoadmapView } from "@/components/roadmap/roadmap-view";
 import { useProfile } from "@/hooks/use-profile";
@@ -48,7 +48,7 @@ export function RoadmapGenerator({
 }) {
   const { profile } = useProfile();
   const [state, setState] = useState<State>({ status: "loading" });
-  const [saved, setSaved] = useState<SavedRoadmap | null>(null);
+  const roadmapId = useRef<string>(crypto.randomUUID());
 
   async function generate() {
     setState({ status: "loading" });
@@ -65,7 +65,26 @@ export function RoadmapGenerator({
         return;
       }
 
-      setState({ status: "ready", roadmap: body as Roadmap });
+      if (!profile) {
+        setState({ status: "error", message: "Your profile was not ready. Refresh and try again." });
+        return;
+      }
+
+      const roadmap = body as Roadmap;
+      const now = new Date().toISOString();
+      const record: SavedRoadmap = {
+        id: roadmapId.current,
+        userId: profile.id,
+        major: profileValues.major,
+        targetCareers: profileValues.targetCareers,
+        educationStage: profileValues.educationStage,
+        createdAt: now,
+        updatedAt: now,
+        roadmap,
+        source,
+      };
+      const saved = await saveRoadmap(record);
+      setState({ status: "ready", roadmap: saved.roadmap });
     } catch {
       setState({ status: "error", message: "Couldn't reach the server. Check your connection and try again." });
     }
@@ -78,24 +97,6 @@ export function RoadmapGenerator({
     generate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  async function handleSave() {
-    if (state.status !== "ready" || !profile) return;
-    const now = new Date().toISOString();
-    const record: SavedRoadmap = {
-      id: crypto.randomUUID(),
-      userId: profile.id,
-      major: profileValues.major,
-      targetCareers: profileValues.targetCareers,
-      educationStage: profileValues.educationStage,
-      createdAt: now,
-      updatedAt: now,
-      roadmap: state.roadmap,
-      source,
-    };
-    const persisted = await saveRoadmap(record);
-    setSaved(persisted);
-  }
 
   if (state.status === "loading") {
     return (
@@ -122,19 +123,12 @@ export function RoadmapGenerator({
     <RoadmapView
       roadmap={state.roadmap}
       actions={
-        saved ? (
-          <div className="flex items-center gap-2">
-            <Badge>Saved</Badge>
-            <Link href="/saved">
-              <Button variant="secondary">View saved guides</Button>
-            </Link>
-          </div>
-        ) : (
-          <Button onClick={handleSave}>
-            <BookmarkCheck className="h-4 w-4" />
-            Save Guide
-          </Button>
-        )
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge>
+            <BookmarkCheck className="mr-1 h-3.5 w-3.5" /> Saved automatically
+          </Badge>
+          <Link href="/saved" className={buttonVariants({ variant: "secondary" })}>View saved guides</Link>
+        </div>
       }
     />
   );

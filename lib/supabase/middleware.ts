@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isProtectedRoute } from "@/lib/auth/route-access";
+import { isReadOnlyDemoMutation } from "@/lib/auth/demo-access";
 
 function redirectToLogin(request: NextRequest) {
   const loginUrl = new URL("/login", request.url);
@@ -55,6 +56,18 @@ export async function updateSession(request: NextRequest) {
 
   if (isProtectedRoute(request.nextUrl.pathname) && !user) {
     return redirectToLogin(request);
+  }
+
+  if (isReadOnlyDemoMutation({
+    pathname: request.nextUrl.pathname,
+    method: request.method,
+    userEmail: user?.email,
+    demoEmail: process.env.DEMO_USER_EMAIL,
+  })) {
+    return NextResponse.json(
+      { error: "The public demo is read-only so it always contains fictional showcase data. Create an account to save your own work." },
+      { status: 403 },
+    );
   }
 
   return response;
