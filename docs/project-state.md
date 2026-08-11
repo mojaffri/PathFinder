@@ -206,6 +206,7 @@ Supabase migrations `0000` through `0010`, reference data, and the shared demo a
 
 ## Launch essentials — 2026-08-10
 
+- Replaced the default Vercel favicon with generated PathFinder browser and Apple touch icons sourced from the canonical product logo.
 - Added complete password recovery with enumeration-safe request copy, PKCE callback exchange, authenticated password update, and local-session sign-out.
 - Added signup acceptance for the Terms and Privacy Notice plus a consistent 13+ account boundary enforced in forms and the profile API.
 - Added public Privacy, Terms, FAQ, and transparent How It Works pages without adding more content above the landing-page fold.
