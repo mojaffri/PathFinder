@@ -15,10 +15,10 @@ const BULLETS = ["- ", "• ", "◦ "] as const;
 
 function generatedResume(index: number): string {
   const headings = RESUME_HEADINGS[index % RESUME_HEADINGS.length];
-  const separator = ENTRY_SEPARATORS[index % ENTRY_SEPARATORS.length];
-  const dateSeparator = DATE_SEPARATORS[index % DATE_SEPARATORS.length];
-  const bullet = BULLETS[index % BULLETS.length];
-  const endDate = index % 2 === 0 ? "Present" : "Current";
+  const separator = ENTRY_SEPARATORS[Math.floor(index / 3) % ENTRY_SEPARATORS.length];
+  const dateSeparator = DATE_SEPARATORS[Math.floor(index / 9) % DATE_SEPARATORS.length];
+  const bullet = BULLETS[Math.floor(index / 27) % BULLETS.length];
+  const endDate = Math.floor(index / 81) % 2 === 0 ? "Present" : "Current";
   const sections = [
     `${headings[0]}\nSoftware Engineer Intern${separator}Northstar Labs${separator}Austin, TX${separator}Jun 2024${dateSeparator}${endDate}\n${bullet}Built Python and SQL services for a production analytics workflow.`,
     `${headings[1]}\nPathFinder Portfolio\nhttps://github.com/example/pathfinder\n${bullet}Developed a TypeScript roadmap engine with React.`,
@@ -27,12 +27,12 @@ function generatedResume(index: number): string {
     `${headings[4]}\nAWS Certified Cloud Practitioner | Amazon Web Services | 2025`,
     `${headings[5]}\n${bullet}Dean's List | Lakeview University | 2024`,
   ];
-  const rotation = index % sections.length;
+  const rotation = Math.floor(index / 6) % sections.length;
   return [...sections.slice(rotation), ...sections.slice(0, rotation)].join("\n\n");
 }
 
 describe("deterministic resume layout corpus", () => {
-  for (let index = 0; index < 18; index++) {
+  for (let index = 0; index < 162; index++) {
     it(`sorts generated resume variant ${index + 1} into the correct sections`, () => {
       const result = extractResumeDataHeuristically(generatedResume(index));
       expect(ResumeExtractionSchema.safeParse(result).success).toBe(true);

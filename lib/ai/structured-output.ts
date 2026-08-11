@@ -15,6 +15,7 @@ export async function requestStructuredAI<T>({
   toolName,
   toolDescription,
   prompt,
+  document,
   maxTokens,
   timeoutMs = 20_000,
   malformedRetries = 1,
@@ -26,6 +27,7 @@ export async function requestStructuredAI<T>({
   toolName: string;
   toolDescription: string;
   prompt: string;
+  document?: { mediaType: "application/pdf"; data: string; title?: string };
   maxTokens: number;
   timeoutMs?: number;
   malformedRetries?: number;
@@ -46,7 +48,7 @@ export async function requestStructuredAI<T>({
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await provider.generateStructured({ feature, maxTokens, toolName, toolDescription, toolSchema, prompt, signal: controller.signal });
+      const response = await provider.generateStructured({ feature, maxTokens, toolName, toolDescription, toolSchema, prompt, document, signal: controller.signal });
       const parsed = schema.safeParse(response.data);
       if (!parsed.success) {
         parseFailures += 1;

@@ -189,7 +189,7 @@ Production Vercel currently has:
 - demo account credentials;
 - GitHub token-encryption key.
 
-`ANTHROPIC_API_KEY` and a server-wide `GITHUB_TOKEN` are optional; deterministic fallbacks/public unauthenticated GitHub limits remain supported.
+`ANTHROPIC_API_KEY` and a server-wide `GITHUB_TOKEN` are optional. Structured AI requests use Vercel AI Gateway's automatic short-lived OIDC token in production; deterministic fallbacks/public unauthenticated GitHub limits remain supported.
 
 Supabase migrations `0000` through `0010`, reference data, and the shared demo account are seeded in production.
 
@@ -214,6 +214,15 @@ Supabase migrations `0000` through `0010`, reference data, and the shared demo a
 - Added public Privacy, Terms, FAQ, and transparent How It Works pages without adding more content above the landing-page fold.
 - Added a recruiter- and user-friendly footer, improved 404 recovery, public-route sitemap, private-route crawler exclusions/noindex metadata, corrected page-title composition, and a branded social preview image.
 - Added Playwright coverage for the trust pages, footer links, crawler files, metadata title, and password-recovery entry point.
+
+## Assessment and resume-ingestion reliability — 2026-08-10
+
+- Replaced every current free-text SkillForge diagnostic and mastery item with a curated multiple-choice or true/false question. All 10 modules now grade deterministically without an AI call, while the dormant open-response path explicitly grades semantic meaning rather than exact wording.
+- Fixed the assessment UI to render keyboard-accessible radio groups, require all answers before submission, preserve answers on retry, and distinguish grading failures from persistence failures instead of claiming unsaved data was saved.
+- Added PDF document blocks to the structured-AI boundary. Validated PDFs are sent server-side with their extracted text so the model can interpret columns and read scanned/image-only resumes; production authentication uses Vercel AI Gateway's automatic OIDC token when no direct Anthropic key is present.
+- Strengthened the resume extraction prompt around two-pass entity grouping and strict name/title/organization/description boundaries. Normalization now repairs reversed job/company fields and merges action-led orphan project, experience, and award descriptions without losing technology tags.
+- Expanded deterministic resume layout coverage from 18 to 162 generated combinations across section names, separators, date syntax, bullet glyphs, current-role wording, and section order. The supplied sample PDF was confirmed to be image-only and is now covered by the visual-document path rather than being sent to an empty text parser.
+- Quality gate: lint and typecheck clean; 426 Vitest tests across 37 files; production build clean with 53 generated page slots; local Playwright smoke 13 passed and 7 intentional environment/device skips.
 
 ## Next three improvements
 

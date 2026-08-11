@@ -34,6 +34,8 @@ Grade honestly and specifically. For EACH question, distinguish:
 - "incorrect": wrong or reflects a genuine misconception.
 - "insufficient-evidence": too short, vague, or off-topic to judge either way — never guess in the student's favor here.
 
+Judge semantic meaning, not exact wording. Accept paraphrases, synonyms, minor grammar mistakes, and answers that reach the correct conclusion through a different valid example. Do not require the student to repeat vocabulary from the prompt or concept description. A small wording or notation error should be partially correct when the central reasoning is sound; reserve incorrect for a genuinely wrong conclusion or misconception.
+
 Do not reward confident-sounding but wrong or vague answers. If a student is wrong or vague, explain specifically what they got wrong or missed, referencing the actual concept.
 
 Then give:

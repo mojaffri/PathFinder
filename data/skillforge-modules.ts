@@ -125,8 +125,8 @@ export const SKILL_MODULES: SkillModule[] = [
       id: "diag-1",
       instructions: "If you've already interviewed or practiced before, this should take under 5 minutes.",
       prompts: [
-        { id: "diag-q1", conceptId: "pattern-recognition", prompt: "Given an unsorted array, you need to find if any two numbers sum to a target value. What pattern would you reach for, and what's the time complexity?" },
-        { id: "diag-q2", conceptId: "complexity-analysis", prompt: "You have a working O(n^2) solution to a problem with n up to 100,000. Is that good enough? How do you know?" },
+        { id: "diag-q1", conceptId: "pattern-recognition", prompt: "For an unsorted array, which approach most efficiently checks whether two values sum to a target?", kind: "multiple-choice", options: ["Check every pair in O(n²)", "Track seen values in a hash set in O(n)", "Sort repeatedly after reading each value", "Use depth-first search"], correctAnswer: "Track seen values in a hash set in O(n)" },
+        { id: "diag-q2", conceptId: "complexity-analysis", prompt: "A solution is O(n²) and n can reach 100,000. What is the best conclusion?", kind: "multiple-choice", options: ["It is probably too slow because work grows to roughly 10 billion comparisons", "It is always fast enough because it is polynomial", "Complexity does not matter when the code is correct", "It will perform the same as O(n log n)"], correctAnswer: "It is probably too slow because work grows to roughly 10 billion comparisons" },
       ],
     },
     assessment: {
@@ -135,8 +135,8 @@ export const SKILL_MODULES: SkillModule[] = [
       description: "Rate your own interview readiness after each mock interview.",
       passingCriteria: "Consistently solving core-pattern problems within a reasonable time limit while explaining your approach clearly.",
       questions: [
-        { id: "q1", conceptId: "pattern-recognition", prompt: "Describe a problem you solved recently: what pattern did you recognize, and how did you know?" },
-        { id: "q2", conceptId: "verbal-reasoning", prompt: "How do you typically structure explaining your approach out loud before writing code?" },
+        { id: "q1", conceptId: "pattern-recognition", prompt: "A problem asks for the longest substring with no repeated characters. Which pattern is the best starting point?", kind: "multiple-choice", options: ["Sliding window with a set or last-seen map", "Breadth-first search", "Union-find", "Binary-tree traversal"], correctAnswer: "Sliding window with a set or last-seen map" },
+        { id: "q2", conceptId: "verbal-reasoning", prompt: "What is the strongest way to begin explaining a coding solution?", kind: "multiple-choice", options: ["Start typing immediately", "Restate constraints, describe the approach and data structures, then analyze complexity before coding", "Read the prompt aloud repeatedly", "Give only the final complexity"], correctAnswer: "Restate constraints, describe the approach and data structures, then analyze complexity before coding" },
       ],
     },
     interviewRelevance: "This skill IS the interview for most software roles — expect 1-2 live coding rounds testing exactly this.",
@@ -200,9 +200,9 @@ export const SKILL_MODULES: SkillModule[] = [
       description: "Complete the core resources and exercises, then submit the project for review.",
       passingCriteria: "Correctly interprets distribution shape and a hypothesis test result without common misconceptions.",
       questions: [
-        { id: "q1", conceptId: "probability-basics", prompt: "Explain the difference between P(A given B) and P(B given A) with a concrete example." },
-        { id: "q2", conceptId: "hypothesis-testing", prompt: "A colleague says 'the p-value was 0.5% so the effect must be huge.' What's wrong with that statement?" },
-        { id: "q3", conceptId: "descriptive-statistics", prompt: "When would you report the median instead of the mean, and why?" },
+        { id: "q1", conceptId: "probability-basics", prompt: "Which statement about P(A given B) and P(B given A) is correct?", kind: "multiple-choice", options: ["They are always equal", "They condition on different known events and can be very different", "Both equal P(A and B)", "Neither depends on base rates"], correctAnswer: "They condition on different known events and can be very different" },
+        { id: "q2", conceptId: "hypothesis-testing", prompt: "A p-value is 0.5%. What can you conclude?", kind: "multiple-choice", options: ["The effect must be large", "The data would be unusual under the null, but effect size must be evaluated separately", "There is a 99.5% chance the hypothesis is true", "The result is automatically useful in practice"], correctAnswer: "The data would be unusual under the null, but effect size must be evaluated separately" },
+        { id: "q3", conceptId: "descriptive-statistics", prompt: "When is the median usually more informative than the mean?", kind: "multiple-choice", options: ["When a distribution is strongly skewed or has extreme outliers", "Whenever the sample is large", "Only for categories with no order", "When every value is identical"], correctAnswer: "When a distribution is strongly skewed or has extreme outliers" },
       ],
     },
     interviewRelevance: "Expect at least one question that tests whether you actually understand a p-value or distribution, not just whether you can name one.",
@@ -256,8 +256,8 @@ export const SKILL_MODULES: SkillModule[] = [
       id: "diag-1",
       instructions: "If you've built a model before (school, internship, self-study), this should be quick.",
       prompts: [
-        { id: "diag-q1", conceptId: "three-statement-linking", prompt: "Walk through how a $10M increase in revenue flows through the income statement into cash and the balance sheet." },
-        { id: "diag-q2", conceptId: "valuation-methods", prompt: "When would you use a DCF instead of a comparable-company analysis, and why?" },
+        { id: "diag-q1", conceptId: "three-statement-linking", prompt: "All else equal, how does an increase in revenue flow through a linked three-statement model?", kind: "multiple-choice", options: ["It affects only revenue", "It changes net income, flows into cash from operations, and updates cash and retained earnings", "It changes cash but never equity", "It reduces assets automatically"], correctAnswer: "It changes net income, flows into cash from operations, and updates cash and retained earnings" },
+        { id: "diag-q2", conceptId: "valuation-methods", prompt: "When is a DCF generally more useful than comparable-company analysis?", kind: "multiple-choice", options: ["When reliable cash-flow forecasts are available and intrinsic value matters", "When no forecasts or assumptions can be made", "Whenever competitors trade at similar multiples", "Only when a company has no revenue"], correctAnswer: "When reliable cash-flow forecasts are available and intrinsic value matters" },
       ],
     },
     assessment: {
@@ -266,12 +266,15 @@ export const SKILL_MODULES: SkillModule[] = [
       description: "Have someone with finance experience review your model for logic errors and defensibility.",
       passingCriteria: "The model links correctly with no circular-reference errors, and you can explain every major assumption.",
       questions: [
-        { id: "q1", conceptId: "three-statement-linking", prompt: "Describe a real link in your model (or one you'd build) between two of the three statements, and what would break if it were hardcoded instead." },
-        { id: "q2", conceptId: "sensitivity-analysis", prompt: "Your model's valuation moves 20% when you change the growth assumption by 2 points. Is that a red flag, and how would you present that to someone reviewing your pitch?" },
+        { id: "q1", conceptId: "three-statement-linking", prompt: "Why should depreciation be linked rather than hardcoded across a three-statement model?", kind: "multiple-choice", options: ["A link keeps the income-statement expense, cash-flow add-back, and asset balance consistent as assumptions change", "Hardcoding is always more accurate", "Depreciation affects only revenue", "Links prevent any assumption from changing"], correctAnswer: "A link keeps the income-statement expense, cash-flow add-back, and asset balance consistent as assumptions change" },
+        { id: "q2", conceptId: "sensitivity-analysis", prompt: "Valuation changes 20% when growth changes by two percentage points. How should this be presented?", kind: "multiple-choice", options: ["Hide the sensitivity", "Show a sensitivity range, explain the assumption's importance, and test whether the range is plausible", "Call the model wrong immediately", "Report only the midpoint"], correctAnswer: "Show a sensitivity range, explain the assumption's importance, and test whether the range is plausible" },
         {
           id: "q3",
           conceptId: "descriptive-statistics",
-          prompt: "Your model's historical revenue data has a couple of extreme outlier quarters. How would that affect an average growth-rate assumption, and what would you use instead?",
+          prompt: "Historical revenue has two extreme outlier quarters. Which growth assumption is most defensible?",
+          kind: "multiple-choice",
+          options: ["Use the simple average without inspection", "Inspect the causes and use a robust measure such as median or normalized growth, with the outliers shown separately", "Delete the quarters without disclosure", "Use the largest quarter"],
+          correctAnswer: "Inspect the causes and use a robust measure such as median or normalized growth, with the outliers shown separately",
         },
       ],
     },
@@ -326,8 +329,8 @@ export const SKILL_MODULES: SkillModule[] = [
       id: "diag-1",
       instructions: "One structuring question, one math question — see where you actually stand.",
       prompts: [
-        { id: "diag-q1", conceptId: "structuring-ambiguity", prompt: "A client asks: 'Should we launch a subscription tier for our app?' Give your first-30-seconds structure for approaching this." },
-        { id: "diag-q2", conceptId: "quantitative-estimation", prompt: "Estimate how many coffee shops are in a city of 2 million people. Show your approach, not just a final number." },
+        { id: "diag-q1", conceptId: "structuring-ambiguity", prompt: "A client asks whether to launch a subscription tier. Which opening structure is strongest?", kind: "multiple-choice", options: ["Start listing features immediately", "Clarify the objective, then assess customer demand, economics, competition, and execution risks", "Choose yes or no before asking questions", "Copy a competitor's pricing"], correctAnswer: "Clarify the objective, then assess customer demand, economics, competition, and execution risks" },
+        { id: "diag-q2", conceptId: "quantitative-estimation", prompt: "Which approach produces the most defensible estimate of coffee shops in a city?", kind: "multiple-choice", options: ["Guess one number from memory", "Estimate coffee demand by population and visits, divide by realistic shop capacity, then sanity-check", "Count only major chains", "Use the city's land area alone"], correctAnswer: "Estimate coffee demand by population and visits, divide by realistic shop capacity, then sanity-check" },
       ],
     },
     assessment: {
@@ -336,8 +339,8 @@ export const SKILL_MODULES: SkillModule[] = [
       description: "Rate your structuring speed and clarity after each mock case.",
       passingCriteria: "Consistently structuring a case within the first two minutes and reaching a defensible recommendation.",
       questions: [
-        { id: "q1", conceptId: "structuring-ambiguity", prompt: "Describe how you structured your most recent practice case in the first two minutes." },
-        { id: "q2", conceptId: "recommendation-synthesis", prompt: "Give an example of a recommendation you landed on in a recent case, and the one or two data points that drove it." },
+        { id: "q1", conceptId: "structuring-ambiguity", prompt: "Which first-two-minute case approach is strongest?", kind: "multiple-choice", options: ["Clarify the objective, state a tailored issue tree, and explain the order of analysis", "Start calculating before defining the question", "Recite every framework you know", "Wait for the interviewer to provide a structure"], correctAnswer: "Clarify the objective, state a tailored issue tree, and explain the order of analysis" },
+        { id: "q2", conceptId: "recommendation-synthesis", prompt: "What makes a strong final case recommendation?", kind: "multiple-choice", options: ["A clear answer supported by the decisive evidence, plus key risk and next step", "A list of every fact mentioned", "A recommendation with no caveats", "More analysis but no decision"], correctAnswer: "A clear answer supported by the decisive evidence, plus key risk and next step" },
       ],
     },
     interviewRelevance: "This skill is tested directly and repeatedly — expect 2-4 case rounds in a real consulting or PM interview loop.",
@@ -391,8 +394,8 @@ export const SKILL_MODULES: SkillModule[] = [
       id: "diag-1",
       instructions: "If you've written legal memos before (school, internship, moot court), this should be fast.",
       prompts: [
-        { id: "diag-q1", conceptId: "irac-structure", prompt: "In one or two sentences, explain what each letter of IRAC stands for and why the order matters." },
-        { id: "diag-q2", conceptId: "counterargument-handling", prompt: "Why should a persuasive brief address the strongest opposing argument directly instead of ignoring it?" },
+        { id: "diag-q1", conceptId: "irac-structure", prompt: "What does IRAC stand for?", kind: "multiple-choice", options: ["Issue, Rule, Application, Conclusion", "Investigation, Record, Argument, Citation", "Issue, Research, Authority, Case", "Introduction, Reasoning, Analysis, Closing"], correctAnswer: "Issue, Rule, Application, Conclusion" },
+        { id: "diag-q2", conceptId: "counterargument-handling", prompt: "Why should a persuasive brief address the strongest opposing argument?", kind: "multiple-choice", options: ["To make the brief longer", "To show the writer understands the dispute and can explain why the position still holds", "To avoid stating a conclusion", "To replace supporting authority"], correctAnswer: "To show the writer understands the dispute and can explain why the position still holds" },
       ],
     },
     assessment: {
@@ -401,8 +404,8 @@ export const SKILL_MODULES: SkillModule[] = [
       description: "Have a mentor, professor, or practicing attorney review your memo for clarity and argument strength.",
       passingCriteria: "Clear IRAC structure, properly cited research, and a defensible, well-argued conclusion.",
       questions: [
-        { id: "q1", conceptId: "irac-structure", prompt: "State the issue and conclusion of your memo (or planned memo) in two sentences, before any reasoning." },
-        { id: "q2", conceptId: "counterargument-handling", prompt: "What's the strongest argument against your position, and how do you address it in your memo?" },
+        { id: "q1", conceptId: "irac-structure", prompt: "Where should facts be connected to the governing rule in IRAC?", kind: "multiple-choice", options: ["Application", "Issue", "Rule", "Conclusion only"], correctAnswer: "Application" },
+        { id: "q2", conceptId: "counterargument-handling", prompt: "What is the best treatment of a strong counterargument in a legal memo?", kind: "multiple-choice", options: ["State it fairly, analyze its authority and facts, then explain why the conclusion still follows", "Ignore it", "Describe it as foolish", "Move it to an uncited footnote"], correctAnswer: "State it fairly, analyze its authority and facts, then explain why the conclusion still follows" },
       ],
     },
     interviewRelevance: "Writing samples are commonly reviewed directly as part of the interview process — this artifact IS part of your candidacy.",
@@ -456,8 +459,8 @@ export const SKILL_MODULES: SkillModule[] = [
       id: "diag-1",
       instructions: "If you've already shadowed or worked in a clinical setting, this should be quick.",
       prompts: [
-        { id: "diag-q1", conceptId: "situational-judgment", prompt: "A patient asks you a question you (as a shadowing student, not the clinician) aren't supposed to answer. What do you say?" },
-        { id: "diag-q2", conceptId: "empathetic-communication", prompt: "Describe how you'd communicate an uncertain or worrying piece of news to a patient in a way that's honest but not alarming." },
+        { id: "diag-q1", conceptId: "situational-judgment", prompt: "A patient asks a shadowing student for medical advice. What is the best response?", kind: "multiple-choice", options: ["Give the most likely answer", "Explain your role and ask the clinician to address the question", "Search online and read the first result", "Avoid responding and leave"], correctAnswer: "Explain your role and ask the clinician to address the question" },
+        { id: "diag-q2", conceptId: "empathetic-communication", prompt: "Which approach best communicates uncertain, worrying information?", kind: "multiple-choice", options: ["State the worst outcome as certain", "Use clear language, acknowledge uncertainty and emotion, check understanding, and explain the next step", "Use technical terms to sound confident", "Withhold all information until certainty is possible"], correctAnswer: "Use clear language, acknowledge uncertainty and emotion, check understanding, and explain the next step" },
       ],
     },
     assessment: {
@@ -466,8 +469,8 @@ export const SKILL_MODULES: SkillModule[] = [
       description: "Rate your comfort articulating specific clinical experiences after each shadowing session.",
       passingCriteria: "Can describe specific patient interactions in detail, not generic statements about 'wanting to help people.'",
       questions: [
-        { id: "q1", conceptId: "history-taking", prompt: "Describe a specific patient interaction you observed or led, including what questions were asked and why." },
-        { id: "q2", conceptId: "situational-judgment", prompt: "Describe an ethically or emotionally difficult moment you observed (or would expect to encounter) and how it was handled." },
+        { id: "q1", conceptId: "history-taking", prompt: "Which sequence supports a complete, patient-centered history?", kind: "multiple-choice", options: ["Begin open-ended, clarify symptoms systematically, review relevant history, then summarize and check understanding", "Ask only yes/no questions", "Start with a diagnosis", "Skip medication and allergy history"], correctAnswer: "Begin open-ended, clarify symptoms systematically, review relevant history, then summarize and check understanding" },
+        { id: "q2", conceptId: "situational-judgment", prompt: "You observe a possible privacy breach during shadowing. What should you do?", kind: "multiple-choice", options: ["Post about it anonymously", "Protect the patient's privacy and promptly raise the concern through the supervising clinician or required channel", "Confront the patient", "Ignore it because you are a student"], correctAnswer: "Protect the patient's privacy and promptly raise the concern through the supervising clinician or required channel" },
       ],
     },
     interviewRelevance: "Admissions interviews for every healthcare path test this directly through situational judgment and 'tell me about a patient interaction' questions.",
@@ -521,8 +524,8 @@ export const SKILL_MODULES: SkillModule[] = [
       id: "diag-1",
       instructions: "Two questions to see whether you should start with the fundamentals or skip ahead.",
       prompts: [
-        { id: "diag-q1", conceptId: "classification-metrics", prompt: "Your fraud-detection model has 99% accuracy but the dataset is 99% non-fraud. Is that a good model? What metric would you look at instead?" },
-        { id: "diag-q2", conceptId: "missing-data-handling", prompt: "15% of a numeric column is missing, and it's not missing at random. What's your plan, and why?" },
+        { id: "diag-q1", conceptId: "classification-metrics", prompt: "A fraud model has 99% accuracy on data that is 99% non-fraud. What should you inspect next?", kind: "multiple-choice", options: ["Only overall accuracy", "Precision, recall, and the confusion matrix for the fraud class", "The number of rows only", "Training time only"], correctAnswer: "Precision, recall, and the confusion matrix for the fraud class" },
+        { id: "diag-q2", conceptId: "missing-data-handling", prompt: "Fifteen percent of a numeric column is missing and the missingness is not random. What is the best first response?", kind: "multiple-choice", options: ["Replace every missing value with zero", "Investigate why values are missing, preserve a missingness signal, and compare defensible treatments", "Drop the column immediately", "Fill with the mean without checking impact"], correctAnswer: "Investigate why values are missing, preserve a missingness signal, and compare defensible treatments" },
       ],
     },
     assessment: {
@@ -531,12 +534,15 @@ export const SKILL_MODULES: SkillModule[] = [
       description: "Complete the core resources and exercises, then submit the project for review.",
       passingCriteria: "Project handles real messiness (not a pre-cleaned dataset) and clearly explains the model's limitations.",
       questions: [
-        { id: "q1", conceptId: "classification-metrics", prompt: "Explain the difference between precision and recall, and describe a real scenario where you'd prioritize one over the other." },
-        { id: "q2", conceptId: "model-assumptions", prompt: "Name one assumption your model (or a model you're familiar with) depends on, and what happens if it's violated." },
+        { id: "q1", conceptId: "classification-metrics", prompt: "For a dangerous disease screening test where missing a case is very costly, which metric usually deserves priority?", kind: "multiple-choice", options: ["Recall", "Precision only", "Overall accuracy only", "R-squared"], correctAnswer: "Recall" },
+        { id: "q2", conceptId: "model-assumptions", prompt: "What is the best response when a model assumption may be violated?", kind: "multiple-choice", options: ["Test the assumption, measure the impact, and use or compare a more appropriate model", "Ignore it if accuracy is high", "Hide the limitation", "Add more decimal places"], correctAnswer: "Test the assumption, measure the impact, and use or compare a more appropriate model" },
         {
           id: "q3",
           conceptId: "probability-basics",
-          prompt: "Your model outputs a 'probability' of fraud for each transaction. What has to be true about that number for it to actually behave like a probability?",
+          prompt: "What must be true for a model's fraud score to behave like a probability?",
+          kind: "multiple-choice",
+          options: ["It must be calibrated so events scored near a probability occur at roughly that frequency", "It must be greater than 0.5", "It must come from a neural network", "It must match classification accuracy"],
+          correctAnswer: "It must be calibrated so events scored near a probability occur at roughly that frequency",
         },
       ],
     },
@@ -591,8 +597,8 @@ export const SKILL_MODULES: SkillModule[] = [
       id: "diag-1",
       instructions: "If you've written persuasive pieces before (school, a blog, an internship), this should be quick.",
       prompts: [
-        { id: "diag-q1", conceptId: "evidence-based-argument", prompt: "Take any position on a real issue you know something about, and give one specific piece of evidence (not a vague claim) that supports it." },
-        { id: "diag-q2", conceptId: "audience-calibration", prompt: "How would the same argument change if you were writing it for a legislator vs. a general newspaper audience?" },
+        { id: "diag-q1", conceptId: "evidence-based-argument", prompt: "Which sentence provides the strongest evidence for a policy position?", kind: "multiple-choice", options: ["This policy is obviously better", "A cited evaluation found the pilot reduced processing time by 18% across 12 offices", "Many people agree with me", "The alternative sounds unreasonable"], correctAnswer: "A cited evaluation found the pilot reduced processing time by 18% across 12 offices" },
+        { id: "diag-q2", conceptId: "audience-calibration", prompt: "How should the same policy argument change for a legislator versus a general-news audience?", kind: "multiple-choice", options: ["It should not change", "For a legislator, emphasize implementation, costs, and constituent impact; for readers, explain context and consequences plainly", "Use more jargon for both", "Remove evidence for the general audience"], correctAnswer: "For a legislator, emphasize implementation, costs, and constituent impact; for readers, explain context and consequences plainly" },
       ],
     },
     assessment: {
@@ -601,8 +607,8 @@ export const SKILL_MODULES: SkillModule[] = [
       description: "Have someone in the field review your memo or brief for clarity and argument strength.",
       passingCriteria: "Clear position, real supporting evidence, and a tight, well-structured argument.",
       questions: [
-        { id: "q1", conceptId: "evidence-based-argument", prompt: "State your memo's position and its single strongest piece of supporting evidence." },
-        { id: "q2", conceptId: "concision-under-constraint", prompt: "What did you cut from your draft to fit a strict word limit, and why did you choose to cut that over something else?" },
+        { id: "q1", conceptId: "evidence-based-argument", prompt: "Which pairing creates the strongest memo claim?", kind: "multiple-choice", options: ["A precise position paired with a relevant, credible, cited fact that directly supports it", "A broad opinion paired with repetition", "A conclusion paired only with popularity", "A statistic with no source or connection"], correctAnswer: "A precise position paired with a relevant, credible, cited fact that directly supports it" },
+        { id: "q2", conceptId: "concision-under-constraint", prompt: "What should be cut first when a memo exceeds its word limit?", kind: "multiple-choice", options: ["Repetition and background that do not change the recommendation", "The main evidence", "The recommendation", "Necessary limitations"], correctAnswer: "Repetition and background that do not change the recommendation" },
       ],
     },
     interviewRelevance: "This writing sample is commonly reviewed directly — it functions as a work-sample interview round in most of these fields.",
@@ -656,8 +662,8 @@ export const SKILL_MODULES: SkillModule[] = [
       id: "diag-1",
       instructions: "If you've already worked in a lab, this should be fast.",
       prompts: [
-        { id: "diag-q1", conceptId: "reproducible-documentation", prompt: "What's the difference between 'ran the standard protocol' and a genuinely reproducible notebook entry? Give a concrete example." },
-        { id: "diag-q2", conceptId: "outreach-specificity", prompt: "Draft one sentence you'd actually send to a specific lab explaining why you want to join, referencing something real about their work." },
+        { id: "diag-q1", conceptId: "reproducible-documentation", prompt: "Which lab-notebook entry is genuinely reproducible?", kind: "multiple-choice", options: ["Ran the usual protocol", "Completed the experiment successfully", "Mixed 2.0 mL of 10 mM reagent with the sample at 22°C for 15 minutes, then centrifuged at 10,000g", "Followed the instructions"], correctAnswer: "Mixed 2.0 mL of 10 mM reagent with the sample at 22°C for 15 minutes, then centrifuged at 10,000g" },
+        { id: "diag-q2", conceptId: "outreach-specificity", prompt: "Which opening line is strongest for an email to a research lab?", kind: "multiple-choice", options: ["I am interested in any research opportunity", "Your recent paper on membrane transport made me curious about how your team is testing the proposed mechanism", "Your lab looks impressive", "Please send me a position"], correctAnswer: "Your recent paper on membrane transport made me curious about how your team is testing the proposed mechanism" },
       ],
     },
     assessment: {
@@ -666,8 +672,8 @@ export const SKILL_MODULES: SkillModule[] = [
       description: "Complete the outreach and documentation exercises, then submit the research deliverable for review.",
       passingCriteria: "Genuine lab involvement with a documented, specific deliverable, not just observation.",
       questions: [
-        { id: "q1", conceptId: "literature-synthesis", prompt: "Summarize a real paper relevant to your target lab or field in 2-3 sentences, including its main finding and one limitation." },
-        { id: "q2", conceptId: "reproducible-documentation", prompt: "Describe one specific technique you've documented (or would document), including enough detail that someone else could repeat it." },
+        { id: "q1", conceptId: "literature-synthesis", prompt: "What belongs in a concise, critical paper summary?", kind: "multiple-choice", options: ["The research question, method, main finding, and one supported limitation", "Only the abstract's first sentence", "Every citation in the paper", "A claim that the study proves the theory"], correctAnswer: "The research question, method, main finding, and one supported limitation" },
+        { id: "q2", conceptId: "reproducible-documentation", prompt: "Which details are essential when documenting a lab technique?", kind: "multiple-choice", options: ["Materials, quantities, conditions, timing, equipment settings, deviations, and observations", "Only the protocol name", "Only whether it worked", "The researcher's initials"], correctAnswer: "Materials, quantities, conditions, timing, equipment settings, deviations, and observations" },
       ],
     },
     interviewRelevance: "Be ready to describe a specific technique you personally performed and a specific contribution you made, not general lab exposure.",

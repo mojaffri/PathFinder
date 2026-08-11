@@ -59,6 +59,8 @@ export function SkillCheckPanel({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [state, setState] = useState<PanelState>("idle");
   const [result, setResult] = useState<SkillEvaluationResult | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const allAnswered = questions.every((question) => Boolean(answers[question.id]?.trim()));
 
   async function submit() {
     const responses: SkillAttemptResponse[] = questions.map((q) => ({
@@ -67,6 +69,7 @@ export function SkillCheckPanel({
     }));
 
     setState("submitting");
+    setSubmitError(null);
 
     let evaluation: SkillEvaluationResult | null = null;
     try {
@@ -86,20 +89,35 @@ export function SkillCheckPanel({
       if (res.ok) {
         const data = (await res.json()) as { evaluation: SkillEvaluationResult | null };
         evaluation = data.evaluation;
+      } else {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        setSubmitError(data?.error ?? "We couldn't submit those answers. Please try again.");
       }
     } catch {
-      evaluation = null;
+      setSubmitError("We couldn't reach the grading service. Please check your connection and try again.");
     }
 
-    const updated = await recordAttempt(skillModule.id, stage, responses, evaluation);
-    onProgressChange(updated);
+    if (!evaluation) {
+      setState("ungraded");
+      return;
+    }
+
+    try {
+      const updated = await recordAttempt(skillModule.id, stage, responses, evaluation);
+      onProgressChange(updated);
+    } catch {
+      setSubmitError("Your grade was calculated, but it couldn't be saved. Please try again.");
+      setState("idle");
+      return;
+    }
     setResult(evaluation);
-    setState(evaluation ? "result" : "ungraded");
+    setState("result");
   }
 
   function retry() {
     setAnswers({});
     setResult(null);
+    setSubmitError(null);
     setState("idle");
   }
 
@@ -194,7 +212,7 @@ export function SkillCheckPanel({
     return (
       <div className="flex flex-col gap-3">
         <div className="rounded-md border border-border bg-surface p-3 text-sm text-muted-foreground">
-          We couldn&apos;t grade this automatically right now. Your answers are saved — you can retry grading anytime.
+          {submitError ?? "We couldn't grade this attempt. Your answers are still here, so you can retry without retyping them."}
         </div>
         <div className="flex items-center gap-2">
           <Button type="button" onClick={submit}>
@@ -210,20 +228,64 @@ export function SkillCheckPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      {questions.map((q) => (
-        <div key={q.id}>
-          <Label htmlFor={`q-${q.id}`}>{q.prompt}</Label>
-          <Textarea
-            id={`q-${q.id}`}
-            className="mt-1.5"
-            value={answers[q.id] ?? ""}
-            onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-            disabled={state === "submitting"}
-          />
-        </div>
-      ))}
+      {questions.map((q) => {
+        const hasOptions = (q.kind === "multiple-choice" || q.kind === "true-false") && q.options && q.options.length > 0;
+        if (hasOptions) {
+          return (
+            <fieldset key={q.id} disabled={state === "submitting"} className="space-y-2">
+              <legend className="text-sm font-medium text-foreground">{q.prompt}</legend>
+              <div className="grid gap-2" role="radiogroup" aria-label={q.prompt}>
+                {q.options?.map((option) => {
+                  const optionId = `q-${q.id}-${option.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+                  const selected = answers[q.id] === option;
+                  return (
+                    <label
+                      key={option}
+                      htmlFor={optionId}
+                      className={cn(
+                        "flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                        "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+                        selected ? "border-primary bg-accent text-foreground" : "border-border bg-surface text-muted-foreground hover:border-primary/50",
+                      )}
+                    >
+                      <input
+                        id={optionId}
+                        type="radio"
+                        name={`q-${q.id}`}
+                        value={option}
+                        checked={selected}
+                        onChange={() => setAnswers((previous) => ({ ...previous, [q.id]: option }))}
+                        className="mt-0.5 h-4 w-4 accent-primary"
+                      />
+                      <span>{option}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+          );
+        }
+
+        return (
+          <div key={q.id}>
+            <Label htmlFor={`q-${q.id}`}>{q.prompt}</Label>
+            <Textarea
+              id={`q-${q.id}`}
+              className="mt-1.5"
+              value={answers[q.id] ?? ""}
+              onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
+              disabled={state === "submitting"}
+              aria-describedby={`q-${q.id}-hint`}
+            />
+            <p id={`q-${q.id}-hint`} className="mt-1 text-xs text-muted-foreground">
+              Write naturally. The grader checks the meaning of your answer, not exact wording.
+            </p>
+          </div>
+        );
+      })}
+      {submitError && state === "idle" && <p role="alert" className="text-sm text-danger">{submitError}</p>}
       <div>
-        <Button type="button" onClick={submit} disabled={state === "submitting"}>
+        <Button type="button" onClick={submit} disabled={state === "submitting" || !allAnswered}>
           {state === "submitting" ? (
             <>
               <Spinner className="h-4 w-4" />

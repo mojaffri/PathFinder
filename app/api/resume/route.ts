@@ -60,18 +60,25 @@ export async function POST(request: Request) {
       );
     }
 
-    if (rawText.trim().length < 30) {
-      return NextResponse.json(
-        { error: "Couldn't find readable text in that file. Try manual entry instead." },
-        { status: 422 },
-      );
-    }
-
     // Re-stitch lines extraction shattered mid-sentence/mid-title before
     // either extraction path sees the text — see lib/resume/text-normalize.ts.
     const normalizedText = reassembleLines(rawText);
 
-    const aiResult = await extractResumeDataWithAI(normalizedText);
+    // The original PDF preserves columns and images that plain text cannot.
+    // This also lets the configured AI provider read scanned resumes with no
+    // text layer. The base64 document is never logged.
+    const aiResult = await extractResumeDataWithAI(
+      normalizedText,
+      validation.fileType === "pdf"
+        ? { mediaType: "application/pdf", data: buffer.toString("base64"), title: fileName.slice(0, 200) }
+        : undefined,
+    );
+    if (normalizedText.trim().length < 30 && !aiResult) {
+      return NextResponse.json(
+        { error: "This appears to be a scanned or image-only PDF. AI document reading is currently unavailable, so please upload a text-based PDF or DOCX." },
+        { status: 422 },
+      );
+    }
     const extraction = validateExtraction(
       normalizeResumeExtraction(aiResult ?? extractResumeDataHeuristically(normalizedText)),
     );

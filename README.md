@@ -43,7 +43,7 @@ For a zero-setup product tour, open the [live site](https://path-finder-umber.ve
 ## What makes it technically interesting
 
 - **Deterministic matching.** Career matching, job-fit scoring, readiness, evidence confidence, roadmap priority, and scheduling are pure or database-backed domain logic—not LLM rankings.
-- **Structured AI boundaries.** Resume/job extraction, roadmap narrative, GitHub summary, and open-response grading use a server-only provider interface. Every structured response is validated with Zod and has an explicit fallback or failure state.
+- **Structured AI boundaries.** Resume/job extraction and roadmap narrative use a server-only provider interface; current assessments are deterministic fixed-choice items. Every structured AI response is validated with Zod, and scanned PDFs can be read as visual documents through Vercel AI Gateway.
 - **Evidence instead of keywords.** Claimed, assessed, demonstrated, and professional signals carry different weights. GitHub analysis uses reproducible file-tree and manifest detectors; popularity metrics never increase skill confidence.
 - **Skill dependency graph.** SkillForge separates learning completion from mastery, tracks multiple dimensions, and walks prerequisite relationships to diagnose root-cause gaps.
 - **Deterministic scheduling.** Roadmap tasks are prioritized from gap severity, saved-job frequency, evidence confidence, and prerequisites, then scheduled against weekly availability and a target date.
@@ -85,7 +85,7 @@ See [docs/architecture.md](docs/architecture.md) for the component boundaries an
 | Surface | What it demonstrates |
 |---|---|
 | Discover | Weighted, explainable matching across 46 curated careers and 9 categories |
-| Resume & profile | PDF/DOCX validation, extraction review, version history, private original-file storage |
+| Resume & profile | PDF/DOCX validation, AI-assisted entity grouping, scanned-PDF vision, extraction review, version history, private original-file storage |
 | Job Fit | Structured required/preferred requirements and requirement-by-requirement deterministic fit |
 | Saved-job insights | Skill frequency and evidence coverage based only on the user's saved jobs |
 | Projects | Public GitHub analysis, deterministic engineering signals, evidence linkage |
@@ -148,7 +148,7 @@ Email/password accounts include confirmation, magic-link sign-in, and password r
 
 ### Production deployment
 
-Vercel needs the production values documented in [.env.example](.env.example). Use a Supabase transaction-pooler `DATABASE_URL` for serverless runtime traffic. Run migrations and reference seeding before exposing authenticated routes; seed demo data only when the shared demo is intended to be public.
+Vercel needs the production values documented in [.env.example](.env.example). Use a Supabase transaction-pooler `DATABASE_URL` for serverless runtime traffic. Structured AI uses Vercel AI Gateway's automatic OIDC token on Vercel, so no long-lived model key is required there; local development can use `ANTHROPIC_API_KEY` or `AI_GATEWAY_API_KEY`. Run migrations and reference seeding before exposing authenticated routes; seed demo data only when the shared demo is intended to be public.
 
 No secrets belong in Git, client-side variables, screenshots, or logs.
 

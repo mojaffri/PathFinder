@@ -48,6 +48,7 @@ That test (and its siblings for `deleteRoadmap` and `skill_progress`) runs again
 | Secret | Where it's read | Never appears in |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | `lib/ai/anthropic-client.ts` (server-only) | client bundles, API responses |
+| `AI_GATEWAY_API_KEY` / automatic `VERCEL_OIDC_TOKEN` | `lib/ai/anthropic-provider.ts` (server-only) | client bundles, API responses, logs |
 | `SUPABASE_SERVICE_ROLE_KEY` | `lib/supabase/admin.ts` (server-only, marked with the `server-only` package so a stray client import fails the build) | client bundles |
 | `DEMO_USER_PASSWORD` | `app/api/demo/login/route.ts` (server-only) | client bundles — the "Try Demo" button never sees the password, it just triggers a server-side sign-in |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Both client and server | This one is *meant* to be public — it's Supabase's public anon key, safe by design (RLS is what actually protects data, not secrecy of this key) |
@@ -57,6 +58,8 @@ That test (and its siblings for `deleteRoadmap` and `skill_progress`) runs again
 ## File upload validation (resumes: PDF + DOCX)
 
 Enforced in `app/api/resume/route.ts` via `lib/resume/file-validation.ts`: an early `Content-Length` check rejects (413) requests whose declared size exceeds the cap before the body is buffered, a hard 8MB cap, an extension/MIME-type check, and — the layer that closes the previous known gap — a **magic-byte check** (`%PDF-` for PDF, the zip local-file signature `PK\x03\x04` for DOCX) that the file's actual bytes must match its declared type. A client-declared `Content-Type`/extension is never trusted as proof of file content on its own; a mismatch (including a renamed file of the other type) is rejected with a 422, not silently accepted. Every route that touches a resume also authorizes via `getServerUser()` first — resume upload/list/reanalyze/delete/set-active all require a signed-in session now (previously the upload endpoint was anonymous/stateless).
+
+Validated PDFs are provided directly to the configured server-side AI provider as an in-memory document block so column layout and scanned/image-only pages can be read. The base64 bytes are never logged or returned to the browser; the same authenticated rate limit applies before the provider call. If AI is unavailable and the PDF has no readable text layer, the route returns a specific 422 instead of inventing or misplacing resume records.
 
 ## Demo mode
 
@@ -90,7 +93,7 @@ See `project-state.md` → Known Issues for the full, current list. The security
 
 ## Privacy limitations
 
-- When AI is enabled and invoked, the minimum required resume text, job text, or assessment response is sent to the configured Anthropic API. PathFinder does not include those bodies in its logs.
+- When AI is enabled and invoked, the minimum required resume/job text or open assessment response is sent through the configured Anthropic endpoint (directly or through Vercel AI Gateway). For a PDF resume, the validated original document may also be sent so the provider can read visual layout or scanned pages. PathFinder does not include those bodies or document bytes in its logs.
 - GitHub analysis reads public repository metadata, file paths, language totals, and selected manifests. It does not clone or execute code and never requests private-repository scope.
 - Vercel Analytics records aggregate usage. PathFinder's `activity_events` records meaningful account changes, not document contents or a full access history.
 - The recruiter demo is a shared account. Visitors should not enter personal information because other demo visitors may see shared changes until the next seed reset.

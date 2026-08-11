@@ -40,4 +40,16 @@ describe("extractResumeDataWithAI", () => {
     requestStructuredAIMock.mockRejectedValueOnce(new Error("provider unavailable"));
     await expect(extractResumeDataWithAI("resume text")).resolves.toBeNull();
   });
+
+  it("forwards image-only PDFs for visual document extraction", async () => {
+    requestStructuredAIMock.mockResolvedValueOnce({ data: VALID_EXTRACTION });
+    const document = { mediaType: "application/pdf" as const, data: "base64-pdf", title: "resume.pdf" };
+
+    await extractResumeDataWithAI("", document);
+
+    expect(requestStructuredAIMock).toHaveBeenCalledWith(expect.objectContaining({
+      document,
+      prompt: expect.stringContaining("No text layer was available"),
+    }));
+  });
 });

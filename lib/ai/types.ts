@@ -13,6 +13,11 @@ export interface AIStructuredRequest {
   toolDescription: string;
   toolSchema: { type: "object"; properties?: Record<string, unknown>; required?: string[]; [key: string]: unknown };
   prompt: string;
+  document?: {
+    mediaType: "application/pdf";
+    data: string;
+    title?: string;
+  };
   signal?: AbortSignal;
 }
 

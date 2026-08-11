@@ -76,3 +76,35 @@ Treasurer | Engineering Society | 2025 - Present
   assert.deepEqual(result.projects[1].bullets, ["https://github.com/example/pathfinder", "Built a deterministic STEM career matching engine.", "Added editable resume extraction review."]);
   assert.equal(result.projects.some((project) => project.title.includes("ACTIVITIES")), false);
 });
+
+test("merges action-led AI project cards even when they contain extracted technologies", () => {
+  const extraction: ResumeExtraction = {
+    educationStage: null, education: [], experience: [], awards: [], certifications: [], skills: [],
+    extractionConfidence: "medium", followUpQuestions: [],
+    projects: [
+      { id: "p1", title: "Transit Delay Explorer", technologies: ["React"], date: null, summary: null, bullets: [], githubUrl: null },
+      { id: "p2", title: "Built an interactive dashboard that compares delay patterns across bus routes.", technologies: ["TypeScript", "D3"], date: null, summary: null, bullets: [], githubUrl: null },
+    ],
+  };
+  const result = normalizeResumeExtraction(extraction);
+  assert.equal(result.projects.length, 1);
+  assert.equal(result.projects[0].title, "Transit Delay Explorer");
+  assert.deepEqual(result.projects[0].technologies, ["React", "TypeScript", "D3"]);
+  assert.equal(result.projects[0].bullets[0], "Built an interactive dashboard that compares delay patterns across bus routes.");
+});
+
+test("repairs reversed experience fields and attaches orphan role descriptions", () => {
+  const extraction: ResumeExtraction = {
+    educationStage: null, education: [], projects: [], awards: [], certifications: [], skills: [],
+    extractionConfidence: "medium", followUpQuestions: [],
+    experience: [
+      { id: "e1", title: "Northstar Labs", organization: "Software Engineer Intern", location: "Austin, TX", startDate: "Jun 2025", endDate: "Aug 2025", summary: null, bullets: [] },
+      { id: "e2", title: "Developed an internal scheduling tool used by the operations team.", organization: null, location: null, startDate: null, endDate: null, summary: null, bullets: [] },
+    ],
+  };
+  const result = normalizeResumeExtraction(extraction);
+  assert.equal(result.experience.length, 1);
+  assert.equal(result.experience[0].title, "Software Engineer Intern");
+  assert.equal(result.experience[0].organization, "Northstar Labs");
+  assert.equal(result.experience[0].bullets[0], "Developed an internal scheduling tool used by the operations team.");
+});

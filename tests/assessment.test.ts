@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
 import { gradeDeterministicQuestions } from "../lib/skillforge/deterministic-grader";
+import { SKILL_MODULES } from "../data/skillforge-modules";
 
 test("deterministic grading normalizes answers and identifies weak concepts", () => {
   const result = gradeDeterministicQuestions(
@@ -18,4 +19,31 @@ test("deterministic grading normalizes answers and identifies weak concepts", ()
 
 test("open responses are deliberately not graded deterministically", () => {
   assert.equal(gradeDeterministicQuestions([{ id: "q", conceptId: "reasoning", prompt: "Explain", kind: "open-response" }], [{ questionId: "q", answer: "Because" }]), null);
+});
+
+test("every Test Me First diagnostic has deterministic selectable answers", () => {
+  for (const skillModule of SKILL_MODULES) {
+    const questions = skillModule.diagnostic.prompts;
+    assert.ok(questions.every((question) => question.kind === "multiple-choice" || question.kind === "true-false"), skillModule.id);
+    assert.ok(questions.every((question) => question.options && question.options.length >= 2), skillModule.id);
+    assert.ok(questions.every((question) => question.correctAnswer && question.options?.includes(question.correctAnswer)), skillModule.id);
+    const result = gradeDeterministicQuestions(
+      questions,
+      questions.map((question) => ({ questionId: question.id, answer: question.correctAnswer ?? "" })),
+    );
+    assert.equal(result?.overallScore, 100, skillModule.id);
+  }
+});
+
+test("every current mastery assessment can be graded without an AI provider", () => {
+  for (const skillModule of SKILL_MODULES) {
+    const questions = skillModule.assessment.questions;
+    assert.ok(questions.every((question) => question.kind === "multiple-choice" || question.kind === "true-false" || question.kind === "code-output"), skillModule.id);
+    assert.ok(questions.every((question) => question.correctAnswer), skillModule.id);
+    const result = gradeDeterministicQuestions(
+      questions,
+      questions.map((question) => ({ questionId: question.id, answer: question.correctAnswer ?? "" })),
+    );
+    assert.equal(result?.overallScore, 100, skillModule.id);
+  }
 });
