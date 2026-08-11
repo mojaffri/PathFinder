@@ -219,10 +219,11 @@ Supabase migrations `0000` through `0010`, reference data, and the shared demo a
 
 - Replaced every current free-text SkillForge diagnostic and mastery item with a curated multiple-choice or true/false question. All 10 modules now grade deterministically without an AI call, while the dormant open-response path explicitly grades semantic meaning rather than exact wording.
 - Fixed the assessment UI to render keyboard-accessible radio groups, require all answers before submission, preserve answers on retry, and distinguish grading failures from persistence failures instead of claiming unsaved data was saved.
+- Allowed the shared demo to calculate a visibly temporary assessment grade without opening any persistence mutation; saving attempts and every other demo write remain blocked.
 - Added PDF document blocks to the structured-AI boundary. Validated PDFs are sent server-side with their extracted text so the model can interpret columns and read scanned/image-only resumes; production authentication uses Vercel AI Gateway's automatic OIDC token when no direct Anthropic key is present.
 - Strengthened the resume extraction prompt around two-pass entity grouping and strict name/title/organization/description boundaries. Normalization now repairs reversed job/company fields and merges action-led orphan project, experience, and award descriptions without losing technology tags.
 - Expanded deterministic resume layout coverage from 18 to 162 generated combinations across section names, separators, date syntax, bullet glyphs, current-role wording, and section order. The supplied sample PDF was confirmed to be image-only and is now covered by the visual-document path rather than being sent to an empty text parser.
-- Quality gate: lint and typecheck clean; 426 Vitest tests across 37 files; production build clean with 53 generated page slots; local Playwright smoke 13 passed and 7 intentional environment/device skips.
+- Quality gate: lint and typecheck clean; 427 Vitest tests across 37 files; production build clean with 53 generated page slots; local Playwright smoke 13 passed and 7 intentional environment/device skips.
 
 ## Next three improvements
 

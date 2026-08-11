@@ -60,6 +60,7 @@ export function SkillCheckPanel({
   const [state, setState] = useState<PanelState>("idle");
   const [result, setResult] = useState<SkillEvaluationResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [resultNotice, setResultNotice] = useState<string | null>(null);
   const allAnswered = questions.every((question) => Boolean(answers[question.id]?.trim()));
 
   async function submit() {
@@ -70,6 +71,7 @@ export function SkillCheckPanel({
 
     setState("submitting");
     setSubmitError(null);
+    setResultNotice(null);
 
     let evaluation: SkillEvaluationResult | null = null;
     try {
@@ -105,7 +107,13 @@ export function SkillCheckPanel({
     try {
       const updated = await recordAttempt(skillModule.id, stage, responses, evaluation);
       onProgressChange(updated);
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && /public demo is read-only/i.test(error.message)) {
+        setResult(evaluation);
+        setResultNotice("Demo grade — this result is temporary and does not change the shared showcase data.");
+        setState("result");
+        return;
+      }
       setSubmitError("Your grade was calculated, but it couldn't be saved. Please try again.");
       setState("idle");
       return;
@@ -118,6 +126,7 @@ export function SkillCheckPanel({
     setAnswers({});
     setResult(null);
     setSubmitError(null);
+    setResultNotice(null);
     setState("idle");
   }
 
@@ -126,6 +135,7 @@ export function SkillCheckPanel({
 
     return (
       <div className="flex flex-col gap-4">
+        {resultNotice && <p className="rounded-md border border-accent bg-accent/30 p-3 text-sm text-accent-foreground">{resultNotice}</p>}
         <div className="grid gap-3 sm:grid-cols-2">
           <ScoreTile label="Knowledge" value={result.knowledgeScore} />
           <ScoreTile label="Ability" value={result.abilityScore} />

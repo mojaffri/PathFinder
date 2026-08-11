@@ -11,4 +11,10 @@ describe("isReadOnlyDemoMutation", () => {
     expect(isReadOnlyDemoMutation({ pathname: "/api/profile", method: "POST", userEmail: "student@example.com", demoEmail: "demo@example.com" })).toBe(false);
     expect(isReadOnlyDemoMutation({ pathname: "/api/demo/login", method: "POST", userEmail: null, demoEmail: "demo@example.com" })).toBe(false);
   });
+
+  it("allows stateless assessment grading but still blocks saving the attempt", () => {
+    const identity = { userEmail: "demo@example.com", demoEmail: "demo@example.com" };
+    expect(isReadOnlyDemoMutation({ pathname: "/api/skillforge/evaluate", method: "POST", ...identity })).toBe(false);
+    expect(isReadOnlyDemoMutation({ pathname: "/api/skillforge/progress/dsa/attempts", method: "POST", ...identity })).toBe(true);
+  });
 });
